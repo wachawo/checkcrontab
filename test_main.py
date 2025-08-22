@@ -28,7 +28,7 @@ from main import (
     check_system_crontab_permissions,
     system_cron_entry,
     user_cron_entry,
-    validate_crontab_files,
+    check_crontab_file,
 )
 
 
@@ -363,43 +363,58 @@ def test_check_system_crontab_not_readable(mock_os):
     assert result  # Now returns True (warning instead of error)
 
 
-def test_validate_crontab_files_with_valid_file():
-    """Test validating crontab files with a valid file"""
+def test_check_crontab_file_with_valid_file():
+    """Test checking crontab file with valid content"""
     with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as temp_file:
         temp_file.write("0 2 * * * /usr/bin/backup.sh\n")
         temp_file.write("@reboot /usr/bin/startup.sh\n")
         temp_file_path = temp_file.name
 
     try:
-        # Mock the system crontab check to avoid actual file access
-        with patch.object(main_module, 'check_crontab_file') as mock_check:
-            mock_check.return_value = 0
-
-            result = validate_crontab_files("/etc/crontab", temp_file_path)
-
-            assert result == 0
+        errors = []
+        result = check_crontab_file(temp_file_path, errors, is_system_crontab=False)
+        assert result == 0
+        assert len(errors) == 0
     finally:
         os.unlink(temp_file_path)
 
 
-def test_validate_crontab_files_with_invalid_file():
-    """Test validating crontab files with an invalid file"""
+def test_check_crontab_file_with_invalid_file():
+    """Test checking crontab file with invalid content"""
     with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as temp_file:
-        temp_file.write("0 2 * * /usr/bin/backup.sh\n")  # Missing weekday field
+        temp_file.write("0 2 * * * /usr/bin/backup.sh\n")  # Valid line
+        temp_file.write("60 25 32 13 8 /usr/bin/invalid.sh\n")  # Invalid time fields
         temp_file_path = temp_file.name
 
     try:
-        # Mock the system crontab check to avoid actual file access
-        with patch.object(main_module, 'check_crontab_file') as mock_check:
-            # First call (system crontab) returns 0, second call (user file) returns 1
-            mock_check.side_effect = [0, 1]
-
-            result = validate_crontab_files("/etc/crontab", temp_file_path)
-
-            # Should have errors due to invalid format
-            assert result > 0
+        errors = []
+        result = check_crontab_file(temp_file_path, errors, is_system_crontab=False)
+        assert result > 0
+        assert len(errors) > 0
     finally:
         os.unlink(temp_file_path)
+
+
+def test_check_crontab_file_with_system_crontab():
+    """Test checking system crontab file"""
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as temp_file:
+        temp_file.write("0 2 * * * root /usr/bin/backup.sh\n")
+        temp_file_path = temp_file.name
+
+    try:
+        errors = []
+        result = check_crontab_file(temp_file_path, errors, is_system_crontab=True)
+        assert result == 0
+        assert len(errors) == 0
+    finally:
+        os.unlink(temp_file_path)
+
+
+def test_check_crontab_file_nonexistent():
+    """Test checking nonexistent crontab file"""
+    errors = []
+    result = check_crontab_file("/nonexistent/file.txt", errors, is_system_crontab=False)
+    assert result == 0  # Should return 0 for nonexistent files (just warning)
 
 
 # Test runner function
@@ -432,8 +447,10 @@ def run_all_tests():
         test_check_system_crontab_permissions_correct,
         test_check_system_crontab_not_exists,
         test_check_system_crontab_not_readable,
-        test_validate_crontab_files_with_valid_file,
-        test_validate_crontab_files_with_invalid_file,
+        test_check_crontab_file_with_valid_file,
+        test_check_crontab_file_with_invalid_file,
+        test_check_crontab_file_with_system_crontab,
+        test_check_crontab_file_nonexistent,
     ]
 
     passed = 0

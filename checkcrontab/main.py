@@ -570,44 +570,6 @@ def check_user_crontab(username: str, errors: List[str]) -> int:
         return 1
 
 
-def validate_crontab_files(system_crontab: str, user_input: Optional[str]) -> int:
-    """Validate crontab files"""
-    errors = []
-    total_errors = 0
-
-    # Check system crontab
-    system_errors = check_crontab_file(system_crontab, errors, is_system_crontab=True)
-    total_errors += system_errors
-
-    # Check user crontab if specified
-    if user_input:
-        # Check if it looks like a file path (contains '/' or '.' or has extension)
-        looks_like_file = '/' in user_input or '.' in user_input or user_input.endswith(('.txt', '.cron', '.crontab'))
-
-        if looks_like_file:
-            # Treat as file path
-            if os.path.exists(user_input):
-                # This is an existing file path
-                if os.path.abspath(user_input) == os.path.abspath(system_crontab):
-                    logger.warning(f"{user_input}: already checked as system crontab")
-                else:
-                    user_errors = check_crontab_file(user_input, errors, is_system_crontab=False)
-                    total_errors += user_errors
-            else:
-                # File doesn't exist, warn but don't treat as error
-                logger.warning(f"File {user_input} does not exist")
-        else:
-            # Treat as username
-            user_errors = check_user_crontab(user_input, errors)
-            total_errors += user_errors
-
-    # Print all errors
-    if errors:
-        print_errors(errors)
-
-    return total_errors
-
-
 def main():
     """Main function"""
     parser = argparse.ArgumentParser(
@@ -615,13 +577,14 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Usage examples:
-    %(prog)s                           # Check only system crontab
+    %(prog)s                           # Check only system crontab (Linux) or no files
     %(prog)s /path/to/user/crontab     # Check system and file crontab
     %(prog)s username                  # Check system and user crontab
+    %(prog)s file1 file2 username      # Check multiple files and user crontab
         """,
     )
 
-    parser.add_argument('user_input', nargs='?', help='Path to crontab file or username')
+    parser.add_argument('user_inputs', nargs='*', help='Paths to crontab files or usernames')
     parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output')
 
     args = parser.parse_args()
@@ -631,17 +594,56 @@ Usage examples:
         logging.getLogger().setLevel(logging.DEBUG)
         logger.debug("Verbose mode enabled")
 
-    # Check cron daemon (only on Linux systems)
+    # Prepare list of files to check
+    file_list = []
+
     if platform.system().lower() == "linux":
+        # Check cron daemon
         check_cron_daemon()
+        # Check system crontab permissions
+        check_system_crontab_permissions()
+
+        # Add /etc/crontab first for Linux systems if not in GitHub
+        is_github = os.getenv('GITHUB_ACTIONS') == 'true'
+        if not is_github:
+            file_list.append("/etc/crontab")
     else:
-        logger.info("Skipping cron daemon check on non-Linux system")
+        logger.info("Skipping checks on non-Linux system")
 
-    # Check system crontab permissions
-    check_system_crontab_permissions()
+    # Add user inputs
+    file_list.extend(args.user_inputs)
 
-    # Validate crontab files
-    total_errors = validate_crontab_files("/etc/crontab", args.user_input)
+    # Remove duplicates
+    file_list = list(set(file_list))
+
+    # Validate crontab files one by one
+    errors = []
+    total_errors = 0
+
+    for file_path in file_list:
+        # Determine if this is a system crontab
+        is_system_crontab = file_path == "/etc/crontab"
+
+        # Check if it looks like a file path (contains '/' or '.' or has extension)
+        looks_like_file = '/' in file_path or '.' in file_path
+
+        if looks_like_file:
+            # Treat as file path
+            if os.path.exists(file_path):
+                # This is an existing file path
+                file_errors = check_crontab_file(file_path, errors, is_system_crontab=is_system_crontab)
+                total_errors += file_errors
+            else:
+                # File doesn't exist, warn but don't treat as error
+                logger.warning(f"File {file_path} does not exist")
+        else:
+            # Treat as username
+            user_errors = check_user_crontab(file_path, errors)
+            total_errors += user_errors
+
+    # Print all errors
+    if errors:
+        print_errors(errors)
 
     # Final result
     if total_errors == 0:
