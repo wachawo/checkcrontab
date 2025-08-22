@@ -1,0 +1,659 @@
+# ========================================
+# INVALID CRON EXAMPLES
+# ========================================
+
+# ========================================
+# INCORRECT NUMBER OF FIELDS
+# ========================================
+
+# Insufficient fields in user crontab (need 6 fields)
+0 2 * * /usr/bin/backup.sh
+
+# Insufficient fields in system crontab (need 7 fields)
+0 2 * * * /usr/bin/backup.sh
+
+# Too many fields in user crontab
+0 2 * * * extra /usr/bin/backup.sh
+
+# Too many fields in system crontab
+0 2 * * * root extra /usr/bin/backup.sh
+
+# Only one field
+0
+
+# Only two fields
+0 2
+
+# Only three fields
+0 2 *
+
+# Only four fields
+0 2 * *
+
+# Only five fields
+0 2 * * *
+
+# ========================================
+# INVALID MINUTE VALUES
+# ========================================
+
+# Value greater than 59
+60 * * * * /usr/bin/script.sh
+
+# Negative value
+-1 * * * * /usr/bin/script.sh
+
+# Non-numeric value
+abc * * * * /usr/bin/script.sh
+
+# Empty value
+ * * * * /usr/bin/script.sh
+
+# Value with letters
+1a * * * * /usr/bin/script.sh
+
+# Value with symbols
+1@ * * * * /usr/bin/script.sh
+
+# Value with spaces
+1 2 * * * * /usr/bin/script.sh
+
+# ========================================
+# INVALID HOUR VALUES
+# ========================================
+
+# Value greater than 23
+* 24 * * * /usr/bin/script.sh
+
+# Negative value
+* -1 * * * /usr/bin/script.sh
+
+# Non-numeric value
+* abc * * * /usr/bin/script.sh
+
+# Empty value
+*  * * * /usr/bin/script.sh
+
+# Value with letters
+* 1a * * * /usr/bin/script.sh
+
+# Value with symbols
+* 1@ * * * /usr/bin/script.sh
+
+# ========================================
+# INVALID DAY OF MONTH VALUES
+# ========================================
+
+# Value greater than 31
+* * 32 * * /usr/bin/script.sh
+
+# Value 0 (day of month starts from 1)
+* * 0 * * /usr/bin/script.sh
+
+# Negative value
+* * -1 * * /usr/bin/script.sh
+
+# Non-numeric value
+* * abc * * /usr/bin/script.sh
+
+# Empty value
+* *  * * /usr/bin/script.sh
+
+# Value with letters
+* * 1a * * /usr/bin/script.sh
+
+# Value with symbols
+* * 1@ * * /usr/bin/script.sh
+
+# ========================================
+# INVALID MONTH VALUES
+# ========================================
+
+# Value greater than 12
+* * * 13 * /usr/bin/script.sh
+
+# Value 0 (month starts from 1)
+* * * 0 * /usr/bin/script.sh
+
+# Negative value
+* * * -1 * /usr/bin/script.sh
+
+# Non-numeric value
+* * * abc * /usr/bin/script.sh
+
+# Empty value
+* * *  * /usr/bin/script.sh
+
+# Value with letters
+* * * 1a * /usr/bin/script.sh
+
+# Value with symbols
+* * * 1@ * /usr/bin/script.sh
+
+# ========================================
+# INVALID DAY OF WEEK VALUES
+# ========================================
+
+# Value greater than 7
+* * * * 8 /usr/bin/script.sh
+
+# Negative value
+* * * * -1 /usr/bin/script.sh
+
+# Non-numeric value
+* * * * abc /usr/bin/script.sh
+
+# Empty value
+* * * *  /usr/bin/script.sh
+
+# Value with letters
+* * * * 1a /usr/bin/script.sh
+
+# Value with symbols
+* * * * 1@ /usr/bin/script.sh
+
+# ========================================
+# INVALID RANGES
+# ========================================
+
+# Range with incorrect order (start > end)
+0 5-3 * * * /usr/bin/script.sh
+
+# Range with identical values
+0 5-5 * * * /usr/bin/script.sh
+
+# Range with non-numeric values
+0 a-z * * * /usr/bin/script.sh
+
+# Range with empty values
+0 - * * * /usr/bin/script.sh
+
+# Range with symbols
+0 1-@ * * * /usr/bin/script.sh
+
+# Range with spaces
+0 1 - 5 * * * /usr/bin/script.sh
+
+# Range with letters in numbers
+0 1a-5b * * * /usr/bin/script.sh
+
+# ========================================
+# INVALID LISTS
+# ========================================
+
+# List with empty values
+0 1,,3 * * * /usr/bin/script.sh
+
+# List with non-numeric values
+0 1,abc,3 * * * /usr/bin/script.sh
+
+# List with symbols
+0 1,@,3 * * * /usr/bin/script.sh
+
+# List with spaces
+0 1, 2,3 * * * /usr/bin/script.sh
+
+# List with letters in numbers
+0 1a,2b,3c * * * /usr/bin/script.sh
+
+# List with duplicate values
+0 1,1,2 * * * /usr/bin/script.sh
+
+# ========================================
+# INVALID STEPS (STEP VALUES)
+# ========================================
+
+# Step with zero value
+*/0 * * * * /usr/bin/script.sh
+
+# Step with negative value
+*/-1 * * * * /usr/bin/script.sh
+
+# Step with non-numeric value
+*/abc * * * * /usr/bin/script.sh
+
+# Step with empty value
+*/ * * * * /usr/bin/script.sh
+
+# Step with symbols
+*/@ * * * * /usr/bin/script.sh
+
+# Step with letters in number
+*/1a * * * * /usr/bin/script.sh
+
+# Step greater than maximum value
+*/60 * * * * /usr/bin/script.sh
+
+# Step greater than maximum value for hours
+* */24 * * * /usr/bin/script.sh
+
+# Step greater than maximum value for days
+* * */32 * * /usr/bin/script.sh
+
+# Step greater than maximum value for months
+* * * */13 * /usr/bin/script.sh
+
+# Step greater than maximum value for weekdays
+* * * * */8 /usr/bin/script.sh
+
+# ========================================
+# INVALID COMBINATIONS
+# ========================================
+
+# Range with incorrect step
+0 1-5/10 * * * /usr/bin/script.sh
+
+# List with incorrect step
+0 1,3,5/2 * * * /usr/bin/script.sh
+
+# Range with incorrect order and step
+0 5-1/2 * * * /usr/bin/script.sh
+
+# Mixed invalid values
+60 25 32 13 8 /usr/bin/script.sh
+
+# ========================================
+# INVALID SPECIAL KEYWORDS
+# ========================================
+
+# Non-existent special keyword
+@invalid /usr/bin/script.sh
+
+# Incorrect spelling
+@Reboot /usr/bin/script.sh
+@REBOOT /usr/bin/script.sh
+@reboot_extra /usr/bin/script.sh
+
+# Special keyword with incorrect number of fields (user crontab)
+@reboot
+
+# Special keyword with incorrect number of fields (system crontab)
+@reboot root
+
+# Special keyword with extra fields (user crontab)
+@reboot extra /usr/bin/script.sh
+
+# Special keyword with extra fields (system crontab)
+@reboot root extra /usr/bin/script.sh
+
+# ========================================
+# INVALID SYSTEM CRONTAB ENTRIES
+# ========================================
+
+# Missing user
+0 2 * * * /usr/bin/backup.sh
+
+# Empty user
+0 2 * * *  /usr/bin/backup.sh
+
+# User with spaces
+0 2 * * * "root user" /usr/bin/backup.sh
+
+# User with symbols
+0 2 * * * root@server /usr/bin/backup.sh
+
+# User with numbers at beginning
+0 2 * * * 1root /usr/bin/backup.sh
+
+# ========================================
+# INVALID COMMANDS
+# ========================================
+
+# Missing command
+0 2 * * *
+
+# Empty command
+0 2 * * * 
+
+# Command with only spaces
+0 2 * * *    
+
+# Command with non-existent path
+0 2 * * * /nonexistent/script.sh
+
+# Command with invalid symbols
+0 2 * * * /usr/bin/script.sh < > | &
+
+# ========================================
+# INVALID FORMATS
+# ========================================
+
+# Incorrect separators
+0,2,*.*.*./usr/bin/script.sh
+
+# Too many spaces between fields
+0    2    *    *    *    /usr/bin/script.sh
+
+# Tab instead of spaces
+0	2	*	*	*	/usr/bin/script.sh
+
+# Mixed separators
+0,2 * * * * /usr/bin/script.sh
+
+# ========================================
+# EDGE CASES - INVALID
+# ========================================
+
+# Values at boundary of valid range + 1
+60 24 32 13 8 /usr/bin/script.sh
+
+# Values at boundary of valid range - 1
+-1 -1 0 0 -1 /usr/bin/script.sh
+
+# Maximum values + 1
+60 24 32 13 8 /usr/bin/script.sh
+
+# Minimum values - 1
+-1 -1 0 0 -1 /usr/bin/script.sh
+
+# ========================================
+# INVALID COMMENTS
+# ========================================
+
+# Comment without # symbol
+This is not a comment
+
+# Comment with incorrect symbol
+@ This is not a comment
+
+# Comment with spaces before #
+ # This comment has leading space
+
+# ========================================
+# INVALID ENVIRONMENT VARIABLES
+# ========================================
+
+# Variable without equals sign
+PATH /usr/local/bin
+
+# Variable with spaces around equals sign
+PATH = /usr/local/bin
+
+# Variable with invalid symbols
+PATH@=/usr/local/bin
+
+# Variable with empty name
+=/usr/local/bin
+
+# Variable with empty value
+PATH=
+
+# ========================================
+# INVALID COMPLEX CASES
+# ========================================
+
+# Combination of multiple errors
+60 25 32 13 8 nonexistent_user /nonexistent/script.sh
+
+# Invalid range with step
+0 5-1/2 * * * /usr/bin/script.sh
+
+# Invalid list with range
+0 1,5-3,7 * * * /usr/bin/script.sh
+
+# Invalid step with range
+0 1-5/10 * * * /usr/bin/script.sh
+
+# Invalid combination of all types
+60 25 32 13 8 nonexistent_user /nonexistent/script.sh # invalid comment
+
+# ========================================
+# INVALID ENTRIES WITH ESCAPING
+# ========================================
+
+# Incorrect escaping
+0 2 * * * echo "Hello \"World"
+
+# Incorrect quotes
+0 2 * * * echo 'Hello "World'
+
+# Incorrect symbols in command
+0 2 * * * /usr/bin/script.sh `rm -rf /`
+
+# ========================================
+# INVALID ENTRIES WITH VARIABLES
+# ========================================
+
+# Variable in wrong place
+0 2 * * * $PATH /usr/bin/script.sh
+
+# Incorrect variable
+0 2 * * * ${INVALID_VAR} /usr/bin/script.sh
+
+# Variable with incorrect syntax
+0 2 * * * $ /usr/bin/script.sh
+
+# ========================================
+# INVALID ENTRIES WITH CONDITIONAL LOGIC
+# ========================================
+
+# Incorrect conditional logic
+0 2 * * * /usr/bin/script1.sh && && /usr/bin/script2.sh
+
+# Incorrect operators
+0 2 * * * /usr/bin/script1.sh ||| /usr/bin/script2.sh
+
+# Incorrect grouping
+0 2 * * * (/usr/bin/script1.sh && /usr/bin/script2.sh
+
+# ========================================
+# INVALID ENTRIES WITH REDIRECTION
+# ========================================
+
+# Incorrect redirection
+0 2 * * * /usr/bin/script.sh > > /dev/null
+
+# Incorrect file descriptor
+0 2 * * * /usr/bin/script.sh >&3
+
+# Incorrect redirection syntax
+0 2 * * * /usr/bin/script.sh >> >> /dev/null
+
+# ========================================
+# INVALID ENTRIES WITH SUBSTITUTION
+# ========================================
+
+# Incorrect command substitution
+0 2 * * * echo $(date)
+
+# Incorrect process substitution
+0 2 * * * echo `date`
+
+# Incorrect arithmetic substitution
+0 2 * * * echo $((1 + 1))
+
+# ========================================
+# INVALID ENTRIES WITH FUNCTIONS
+# ========================================
+
+# Incorrect function definition
+0 2 * * * function test() { echo "test"; }
+
+# Incorrect function call
+0 2 * * * test()
+
+# Incorrect anonymous function
+0 2 * * * () { echo "test"; }
+
+# ========================================
+# INVALID ENTRIES WITH LOOPS
+# ========================================
+
+# Incorrect for loop
+0 2 * * * for i in 1 2 3; do echo $i; done
+
+# Incorrect while loop
+0 2 * * * while true; do echo "loop"; done
+
+# Incorrect until loop
+0 2 * * * until false; do echo "loop"; done
+
+# ========================================
+# INVALID ENTRIES WITH CONDITIONS
+# ========================================
+
+# Incorrect if condition
+0 2 * * * if [ -f file ]; then echo "exists"; fi
+
+# Incorrect case condition
+0 2 * * * case $var in 1) echo "one";; esac
+
+# Incorrect select condition
+0 2 * * * select i in 1 2 3; do echo $i; done
+
+# ========================================
+# INVALID ENTRIES WITH ARITHMETIC OPERATIONS
+# ========================================
+
+# Incorrect arithmetic
+0 2 * * * echo $((1 / 0))
+
+# Incorrect expression
+0 2 * * * echo $((1 + ))
+
+# Incorrect substitution
+0 2 * * * echo $((1 + 1))
+
+# ========================================
+# INVALID ENTRIES WITH REGULAR EXPRESSIONS
+# ========================================
+
+# Incorrect regular expression
+0 2 * * * echo "test" | grep "test["
+
+# Incorrect substitution
+0 2 * * * echo "test" | sed 's/test//'
+
+# Incorrect replacement
+0 2 * * * echo "test" | tr 'a-z' 'A-Z'
+
+# ========================================
+# INVALID ENTRIES WITH NETWORK OPERATIONS
+# ========================================
+
+# Incorrect URL
+0 2 * * * curl http://invalid-url
+
+# Incorrect port
+0 2 * * * nc localhost 99999
+
+# Incorrect protocol
+0 2 * * * wget invalid://example.com
+
+# ========================================
+# INVALID ENTRIES WITH DATABASES
+# ========================================
+
+# Incorrect SQL query
+0 2 * * * mysql -e "SELECT * FROM table;"
+
+# Incorrect connection
+0 2 * * * psql -h invalid-host -d invalid-db
+
+# Incorrect command
+0 2 * * * sqlite3 invalid.db "SELECT * FROM table;"
+
+# ========================================
+# INVALID ENTRIES WITH FILE OPERATIONS
+# ========================================
+
+# Incorrect path
+0 2 * * * cat /nonexistent/file
+
+# Incorrect permissions
+0 2 * * * chmod 999 /etc/passwd
+
+# Incorrect operation
+0 2 * * * rm -rf /
+
+# ========================================
+# INVALID ENTRIES WITH PROCESSES
+# ========================================
+
+# Incorrect signal
+0 2 * * * kill -999 1
+
+# Incorrect process
+0 2 * * * killall nonexistent_process
+
+# Incorrect prioritization
+0 2 * * * nice -999 /usr/bin/script.sh
+
+# ========================================
+# INVALID ENTRIES WITH SYSTEM CALLS
+# ========================================
+
+# Incorrect system call
+0 2 * * * /usr/bin/script.sh --invalid-option
+
+# Incorrect parameter
+0 2 * * * /usr/bin/script.sh -x
+
+# Incorrect flag
+0 2 * * * /usr/bin/script.sh --help=invalid
+
+# ========================================
+# INVALID ENTRIES WITH LOGGING
+# ========================================
+
+# Incorrect logging level
+0 2 * * * logger -p invalid.facility "message"
+
+# Incorrect tag
+0 2 * * * logger -t "" "message"
+
+# Incorrect message
+0 2 * * * logger ""
+
+# ========================================
+# INVALID ENTRIES WITH DATA TRANSFER
+# ========================================
+
+# Incorrect pipe
+0 2 * * * echo "test" | invalid_command
+
+# Incorrect substitution
+0 2 * * * echo "test" | grep "test" | invalid_command
+
+# Incorrect grouping
+0 2 * * * (echo "test" | grep "test") | invalid_command
+
+# ========================================
+# INVALID ENTRIES WITH SYNTAX ERRORS
+# ========================================
+
+# Incorrect structure
+0 2 * * * /usr/bin/script.sh {
+
+# Incorrect closing
+0 2 * * * /usr/bin/script.sh }
+
+# Incorrect grouping
+0 2 * * * /usr/bin/script.sh (echo "test"
+
+# Incorrect substitution
+0 2 * * * /usr/bin/script.sh `echo "test"
+
+# Incorrect arithmetic
+0 2 * * * /usr/bin/script.sh $((1 + 1
+
+# Incorrect variable
+0 2 * * * /usr/bin/script.sh ${VAR
+
+# Incorrect command substitution
+0 2 * * * /usr/bin/script.sh $(echo "test"
+
+# Incorrect process substitution
+0 2 * * * /usr/bin/script.sh `echo "test"
+
+# Incorrect arithmetic substitution
+0 2 * * * /usr/bin/script.sh $((1 + 1))
+
+# Incorrect substitution переменной
+0 2 * * * /usr/bin/script.sh ${VAR}
+
+# Incorrect command substitution
+0 2 * * * /usr/bin/script.sh $(echo "test")
+
+# Incorrect process substitution
+0 2 * * * /usr/bin/script.sh `echo "test"`

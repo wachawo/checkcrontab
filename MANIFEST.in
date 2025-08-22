@@ -1,0 +1,6 @@
+include README.md
+include LICENSE
+include MANIFEST.in
+include pyproject.toml
+include requirements.txt
+recursive-include checkcrontab *.py

@@ -1,0 +1,940 @@
+# ========================================
+# VALID CRON EXAMPLES
+# ========================================
+
+# ========================================
+# STANDARD VALID ENTRIES (User Crontab)
+# ========================================
+
+# Every minute
+* * * * * /usr/bin/script.sh
+
+# Every hour at minute 0
+0 * * * * /usr/bin/hourly_task.sh
+
+# Every day at 2:30 AM
+30 2 * * * /usr/bin/daily_backup.sh
+
+# Every Sunday at 3:00
+0 3 * * 0 /usr/bin/weekly_cleanup.sh
+
+# Every month on the 1st at 4:00
+0 4 1 * * /usr/bin/monthly_report.sh
+
+# Every year on January 1st at 5:00
+0 5 1 1 * /usr/bin/yearly_maintenance.sh
+
+# ========================================
+# STANDARD VALID ENTRIES (System Crontab)
+# ========================================
+
+# System task - every hour
+0 * * * * root /usr/bin/system_hourly.sh
+
+# System task - every day
+0 2 * * * root /usr/bin/system_daily.sh
+
+# System task - every Sunday
+0 3 * * 0 root /usr/bin/system_weekly.sh
+
+# System task - every month
+0 4 1 * * root /usr/bin/system_monthly.sh
+
+# ========================================
+# SPECIAL KEYWORDS
+# ========================================
+
+# At system reboot (user crontab)
+@reboot /usr/bin/startup_script.sh
+
+# Yearly (equivalent to 0 0 1 1 *)
+@yearly /usr/bin/yearly_task.sh
+
+# Monthly (equivalent to 0 0 1 * *)
+@monthly /usr/bin/monthly_task.sh
+
+# Weekly (equivalent to 0 0 * * 0)
+@weekly /usr/bin/weekly_task.sh
+
+# Daily (equivalent to 0 0 * * *)
+@daily /usr/bin/daily_task.sh
+
+# Hourly (equivalent to 0 * * * *)
+@hourly /usr/bin/hourly_task.sh
+
+# Special keywords in system crontab
+@reboot root /usr/bin/system_startup.sh
+@yearly root /usr/bin/system_yearly.sh
+@monthly root /usr/bin/system_monthly.sh
+@weekly root /usr/bin/system_weekly.sh
+@daily root /usr/bin/system_daily.sh
+@hourly root /usr/bin/system_hourly.sh
+
+# ========================================
+# EDGE CASES - VALID
+# ========================================
+
+# Minimum values
+0 0 1 1 0 /usr/bin/minimal_values.sh
+0 0 1 1 1 /usr/bin/minimal_values.sh
+
+# Maximum values
+59 23 31 12 7 /usr/bin/maximal_values.sh
+59 23 31 12 6 /usr/bin/maximal_values.sh
+
+# Zero values (for weekday 0 = Sunday)
+0 0 1 1 0 /usr/bin/sunday_task.sh
+
+# Seventh value (for weekday 7 = Sunday, same as 0)
+0 0 1 1 7 /usr/bin/sunday_task_alt.sh
+
+# ========================================
+# COMPLEX VALID ENTRIES
+# ========================================
+
+# Ranges
+0 9-17 * * 1-5 /usr/bin/work_hours.sh
+30 8-18 * * 1-5 /usr/bin/business_hours.sh
+
+# Lists of values
+0 2,14,22 * * * /usr/bin/multiple_times.sh
+15 0 1,15 * * /usr/bin/monthly_tasks.sh
+0 12 * * 1,3,5 /usr/bin/odd_weekdays.sh
+
+# Steps (step values)
+*/15 * * * * /usr/bin/every_15_minutes.sh
+0 */2 * * * /usr/bin/every_2_hours.sh
+0 0 */3 * * /usr/bin/every_3_days.sh
+0 0 1 */2 * /usr/bin/every_2_months.sh
+0 0 * * */2 /usr/bin/every_2_weekdays.sh
+
+# Combinations of ranges and steps (moved to edge_cases_cron_examples.txt)
+# 0 9-17/2 * * 1-5 /usr/bin/work_hours_every_2.sh
+# 30 8-18/3 * * 1-5 /usr/bin/business_hours_every_3.sh
+
+# Combinations of lists and ranges
+0 2,8,14-18 * * 1-5 /usr/bin/complex_schedule.sh
+15 0 1,15,28-31 * * /usr/bin/complex_monthly.sh
+
+# ========================================
+# VALID ENTRIES WITH COMMANDS
+# ========================================
+
+# Simple commands
+* * * * * echo "Hello World"
+
+# Commands with arguments
+0 2 * * * /usr/bin/backup.sh --full --compress
+
+# Commands with environment variables
+0 3 * * * PATH=/usr/local/bin:/usr/bin /usr/bin/script.sh
+
+# Commands with redirection
+0 4 * * * /usr/bin/log_cleanup.sh > /var/log/cleanup.log 2>&1
+
+# Commands with conditional logic
+0 5 * * * /usr/bin/check_disk.sh && /usr/bin/cleanup.sh
+
+# Commands with quotes
+0 6 * * * /usr/bin/script.sh "argument with spaces"
+
+# ========================================
+# VALID ENTRIES WITH COMMENTS
+# ========================================
+
+# Comment before entry
+# Daily backup
+0 2 * * * /usr/bin/backup.sh
+
+# Comment after entry
+0 3 * * * /usr/bin/cleanup.sh # Clean temporary files
+
+# Multi-line comments
+# ========================================
+# System maintenance
+# Runs every Sunday at 4:00
+# ========================================
+0 4 * * 0 /usr/bin/system_maintenance.sh
+
+# ========================================
+# VALID ENTRIES WITH ENVIRONMENT VARIABLES
+# ========================================
+
+# Environment variables (ignored by validator)
+PATH=/usr/local/bin:/usr/bin:/bin
+HOME=/home/user
+SHELL=/bin/bash
+
+# Entry after variables
+0 7 * * * /usr/bin/script.sh
+
+# ========================================
+# EMPTY LINES AND COMMENTS (VALID)
+# ========================================
+
+# Empty line (ignored)
+
+# Comment only
+# This is a comment without cron entry
+
+# Comment with @ symbol (not a special keyword)
+# @author: John Doe
+# @version: 1.0
+
+# ========================================
+# VALID ENTRIES WITH DIFFERENT TIME FORMATS
+# ========================================
+
+# Exact values
+0 0 1 1 1 /usr/bin/exact_time.sh
+30 15 15 6 3 /usr/bin/specific_time.sh
+
+# All asterisks (every minute)
+* * * * * /usr/bin/every_minute.sh
+
+# Mixed formats
+0 */6 * * * /usr/bin/every_6_hours.sh
+30 2 * * 0,6 /usr/bin/weekends.sh
+0 0 1,15 * * /usr/bin/monthly_tasks.sh
+
+# ========================================
+# VALID ENTRIES WITH LONG COMMANDS
+# ========================================
+
+# Long command with multiple arguments
+0 8 * * 1-5 /usr/bin/complex_script.sh --config=/etc/app/config.conf --log-level=INFO --output=/var/log/app.log --backup --compress --encrypt
+
+# Command with conditional logic
+0 9 * * * /usr/bin/check_service.sh && /usr/bin/restart_service.sh || /usr/bin/send_alert.sh
+
+# Command with redirection and logging
+0 10 * * * /usr/bin/database_backup.sh > /var/log/backup.log 2>&1 && /usr/bin/cleanup_old_backups.sh
+
+# ========================================
+# VALID ENTRIES WITH DIFFERENT USERS (System Crontab)
+# ========================================
+
+# Different users
+0 1 * * * root /usr/bin/root_task.sh
+0 2 * * * www-data /usr/bin/web_task.sh
+0 3 * * * postgres /usr/bin/db_task.sh
+0 4 * * * backup /usr/bin/backup_task.sh
+0 5 * * * monitoring /usr/bin/monitoring_task.sh
+
+# Users with hyphens and underscores
+0 6 * * * web-server /usr/bin/web_maintenance.sh
+0 7 * * * db_admin /usr/bin/database_maintenance.sh
+
+
+# ========================================
+# EDGE CASES CRON EXAMPLES
+# ========================================
+# These examples demonstrate cases that may be
+# valid or invalid depending on context
+# and cron system implementation
+# ========================================
+
+# ========================================
+# EDGE TIME VALUES
+# ========================================
+
+# Minimum valid values
+0 0 1 1 0 /usr/bin/minimal_test.sh
+0 0 1 1 1 /usr/bin/minimal_test.sh
+
+# Maximum valid values
+59 23 31 12 7 /usr/bin/maximal_test.sh
+59 23 31 12 6 /usr/bin/maximal_test.sh
+
+# Boundary values for each field
+59 23 31 12 7 /usr/bin/boundary_test.sh
+0 0 1 1 0 /usr/bin/boundary_test.sh
+
+# ========================================
+# SPECIAL DAY OF WEEK CASES
+# ========================================
+
+# Sunday as 0 (standard)
+0 0 * * 0 /usr/bin/sunday_as_zero.sh
+
+# Sunday as 7 (alternative standard)
+0 0 * * 7 /usr/bin/sunday_as_seven.sh
+
+# Comparison of 0 and 7 for Sunday
+0 0 * * 0 /usr/bin/sunday_test.sh
+0 0 * * 7 /usr/bin/sunday_test.sh
+
+# ========================================
+# EDGE CASE RANGES
+# ========================================
+
+# Range with identical values (may be valid)
+0 5-5 * * * /usr/bin/same_range.sh
+
+# Range with minimum values
+0 0-0 * * * /usr/bin/min_range.sh
+
+# Range with maximum values
+0 23-23 * * * /usr/bin/max_range.sh
+
+# Range across boundary (e.g., 23-1)
+0 23-1 * * * /usr/bin/cross_boundary_range.sh
+
+# ========================================
+# EDGE CASE STEPS (STEP VALUES)
+# ========================================
+
+# Step equal to maximum value
+*/59 * * * * /usr/bin/step_max_minutes.sh
+* */23 * * * /usr/bin/step_max_hours.sh
+* * */31 * * /usr/bin/step_max_days.sh
+* * * */12 * /usr/bin/step_max_months.sh
+* * * * */7 /usr/bin/step_max_weekdays.sh
+
+# Step equal to 1 (every value)
+*/1 * * * * /usr/bin/step_one_minutes.sh
+* */1 * * * /usr/bin/step_one_hours.sh
+* * */1 * * /usr/bin/step_one_days.sh
+* * * */1 * /usr/bin/step_one_months.sh
+* * * * */1 /usr/bin/step_one_weekdays.sh
+
+# ========================================
+# EDGE CASE COMBINATIONS
+# ========================================
+
+# Combination of range and step at boundary
+0 0-23/23 * * * /usr/bin/range_step_boundary.sh
+
+# Combination of list and range at boundary
+0 0,23,0-23 * * * /usr/bin/list_range_boundary.sh
+
+# Combination of all types at boundary
+0 0,23,0-23/23 * * * /usr/bin/all_types_boundary.sh
+
+# ========================================
+# EDGE CASES - DAY OF MONTH
+# ========================================
+
+# 31-е day в months with 30 days
+0 0 31 4 * /usr/bin/april_31.sh
+0 0 31 6 * /usr/bin/june_31.sh
+0 0 31 9 * /usr/bin/september_31.sh
+0 0 31 11 * /usr/bin/november_31.sh
+
+# 30-е February
+0 0 30 2 * /usr/bin/february_30.sh
+
+# 29-е February в невисокосный год
+0 0 29 2 * /usr/bin/february_29_non_leap.sh
+
+# 29-е February в високосный год
+0 0 29 2 * /usr/bin/february_29_leap.sh
+
+# ========================================
+# EDGE CASES - MONTHS
+# ========================================
+
+# February with 30 days
+0 0 30 2 * /usr/bin/february_30_days.sh
+
+# Months with different number of days
+0 0 31 1 * /usr/bin/january_31.sh
+0 0 28 2 * /usr/bin/february_28.sh
+0 0 31 3 * /usr/bin/march_31.sh
+0 0 30 4 * /usr/bin/april_30.sh
+0 0 31 5 * /usr/bin/may_31.sh
+0 0 30 6 * /usr/bin/june_30.sh
+0 0 31 7 * /usr/bin/july_31.sh
+0 0 31 8 * /usr/bin/august_31.sh
+0 0 30 9 * /usr/bin/september_30.sh
+0 0 31 10 * /usr/bin/october_31.sh
+0 0 30 11 * /usr/bin/november_30.sh
+0 0 31 12 * /usr/bin/december_31.sh
+
+# ========================================
+# EDGE CASES - HOURS
+# ========================================
+
+# Crossing midnight
+0 23-1 * * * /usr/bin/midnight_cross.sh
+
+# 24-hour format at boundary
+0 0-23 * * * /usr/bin/full_day_range.sh
+
+# Midnight hours
+0 0 * * * /usr/bin/midnight.sh
+0 23 * * * /usr/bin/midnight_alt.sh
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ МИНУТ
+# ========================================
+
+# Переход через час
+59 23-0 * * * /usr/bin/hour_cross.sh
+
+# 60-минутный формат на границе
+0-59 * * * * /usr/bin/full_minute_range.sh
+
+# Граничные минуты
+59 * * * * /usr/bin/last_minute.sh
+0 * * * * /usr/bin/first_minute.sh
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ СПЕЦИАЛЬНЫХ КЛЮЧЕВЫХ СЛОВ
+# ========================================
+
+# Специальные ключевые слова with пробелами
+@reboot  /usr/bin/reboot_with_spaces.sh
+@yearly  /usr/bin/yearly_with_spaces.sh
+@monthly  /usr/bin/monthly_with_spaces.sh
+@weekly  /usr/bin/weekly_with_spaces.sh
+@daily  /usr/bin/daily_with_spaces.sh
+@hourly  /usr/bin/hourly_with_spaces.sh
+
+# Специальные ключевые слова with табуляцией
+@reboot	/usr/bin/reboot_with_tab.sh
+@yearly	/usr/bin/yearly_with_tab.sh
+
+# Специальные ключевые слова with множественными пробелами
+@reboot    /usr/bin/reboot_multiple_spaces.sh
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ КОММЕНТАРИЕВ
+# ========================================
+
+# Комментарий with пробелами перед
+# Комментарий with ведущим пробелом
+
+# Комментарий with табуляцией перед
+# # Комментарий with ведущей табуляцией
+
+# Комментарий with множественными пробелами перед
+# Комментарий with множественными пробелами
+
+# Комментарий with символами
+# @reboot - это не специальное ключевое слово в Comments
+
+# Комментарий with кавычками
+# "Это комментарий в кавычках"
+
+# Комментарий with экранированием
+# Это комментарий with \"экранированными\" кавычками
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ ПЕРЕМЕННЫХ ОКРУЖЕНИЯ
+# ========================================
+
+# Variable with пробелами вокруг знака равенства
+PATH = /usr/local/bin:/usr/bin
+
+# Variable with табуляцией
+PATH	=/usr/local/bin:/usr/bin
+
+# Variable with множественными пробелами
+PATH    =    /usr/local/bin:/usr/bin
+
+# Variable with пустым value
+EMPTY_VAR=
+
+# Variable with пробелами в значении
+PATH_WITH_SPACES=/usr/local/bin /usr/bin
+
+# Variable with кавычками
+QUOTED_VAR="value with spaces"
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ КОМАНД
+# ========================================
+
+# Command with пробелами в начале
+0 2 * * *  /usr/bin/script_with_leading_space.sh
+
+# Command with табуляцией в начале
+0 2 * * *	/usr/bin/script_with_leading_tab.sh
+
+# Command with множественными пробелами
+0 2 * * *    /usr/bin/script_with_multiple_spaces.sh
+
+# Command with пробелами в конце
+0 2 * * * /usr/bin/script_with_trailing_space.sh
+
+# Command with табуляцией в конце
+0 2 * * * /usr/bin/script_with_trailing_tab.sh
+
+# Command with пробелами вокруг
+0 2 * * *  /usr/bin/script_with_spaces_around.sh
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ ФОРМАТИРОВАНИЯ
+# ========================================
+
+# Запись with табуляцией вместо пробелов
+0	2	*	*	*	/usr/bin/tab_separated.sh
+
+# Запись with множественными пробелами
+0    2    *    *    *    /usr/bin/multiple_spaces.sh
+
+# Запись with смешанными разделителями
+0,2 * * * * /usr/bin/mixed_separators.sh
+
+# Запись with пробелами в значениях
+0 2 * * * /usr/bin/script.sh "argument with spaces"
+
+# Запись with экранированными символами
+0 2 * * * /usr/bin/script.sh argument_with_\"quotes\"
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ СИСТЕМНОГО CRONTAB
+# ========================================
+
+# user with пробелами (может быть валидным в некоторых системах)
+0 2 * * * "root user" /usr/bin/script.sh
+
+# user with дефисами
+0 2 * * * root-user /usr/bin/script.sh
+
+# user with подчеркиваниями
+0 2 * * * root_user /usr/bin/script.sh
+
+# user with numbers
+0 2 * * * user123 /usr/bin/script.sh
+
+# user with точками
+0 2 * * * user.name /usr/bin/script.sh
+
+# user with символами (может быть валидным в некоторых системах)
+0 2 * * * user@domain /usr/bin/script.sh
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ ПУСТЫХ СТРОК
+# ========================================
+
+# Empty line
+# (Empty line)
+
+# Строка только with пробелами
+# (строка with пробелами)
+
+# Строка только with табуляцией
+# (строка with табуляцией)
+
+# Строка только with символами новой строки
+# (строка with символами новой строки)
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ ДЛИННЫХ ЗАПИСЕЙ
+# ========================================
+
+# Очень длинная Command
+0 2 * * * /usr/bin/very_long_script.sh --option1=value1 --option2=value2 --option3=value3 --option4=value4 --option5=value5 --option6=value6 --option7=value7 --option8=value8 --option9=value9 --option10=value10
+
+# Command with множественными arguments
+0 2 * * * /usr/bin/script.sh arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 arg9 arg10 arg11 arg12 arg13 arg14 arg15 arg16 arg17 arg18 arg19 arg20
+
+# Command with очень длинными arguments
+0 2 * * * /usr/bin/script.sh "this is a very long argument that contains many words and should be properly handled by the cron parser even though it is quite lengthy and might cause issues with some implementations"
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ ЭКРАНИРОВАНИЯ
+# ========================================
+
+# Command with экранированными пробелами
+0 2 * * * /usr/bin/script.sh argument_with\ spaces
+
+# Command with экранированными кавычками
+0 2 * * * /usr/bin/script.sh argument_with_\"quotes\"
+
+# Command with экранированными символами
+0 2 * * * /usr/bin/script.sh argument_with_\\backslashes\\
+
+# Command with экранированными звездочками
+0 2 * * * /usr/bin/script.sh argument_with_\*asterisks\*
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ ПОДСТАНОВКИ
+# ========================================
+
+# Command with переменными окружения
+0 2 * * * /usr/bin/script.sh $PATH
+
+# Command with подстановкой команд
+0 2 * * * /usr/bin/script.sh $(date)
+
+# Command with подстановкой процессов
+0 2 * * * /usr/bin/script.sh `date`
+
+# Command with арифметической подстановкой
+0 2 * * * /usr/bin/script.sh $((1 + 1))
+
+# Command with подстановкой параметров
+0 2 * * * /usr/bin/script.sh ${VAR:-default}
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ УСЛОВНОЙ ЛОГИКИ
+# ========================================
+
+# Command with условной логикой
+0 2 * * * /usr/bin/check.sh && /usr/bin/success.sh || /usr/bin/failure.sh
+
+# Command with группировкой
+0 2 * * * (/usr/bin/script1.sh && /usr/bin/script2.sh) > /var/log/combined.log
+
+# Command with вложенными условиями
+0 2 * * * /usr/bin/check.sh && (/usr/bin/script1.sh || /usr/bin/script2.sh)
+
+# Command with множественными операторами
+0 2 * * * /usr/bin/script1.sh && /usr/bin/script2.sh && /usr/bin/script3.sh
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ ПЕРЕНАПРАВЛЕНИЯ
+# ========================================
+
+# Command with перенаправлением вывода
+0 2 * * * /usr/bin/script.sh > /var/log/output.log
+
+# Command with перенаправлением ошибок
+0 2 * * * /usr/bin/script.sh 2> /var/log/error.log
+
+# Command with перенаправлением ввода
+0 2 * * * /usr/bin/script.sh < /var/log/input.log
+
+# Command with перенаправлением ввода-вывода
+0 2 * * * /usr/bin/script.sh > /var/log/output.log 2>&1
+
+# Command with добавлением к файлу
+0 2 * * * /usr/bin/script.sh >> /var/log/append.log
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ КАНАЛОВ
+# ========================================
+
+# Command with каналом
+0 2 * * * /usr/bin/script.sh | /usr/bin/filter.sh
+
+# Command with множественными каналами
+0 2 * * * /usr/bin/script1.sh | /usr/bin/script2.sh | /usr/bin/script3.sh
+
+# Command with каналом и перенаправлением
+0 2 * * * /usr/bin/script.sh | /usr/bin/filter.sh > /var/log/filtered.log
+
+# Command with каналом и условной логикой
+0 2 * * * /usr/bin/script.sh | /usr/bin/filter.sh && /usr/bin/success.sh
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ ФУНКЦИЙ
+# ========================================
+
+# Command with определением функции
+0 2 * * * function test_func() { echo "test"; }; test_func
+
+# Command with анонимной function
+0 2 * * * () { echo "anonymous function"; }
+
+# Command with function и arguments
+0 2 * * * function test_func() { echo "$1"; }; test_func "argument"
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ ЦИКЛОВ
+# ========================================
+
+# Command with loop for
+0 2 * * * for i in 1 2 3; do echo $i; done
+
+# Command with loop while
+0 2 * * * while [ -f /tmp/flag ]; do sleep 1; done
+
+# Command with loop until
+0 2 * * * until [ -f /tmp/flag ]; do sleep 1; done
+
+# Command with loop и условной логикой
+0 2 * * * for i in 1 2 3; do echo $i && break; done
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ УСЛОВИЙ
+# ========================================
+
+# Command with condition if
+0 2 * * * if [ -f /tmp/file ]; then echo "exists"; else echo "not exists"; fi
+
+# Command with condition case
+0 2 * * * case $(date +%u) in 1) echo "Monday";; *) echo "Other day";; esac
+
+# Command with condition select
+0 2 * * * select i in 1 2 3; do echo $i; break; done
+
+# Command with вложенными условиями
+0 2 * * * if [ -f /tmp/file1 ]; then if [ -f /tmp/file2 ]; then echo "both exist"; fi; fi
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ МАТЕМАТИЧЕСКИХ ОПЕРАЦИЙ
+# ========================================
+
+# Command with арифметическими operations
+0 2 * * * echo $((1 + 2 * 3))
+
+# Command with арифметическими operations и переменными
+0 2 * * * x=5; y=3; echo $((x + y))
+
+# Command with арифметическими operations и условиями
+0 2 * * * if [ $((1 + 1)) -eq 2 ]; then echo "correct"; fi
+
+# Command with арифметическими operations и циклами
+0 2 * * * for i in $(seq 1 5); do echo $((i * 2)); done
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ РЕГУЛЯРНЫХ ВЫРАЖЕНИЙ
+# ========================================
+
+# Command with regular expressions
+0 2 * * * echo "test" | grep "t.*t"
+
+# Command with sed и regular expressions
+0 2 * * * echo "hello world" | sed 's/hello/bye/'
+
+# Command with awk и regular expressions
+0 2 * * * echo "test" | awk '/t.*t/ {print $0}'
+
+# Command with множественными regular expressions
+0 2 * * * echo "test123" | grep -E "[a-z]+[0-9]+"
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ СЕТЕВЫХ ОПЕРАЦИЙ
+# ========================================
+
+# Command with curl
+0 2 * * * curl -s http://example.com
+
+# Command with wget
+0 2 * * * wget -q -O /dev/null http://example.com
+
+# Command with nc (netcat)
+0 2 * * * echo "test" | nc localhost 8080
+
+# Command with ssh
+0 2 * * * ssh user@host "echo 'remote command'"
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ databases
+# ========================================
+
+# Command with mysql
+0 2 * * * mysql -u user -ppass -e "SELECT NOW();"
+
+# Command with psql
+0 2 * * * psql -U user -d database -c "SELECT NOW();"
+
+# Command with sqlite3
+0 2 * * * sqlite3 /path/to/db.db "SELECT datetime('now');"
+
+# Command with mongodb
+0 2 * * * mongo --eval "print(new Date())"
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ ФАЙЛОВЫХ ОПЕРАЦИЙ
+# ========================================
+
+# Command with проверкой файлов
+0 2 * * * [ -f /tmp/file ] && echo "exists" || echo "not exists"
+
+# Command with созданием файлов
+0 2 * * * touch /tmp/$(date +%Y%m%d).log
+
+# Command with удалением файлов
+0 2 * * * find /tmp -name "*.tmp" -mtime +7 -delete
+
+# Command with архивированием
+0 2 * * * tar -czf /backup/$(date +%Y%m%d).tar.gz /var/log/
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ ПРОЦЕССОВ
+# ========================================
+
+# Command with проверкой процессов
+0 2 * * * pgrep -f "script.sh" || /usr/bin/start_script.sh
+
+# Command with остановкой процессов
+0 2 * * * pkill -f "old_script.sh"
+
+# Command with перезапуском процессов
+0 2 * * * systemctl restart service
+
+# Command with мониторингом процессов
+0 2 * * * ps aux | grep -v grep | grep "script.sh" || echo "process not running"
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ СИСТЕМНЫХ ВЫЗОВОВ
+# ========================================
+
+# Command with системными вызовами
+0 2 * * * /usr/bin/script.sh --config=/etc/config.conf
+
+# Command with множественными опциями
+0 2 * * * /usr/bin/script.sh -v --debug --log-level=INFO
+
+# Command with длинными опциями
+0 2 * * * /usr/bin/script.sh --very-long-option-name=very-long-value
+
+# Command with короткими опциями
+0 2 * * * /usr/bin/script.sh -abc -d value
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ ЛОГИРОВАНИЯ
+# ========================================
+
+# Command with logger
+0 2 * * * logger -t "cron" -p local0.info "Scheduled task completed"
+
+# Command with syslog
+0 2 * * * echo "Scheduled task completed" | logger -t "cron"
+
+# Command with множественными уровнями логирования
+0 2 * * * logger -t "cron" -p local0.debug "Debug message" && logger -t "cron" -p local0.error "Error message"
+
+# Command with форматированным logging
+0 2 * * * logger -t "cron" -p local0.notice "Task $(date) completed with status $?"
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ ПЕРЕДАЧИ ДАННЫХ
+# ========================================
+
+# Command with передачей данных через каналы
+0 2 * * * /usr/bin/generate_data.sh | /usr/bin/process_data.sh | /usr/bin/store_data.sh
+
+# Command with передачей данных через файлы
+0 2 * * * /usr/bin/generate_data.sh > /tmp/data.txt && /usr/bin/process_data.sh < /tmp/data.txt
+
+# Command with передачей данных через переменные
+0 2 * * * data=$(/usr/bin/generate_data.sh) && echo "$data" | /usr/bin/process_data.sh
+
+# Command with передачей данных через аргументы
+0 2 * * * /usr/bin/process_data.sh "$(/usr/bin/generate_data.sh)"
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ ОШИБОК syntax errors
+# ========================================
+
+# Command with незакрытыми кавычками (может быть валидной в некоторых случаях)
+0 2 * * * /usr/bin/script.sh "unclosed quote
+
+# Command with незакрытыми скобками (может быть валидной в некоторых случаях)
+0 2 * * * /usr/bin/script.sh (unclosed parenthesis
+
+# Command with незакрытыми подстановками (может быть валидной в некоторых случаях)
+0 2 * * * /usr/bin/script.sh $(unclosed substitution
+
+# Command with незакрытыми арифметическими выражениями (может быть валидной в некоторых случаях)
+0 2 * * * /usr/bin/script.sh $((unclosed arithmetic
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ encodings
+# ========================================
+
+# Command with UTF-8 символами
+# 0 2 * * * /usr/bin/script.sh "тест with кириллицей"
+
+# Command with Unicode символами
+0 2 * * * /usr/bin/script.sh "test with unicode: rocket calendar clock"
+
+# Command with специальными символами
+0 2 * * * /usr/bin/script.sh "test with special chars: !@#$%^&*()"
+
+# Command with символами новой строки
+0 2 * * * /usr/bin/script.sh "test with newlines:
+line 2
+line 3"
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ performance
+# ========================================
+
+# Command with множественными processes
+0 2 * * * for i in {1..100}; do /usr/bin/script.sh $i & done; wait
+
+# Command with параллельным выполнением
+0 2 * * * parallel -j 4 /usr/bin/script.sh ::: {1..10}
+
+# Command with фоновым выполнением
+0 2 * * * /usr/bin/long_running_script.sh > /dev/null 2>&1 &
+
+# Command with приоритизацией
+0 2 * * * nice -n 19 /usr/bin/low_priority_script.sh
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ security
+# ========================================
+
+# Command with проверкой security
+0 2 * * * /usr/bin/security_check.sh && /usr/bin/secure_script.sh
+
+# Command with ограниченными правами
+0 2 * * * sudo -u limited_user /usr/bin/restricted_script.sh
+
+# Command with проверкой целостности
+0 2 * * * /usr/bin/integrity_check.sh || /usr/bin/alert.sh
+
+# Command with аудитом
+0 2 * * * /usr/bin/audit_script.sh | /usr/bin/log_audit.sh
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ monitoring
+# ========================================
+
+# Command with мониторингом ресурсов
+0 2 * * * /usr/bin/monitor_resources.sh | /usr/bin/alert_if_high.sh
+
+# Command with проверкой доступности
+0 2 * * * /usr/bin/check_availability.sh || /usr/bin/restart_service.sh
+
+# Command with метриками
+0 2 * * * /usr/bin/collect_metrics.sh | /usr/bin/store_metrics.sh
+
+# Command with алертами
+0 2 * * * /usr/bin/check_thresholds.sh && /usr/bin/send_alert.sh
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ backup
+# ========================================
+
+# Command with инкрементальным резервным копированием
+0 2 * * * /usr/bin/backup_incremental.sh --since=yesterday
+
+# Command with дифференциальным резервным копированием
+0 2 * * * /usr/bin/backup_differential.sh --since=last_full
+
+# Command with полным резервным копированием
+0 2 * * * /usr/bin/backup_full.sh --compress --encrypt
+
+# Command with проверкой резервных копий
+0 2 * * * /usr/bin/verify_backup.sh || /usr/bin/alert_backup_failed.sh
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ cleanup
+# ========================================
+
+# Command with очисткой логов
+0 2 * * * find /var/log -name "*.log" -mtime +30 -delete
+
+# Command with очисткой временных файлов
+0 2 * * * find /tmp -name "*.tmp" -mtime +1 -delete
+
+# Command with очисткой кэша
+0 2 * * * /usr/bin/clear_cache.sh --all --force
+
+# Command with очисткой старых резервных копий
+0 2 * * * find /backup -name "*.tar.gz" -mtime +90 -delete
+
+# ========================================
+# ПОГРАНИЧНЫЕ СЛУЧАИ synchronization
+# ========================================
+
+# Command with синхронизацией файлов
+0 2 * * * rsync -avz /source/ /destination/
+
+# Command with синхронизацией времени
+0 2 * * * ntpdate -s time.nist.gov
+
+# Command with синхронизацией данных
+0 2 * * * /usr/bin/sync_data.sh --source=db1 --destination=db2
+
+# Command with проверкой synchronization
+0 2 * * * /usr/bin/check_sync.sh || /usr/bin/fix_sync.sh
