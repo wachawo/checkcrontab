@@ -16,6 +16,14 @@ import traceback
 from typing import List, Optional
 from collections import namedtuple
 
+# Import version from the package
+try:
+    from . import __version__, __description__
+except ImportError:
+    # Fallback for direct script execution
+    __version__ = "0.0.0"
+    __description__ = "A Python script for checking syntax of crontab files"
+
 # Named tuples for representing crontab entries
 system_cron_entry = namedtuple('system_cron_entry', [
     'minute', 'hour', 'day', 'month', 'weekday',
@@ -573,7 +581,7 @@ def check_user_crontab(username: str, errors: List[str]) -> int:
 def main():
     """Main function"""
     parser = argparse.ArgumentParser(
-        description="Check syntax and correctness of crontab files",
+        description=__description__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Usage examples:
@@ -584,15 +592,16 @@ Usage examples:
         """,
     )
 
-    parser.add_argument('user_inputs', nargs='*', help='Paths to crontab files or usernames')
-    parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output')
+    parser.add_argument('arguments', nargs='*', help='Paths to crontab files or usernames')
+    parser.add_argument('-d', '--debug', action='store_true', help='Debug output')
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
 
     args = parser.parse_args()
 
     # Set logging level
-    if args.verbose:
+    if args.debug:
         logging.getLogger().setLevel(logging.DEBUG)
-        logger.debug("Verbose mode enabled")
+        logger.debug("Debug mode enabled")
 
     # Prepare list of files to check
     file_list = []
@@ -611,7 +620,7 @@ Usage examples:
         logger.info("Skipping checks on non-Linux system")
 
     # Add user inputs
-    file_list.extend(args.user_inputs)
+    file_list.extend(args.arguments)
 
     # Remove duplicates
     file_list = list(set(file_list))

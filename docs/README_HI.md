@@ -1,48 +1,48 @@
-### Checkcrontab - Crontab फ़ाइल वैलिडेटर
+## Checkcrontab - check syntax in crontab files
 
 [![CI](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml/badge.svg)](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 [![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 
-Linux/Unix सिस्टम में crontab फ़ाइलों की सिंटैक्स और सटीकता की जांच के लिए Python स्क्रिप्ट।
+A Python script for checking syntax of crontab files in Linux.
 
-**अनुवाद:** [English](https://github.com/wachawo/checkcrontab/blob/main/README.md) | [Русский](https://github.com/wachawo/checkcrontab/blob/main/docs/README_RU.md) | [Español](https://github.com/wachawo/checkcrontab/blob/main/docs/README_ES.md) | [Português](https://github.com/wachawo/checkcrontab/blob/main/docs/README_PT.md) | [Français](https://github.com/wachawo/checkcrontab/blob/main/docs/README_FR.md) | [Deutsch](https://github.com/wachawo/checkcrontab/blob/main/docs/README_DE.md) | [Italiano](https://github.com/wachawo/checkcrontab/blob/main/docs/README_IT.md) | [中文](https://github.com/wachawo/checkcrontab/blob/main/docs/README_ZH.md) | [日本語](https://github.com/wachawo/checkcrontab/blob/main/docs/README_JA.md)
+[English](../README.md) | [Español](README_ES.md) | [Português](README_PT.md) | [Français](README_FR.md) | [Deutsch](README_DE.md) | [Italiano](README_IT.md) | [Русский](README_RU.md) | [中文](README_ZH.md) | [日本語](README_JA.md) | [हिन्दी](README_HI.md)
 
-#### आवश्यकताएं
+### Requirements
 
-- **Python 3.8 या उससे ऊपर**
-- systemctl के साथ Linux/Unix सिस्टम
-- `/etc/crontab` तक पढ़ने का अधिकार
+- **Python 3.7 or higher**
+- Linux/Unix system with systemctl
+- Read access to `/etc/crontab`
 
-#### इंस्टॉलेशन
+### Installation
 
 ```bash
 pip3 install checkcrontab
 ```
 
-या GitHub से:
+Or from GitHub:
 
 ```bash
 pip3 install git+https://github.com/wachawo/checkcrontab.git
 ```
 
-#### उपयोग
+### Usage
 
 ```bash
-# सिस्टम crontab की जांच करें
+# Check system crontab
 checkcrontab
 
-# crontab फ़ाइल की जांच करें
+# Check crontab file
 checkcrontab /etc/crontab
 
-# उपयोगकर्ता crontab की जांच करें
+# Check user crontab
 checkcrontab username
 
-# सहायता दिखाएं
+# Show help
 checkcrontab --help
 ```
 
-#### विकास उपकरण
+### Development Tools
 
 ```bash
 pip3 install pre-commit flake8 pytest
@@ -51,6 +51,6 @@ pre-commit run --all-files
 pre-commit autoupdate
 ```
 
-#### लाइसेंस
+### License
 
 MIT License
