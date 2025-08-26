@@ -151,8 +151,8 @@ def test_check_special_user_crontab():
     # Invalid special keywords
     assert len(checker.check_special("@invalid", ["@invalid", "/usr/bin/backup.sh"], is_system_crontab=False)) == 1
 
-    # Too many fields for user crontab
-    assert len(checker.check_special("@reboot", ["@reboot", "root", "/usr/bin/backup.sh"], is_system_crontab=False)) == 1
+    # Too many fields for user crontab (now warning instead of error)
+    assert checker.check_special("@reboot", ["@reboot", "root", "/usr/bin/backup.sh"], is_system_crontab=False) == []
 
 
 def test_check_special_system_crontab():

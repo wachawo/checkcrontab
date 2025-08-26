@@ -5,6 +5,7 @@ Module for checking crontab syntax and system requirements
 
 import logging
 import os
+import platform
 import re
 import subprocess
 import traceback
@@ -152,22 +153,25 @@ def check_user_exists(username: str) -> bool:
         result = subprocess.run(["id", username], capture_output=True, text=True, timeout=5, check=False)
         return result.returncode == 0
     except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
-        # If id command fails, assume user exists to avoid false positives
+        return True
+    except Exception as e:
+        logging.warning(f"{type(e).__name__} {str(e)}\n{traceback.format_exc()}")
         return True
 
 
 def check_user(user: str) -> List[str]:
     """Check user field validation"""
-    errors = []
-
+    errors: List[str] = []
+    if platform.system().lower() == "windows":
+        return errors
     if not user or user.startswith("#"):
         errors.append("invalid user field")
     elif '"' in user or "@" in user or " " in user:
         errors.append(f"invalid user field format: '{user}'")
-    # Check if user exists in the system
+    # Check if user exists in the system (only on Linux/macOS)
     elif not check_user_exists(user):
-        errors.append(f"user does not exist: '{user}'")
-
+        # On Linux/macOS, log warning instead of error
+        logger.warning(f"user does not exist: '{user}'")
     return errors
 
 
@@ -212,10 +216,12 @@ def check_special(keyword: str, parts: List[str], is_system_crontab: bool = Fals
     else:
         # User crontab format: @keyword command
         # Check if first argument is an existing user (which would be wrong for user crontab)
-        if len(parts) > 1:
+        # Only check on Linux/macOS where user existence can be verified
+        if len(parts) > 1 and platform.system().lower() != "windows":
             first_arg = parts[1]
             if check_user_exists(first_arg):
-                errors.append(f"user field not allowed in user crontab special keyword: '{first_arg}'")
+                # On Linux/macOS, log warning instead of error
+                logger.warning(f"user field not allowed in user crontab special keyword: '{first_arg}'")
 
         # All parts after keyword are considered part of the command
         command = " ".join(parts[1:])
