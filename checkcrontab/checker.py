@@ -43,7 +43,6 @@ def get_line_content(file_path: str, line_number: int) -> str:
 
 def clean_line_for_output(line: str) -> str:
     """Clean line for output: replace tabs and multiple spaces with single spaces"""
-    import re
     # Replace tabs with spaces
     line = line.replace('\t', ' ')
     # Replace multiple spaces with single space
