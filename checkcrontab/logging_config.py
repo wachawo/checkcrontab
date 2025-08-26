@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class ColoredFormatter(logging.Formatter):
     """Enhanced colored formatter with Windows support"""
 
-    def __init__(self, fmt: Optional[str] = None, use_colors: bool = True, **kwargs) -> None:
+    def __init__(self, fmt: Optional[str] = None, use_colors: bool = True, **kwargs) -> None:  # type: ignore[no-untyped-def]
         super().__init__(fmt, **kwargs)
         self._use_color = use_colors and self._get_color_compatibility()
         self.COLORS = {

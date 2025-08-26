@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Tests for checkcrontab package
 """
+from unittest.mock import MagicMock, patch
+
 from checkcrontab import checker
 from checkcrontab import main as check_crontab
 from checkcrontab.logging_config import setup_logging
-from unittest.mock import patch, MagicMock
-
 
 # ============================================================================
 # User crontab line checking tests

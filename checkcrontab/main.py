@@ -158,7 +158,7 @@ Usage examples:
         logger.info("Skipping checks on non-Linux system")
 
     # Remove duplicates while preserving order
-    seen: set = set()
+    seen = set()
     unique_file_list: List[str] = []
     for file_path in file_list:
         if file_path not in seen:
