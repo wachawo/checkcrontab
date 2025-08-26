@@ -60,9 +60,9 @@ def check_dangerous_commands(command: str) -> List[str]:
     return errors
 
 
-def validate_time_field_logic(value: str, field_name: str, min_val: int, max_val: int) -> list[str]:
+def validate_time_field_logic(value: str, field_name: str, min_val: int, max_val: int) -> List[str]:
     """Validate time field logic (ranges, lists, steps)"""
-    errors: list[str] = []
+    errors: List[str] = []
 
     # Skip special values
     if value in ['*']:
@@ -94,9 +94,9 @@ def validate_time_field_logic(value: str, field_name: str, min_val: int, max_val
     return errors
 
 
-def validate_single_time_value(value: str, field_name: str, min_val: int, max_val: int) -> list[str]:
+def validate_single_time_value(value: str, field_name: str, min_val: int, max_val: int) -> List[str]:
     """Validate single time value, range, or step"""
-    errors: list[str] = []
+    errors: List[str] = []
 
     # Handle steps (*/n)
     if value.startswith('*/'):
@@ -175,12 +175,12 @@ def check_system_crontab_permissions() -> None:
         logger.debug("System crontab file does not exist")
 
 
-def check_line_user(line: str, line_number: int, file_name: str, file_path: Optional[str] = None) -> list[str]:
+def check_line_user(line: str, line_number: int, file_name: str, file_path: Optional[str] = None) -> List[str]:
     """
     Check a single user crontab line
     Returns: list of error messages
     """
-    errors: list[str] = []
+    errors: List[str] = []
 
     # Skip environment variables
     if '=' in line and not any(char.isdigit() or char in '*@' for char in line.split('=')[0]):
@@ -254,12 +254,12 @@ def check_line_user(line: str, line_number: int, file_name: str, file_path: Opti
     return formatted_errors
 
 
-def check_line_system(line: str, line_number: int, file_name: str, file_path: Optional[str] = None) -> list[str]:
+def check_line_system(line: str, line_number: int, file_name: str, file_path: Optional[str] = None) -> List[str]:
     """
     Check a single system crontab line
     Returns: list of error messages
     """
-    errors: list[str] = []
+    errors: List[str] = []
 
     # Skip environment variables
     if '=' in line and not any(char.isdigit() or char in '*@' for char in line.split('=')[0]):
@@ -363,12 +363,12 @@ def check_line_system(line: str, line_number: int, file_name: str, file_path: Op
     return formatted_errors
 
 
-def check_line_special(line: str, line_number: int, file_name: str, file_path: Optional[str] = None) -> list[str]:
+def check_line_special(line: str, line_number: int, file_name: str, file_path: Optional[str] = None) -> List[str]:
     """
     Check a special keyword line (@reboot, @yearly, etc.)
     Returns: list of error messages
     """
-    errors: list[str] = []
+    errors: List[str] = []
 
     parts = line.split()
     if len(parts) < 2:

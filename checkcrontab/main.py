@@ -10,6 +10,7 @@ import platform
 import re
 import sys
 import traceback
+from typing import List, Tuple
 
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -33,7 +34,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-def check_file(file_path: str, is_system_crontab: bool = False) -> tuple[int, list[str]]:
+def check_file(file_path: str, is_system_crontab: bool = False) -> Tuple[int, List[str]]:
     """
     Check crontab file line by line
     Returns: (checked_lines_count, errors_list)
@@ -144,7 +145,7 @@ Usage examples:
     logging_config.setup_logging(args.debug, args.no_colors)
 
     # Prepare list of files to check
-    file_list: list[str] = []
+    file_list: List[str] = []
     file_list.extend(args.arguments)
 
     if platform.system().lower() == "linux":
@@ -157,8 +158,8 @@ Usage examples:
         logger.info("Skipping checks on non-Linux system")
 
     # Remove duplicates while preserving order
-    seen: set[str] = set()
-    unique_file_list: list[str] = []
+    seen: set = set()
+    unique_file_list: List[str] = []
     for file_path in file_list:
         if file_path not in seen:
             seen.add(file_path)
@@ -167,7 +168,7 @@ Usage examples:
 
     total_checked_lines = 0
     total_errors = 0
-    all_errors: list[str] = []
+    all_errors: List[str] = []
 
     for file_path in file_list:
         is_system_crontab = (file_path == "/etc/crontab" or
