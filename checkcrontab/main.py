@@ -9,22 +9,26 @@ import os
 import platform
 import re
 import sys
+import traceback
 
-# Import version from the package
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 try:
-    from . import __version__, __description__
+    # Use as python3 -m checkcrontab
+    from . import __version__ as VERSION
+    from . import __description__ as DESCRIPTION
+    from . import logging_config
+    from . import checker
 except ImportError:
-    # Fallback for direct script execution
-    __version__ = "0.0.0"
-    __description__ = "A Python script for checking syntax of crontab files"
-
-# Import modules
-from .logger import setup_logging
-from .checker import (
-    check_cron_daemon, check_system_crontab_permissions,
-    check_line_user, check_line_system,
-    get_line_content, clean_line_for_output
-)
+    # Use as python3 checkcrontab/main.py
+    try:
+        from checkcrontab import __version__ as VERSION
+        from checkcrontab import __description__ as DESCRIPTION
+        import logging_config
+        import checker
+    except Exception as e:
+        logging.warning(f"{type(e).__name__} {str(e)}\n{traceback.format_exc()}")
+        sys.exit(2)
 
 logger = logging.getLogger(__name__)
 
@@ -80,8 +84,8 @@ def check_file(file_path: str, is_system_crontab: bool = False) -> tuple[int, li
             # Note: line already has newline stripped, so we check if original line ended with newline
             original_line = lines[line_number - 1] if line_number <= len(lines) else line
             if not original_line.endswith('\n'):
-                line_content = get_line_content(file_path, line_number) if file_path else line
-                line_content = clean_line_for_output(line_content)
+                line_content = checker.get_line_content(file_path, line_number) if file_path else line
+                line_content = checker.clean_line_for_output(line_content)
                 errors.append(f"{os.path.basename(file_path)} (Line {line_number}): {line_content} # Comment line should end with newline")
             continue
 
@@ -90,13 +94,13 @@ def check_file(file_path: str, is_system_crontab: bool = False) -> tuple[int, li
 
         # Determine line type and check accordingly
         if is_system_crontab:
-            line_errors = check_line_system(line, line_number, os.path.basename(file_path), file_path)
+            line_errors = checker.check_line_system(line, line_number, os.path.basename(file_path), file_path)
         else:
-            line_errors = check_line_user(line, line_number, os.path.basename(file_path), file_path)
+            line_errors = checker.check_line_user(line, line_number, os.path.basename(file_path), file_path)
 
         # Output result immediately in order of processing
-        line_content = get_line_content(file_path, line_number) if file_path else line
-        line_content = clean_line_for_output(line_content)
+        line_content = checker.get_line_content(file_path, line_number) if file_path else line
+        line_content = checker.clean_line_for_output(line_content)
 
         if line_errors:
             # Output all errors for this line
@@ -119,7 +123,7 @@ def check_file(file_path: str, is_system_crontab: bool = False) -> tuple[int, li
 def main():
     """Main function"""
     parser = argparse.ArgumentParser(
-        description=__description__,
+        description=DESCRIPTION,
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Usage examples:
@@ -131,14 +135,14 @@ Usage examples:
     )
 
     parser.add_argument('arguments', nargs='*', help='Paths to crontab files or usernames')
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + VERSION)
     parser.add_argument('-d', '--debug', action='store_true', help='Debug output')
     parser.add_argument('-n', '--no-colors', action='store_true', help='Disable colored output')
 
     args = parser.parse_args()
 
     # Setup logging
-    setup_logging(args.debug, args.no_colors)
+    logging_config.setup_logging(args.debug, args.no_colors)
 
     # Prepare list of files to check
     file_list = []
@@ -148,9 +152,9 @@ Usage examples:
 
     if platform.system().lower() == "linux":
         # Check cron daemon
-        check_cron_daemon()
+        checker.check_cron_daemon()
         # Check system crontab permissions
-        check_system_crontab_permissions()
+        checker.check_system_crontab_permissions()
 
         # Add /etc/crontab first for Linux systems if not in GitHub
         is_github = os.getenv('GITHUB_ACTIONS') == 'true'

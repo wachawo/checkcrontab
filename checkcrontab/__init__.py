@@ -6,21 +6,20 @@ Checkcrontab package
 
 __version__ = "0.1.0"
 __description__ = "A Python script for checking syntax of crontab files"
+__author__ = 'Aleksandr Pimenov'
+__email__ = 'wachawo@gmail.com'
 
 # Import main functions
-from .main import main
-from .checker import (
-    check_cron_daemon, check_system_crontab_permissions,
-    check_line_user, check_line_system, check_line_special
-)
-from .logger import setup_logging
+from . import main
+from . import checker
+from . import logging_config
 
 __all__ = [
-    'main',
-    'check_cron_daemon',
-    'check_system_crontab_permissions',
-    'check_line_user',
-    'check_line_system',
-    'check_line_special',
-    'setup_logging'
+    "main",
+    "checker",
+    "logging_config",
+    "__version__",
+    "__description__",
+    "__author__",
+    "__email__",
 ]
