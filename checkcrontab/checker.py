@@ -18,6 +18,7 @@ USER_CRONTAB_MIN_FIELDS = 6
 SYSTEM_CRONTAB_MIN_FIELDS = 7
 SYSTEM_CRONTAB_MAX_FIELDS = 7
 SPECIAL_KEYWORD_MIN_FIELDS = 2
+USER_SPECIAL_MIN_FIELDS = 2
 SYSTEM_SPECIAL_MIN_FIELDS = 3
 WINDOWS_MAJOR_VERSION = 10
 WINDOWS_BUILD_VERSION = 10586
@@ -431,7 +432,7 @@ def check_line_special(line: str, line_number: int, file_name: str, file_path: O
             errors.append("missing command")
 
         # Check if there are too many fields (user field in user crontab)
-        if len(parts) > 2:
+        if len(parts) > SPECIAL_KEYWORD_MIN_FIELDS:
             errors.append("too many fields for user crontab special keyword (should be: @keyword command)")
 
     # Return errors with line number and content
