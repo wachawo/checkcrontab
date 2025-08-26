@@ -10,8 +10,13 @@ repos:
     rev: v0.12.10
     hooks:
     - id: ruff
-      args: ["--fix"]
+      args: ["--fix", "--line-length=180", "--select=E,F,I,UP,B,SIM,C4,PL", "--ignore=E501"]
+      exclude: ^examples/
+      files: \.py$
     - id: ruff-format
+      args: ["--line-length=180"]
+      exclude: ^examples/
+      files: \.py$
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.17.1
@@ -32,5 +37,7 @@ repos:
     rev: v6.0.0
     hooks:
     - id: end-of-file-fixer
+      exclude: ^examples/
     - id: trailing-whitespace
+      exclude: ^examples/
     - id: check-yaml

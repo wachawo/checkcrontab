@@ -81,22 +81,13 @@ def check_file(file_path: str, is_system_crontab: bool = False) -> Tuple[int, Li
         if not stripped_line:
             continue
         if stripped_line.startswith("#"):
-            # Check if comment line ends with newline (RFC compliance)
-            original_line = lines[line_number - 1] if line_number <= len(lines) else line
-            if not original_line.endswith("\n"):
-                line_content = checker.get_line_content(file_path, line_number) if file_path else line
-                line_content = checker.clean_line_for_output(line_content)
-                errors.append(f"{os.path.basename(file_path)} (Line {line_number}): {line_content} # Comment line should end with newline")
             continue
 
         # This is a line to check
         checked_lines += 1
 
-        # Determine line type and check accordingly
-        if is_system_crontab:
-            line_errors = checker.check_line_system(line, line_number, os.path.basename(file_path), file_path)
-        else:
-            line_errors = checker.check_line_user(line, line_number, os.path.basename(file_path), file_path)
+        # Check line using unified function with system crontab flag
+        line_errors = checker.check_line(line, line_number, os.path.basename(file_path), file_path, is_system_crontab=is_system_crontab)
 
         # Output result immediately in order of processing
         line_content = checker.get_line_content(file_path, line_number) if file_path else line
@@ -149,8 +140,8 @@ Usage examples:
     file_list.extend(args.arguments)
 
     if platform.system().lower() == "linux":
-        checker.check_cron_daemon()
-        checker.check_system_crontab_permissions()
+        checker.check_daemon()
+        checker.check_permissions()
         is_github = os.getenv("GITHUB_ACTIONS") == "true"
         if not is_github and "/etc/crontab" not in file_list:
             file_list.insert(0, "/etc/crontab")
@@ -171,7 +162,7 @@ Usage examples:
     all_errors: List[str] = []
 
     for file_path in file_list:
-        is_system_crontab = file_path == "/etc/crontab" or "system" in os.path.basename(file_path)
+        is_system_crontab = file_path == "/etc/crontab" or file_path.startswith("/etc/cron.d") or "system" in os.path.basename(file_path)
         looks_like_file = "/" in file_path or "." in file_path
         if looks_like_file:
             if os.path.exists(file_path):
