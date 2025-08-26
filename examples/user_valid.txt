@@ -19,6 +19,7 @@
 
 # Valid special keyword
 @reboot /usr/bin/script.sh
+@reboot /usr/bin/script.sh arg1 arg2
 @yearly /usr/bin/script.sh
 @monthly /usr/bin/script.sh
 @weekly /usr/bin/script.sh

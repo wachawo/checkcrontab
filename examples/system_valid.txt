@@ -20,6 +20,7 @@
 
 # Valid special keyword with user and command
 @reboot root /usr/bin/script.sh
+@reboot root /usr/bin/script.sh arg1 arg2
 
 # ========================================
 # VALID REGULAR CRONTAB LINES

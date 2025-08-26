@@ -116,8 +116,7 @@ def test_check_user():
     """Test user field validation"""
     # Valid users
     assert checker.check_user("root") == []
-    assert checker.check_user("user1") == []
-    assert checker.check_user("test_user") == []
+    assert checker.check_user("daemon") == []
 
     # Invalid users
     assert len(checker.check_user("")) == 1
@@ -159,8 +158,8 @@ def test_check_special_user_crontab():
 def test_check_special_system_crontab():
     """Test special keyword validation for system crontab"""
     # Valid special keywords
-    assert checker.check_special("@reboot", ["@reboot", "root", "/usr/bin/backup.sh"], is_system_crontab=True) == []
-    assert checker.check_special("@daily", ["@daily", "user1", "echo hello"], is_system_crontab=True) == []
+    assert checker.check_special("@reboot", ["@reboot", "daemon", "/usr/bin/backup.sh"], is_system_crontab=True) == []
+    assert checker.check_special("@daily", ["@daily", "root", "echo hello"], is_system_crontab=True) == []
 
     # Invalid special keywords
     assert len(checker.check_special("@invalid", ["@invalid", "root", "/usr/bin/backup.sh"], is_system_crontab=True)) == 1

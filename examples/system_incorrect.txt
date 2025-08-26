@@ -182,5 +182,6 @@ abc * * * * root /usr/bin/script.sh
 
 # Incorrect special keyword usage
 @reboot /usr/bin/script.sh
+@reboot /usr/bin/script.sh arg1 arg2
 
 # File should end with newline

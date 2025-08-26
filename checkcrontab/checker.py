@@ -144,6 +144,16 @@ def check_day_of_week(weekday: str) -> List[str]:
     return errors
 
 
+def check_user_exists(username: str) -> bool:
+    """Check if user exists in the system"""
+    try:
+        result = subprocess.run(["id", username], capture_output=True, text=True, timeout=5, check=False)
+        return result.returncode == 0
+    except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
+        # If id command fails, assume user exists to avoid false positives
+        return True
+
+
 def check_user(user: str) -> List[str]:
     """Check user field validation"""
     errors = []
@@ -152,6 +162,9 @@ def check_user(user: str) -> List[str]:
         errors.append("invalid user field")
     elif '"' in user or "@" in user or " " in user:
         errors.append(f"invalid user field format: '{user}'")
+    # Check if user exists in the system
+    elif not check_user_exists(user):
+        errors.append(f"user does not exist: '{user}'")
 
     return errors
 
@@ -196,15 +209,18 @@ def check_special(keyword: str, parts: List[str], is_system_crontab: bool = Fals
             errors.extend(command_errors)
     else:
         # User crontab format: @keyword command
+        # Check if first argument is an existing user (which would be wrong for user crontab)
+        if len(parts) > 1:
+            first_arg = parts[1]
+            if check_user_exists(first_arg):
+                errors.append(f"user field not allowed in user crontab special keyword: '{first_arg}'")
+
+        # All parts after keyword are considered part of the command
         command = " ".join(parts[1:])
 
         # Validate command
         command_errors = check_command(command)
         errors.extend(command_errors)
-
-        # Check if there are too many fields (user field in user crontab)
-        if len(parts) > SPECIAL_KEYWORD_MIN_FIELDS:
-            errors.append("too many fields for user crontab special keyword (should be: @keyword command)")
 
     return errors
 
