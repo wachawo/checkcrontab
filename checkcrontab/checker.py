@@ -1,15 +1,25 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Module for checking crontab syntax and system requirements
 """
+import logging
 import os
 import re
 import subprocess
-import logging
-from typing import Optional, List
+from typing import List, Optional
 
 logger = logging.getLogger(__name__)
+
+# Constants for validation
+RANGE_PARTS_COUNT = 2
+SYSTEM_CRONTAB_PERMISSIONS = 0o644
+USER_CRONTAB_MIN_FIELDS = 6
+SYSTEM_CRONTAB_MIN_FIELDS = 7
+SYSTEM_CRONTAB_MAX_FIELDS = 7
+SPECIAL_KEYWORD_MIN_FIELDS = 2
+SYSTEM_SPECIAL_MIN_FIELDS = 3
+WINDOWS_MAJOR_VERSION = 10
+WINDOWS_BUILD_VERSION = 10586
 
 # Regex patterns for time fields
 MINUTE_PATTERN = r'^(\*|([0-5]?[0-9])(-([0-5]?[0-9]))?(/([0-9]+))?(,([0-5]?[0-9])(-([0-5]?[0-9]))?(/([0-9]+))?)*|\*/([0-9]+))$'
@@ -22,7 +32,7 @@ WEEKDAY_PATTERN = r'^(\*|([0-7])(-([0-7]))?(/([0-7]))?(,([0-7])(-([0-7]))?)*|\*/
 def get_line_content(file_path: str, line_number: int) -> str:
     """Get line content from file"""
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, encoding='utf-8') as f:
             lines = f.readlines()
             if 1 <= line_number <= len(lines):
                 return lines[line_number - 1].rstrip('\n')
@@ -33,7 +43,6 @@ def get_line_content(file_path: str, line_number: int) -> str:
 
 def clean_line_for_output(line: str) -> str:
     """Clean line for output: replace tabs and multiple spaces with single spaces"""
-    import re
     # Replace tabs with spaces
     line = line.replace('\t', ' ')
     # Replace multiple spaces with single space
@@ -73,18 +82,18 @@ def validate_time_field_logic(value: str, field_name: str, min_val: int, max_val
         parts = value.split(',')
         seen_values = set()
         for part in parts:
-            part = part.strip()
-            if not part:
+            part_stripped = part.strip()
+            if not part_stripped:
                 errors.append(f"empty value in {field_name} list: '{value}'")
                 continue
 
             # Check for duplicates
-            if part in seen_values:
-                errors.append(f"duplicate value '{part}' in {field_name} list: '{value}'")
-            seen_values.add(part)
+            if part_stripped in seen_values:
+                errors.append(f"duplicate value '{part_stripped}' in {field_name} list: '{value}'")
+            seen_values.add(part_stripped)
 
             # Validate individual part
-            part_errors = validate_single_time_value(part, field_name, min_val, max_val)
+            part_errors = validate_single_time_value(part_stripped, field_name, min_val, max_val)
             errors.extend(part_errors)
     else:
         # Validate single value or range or step
@@ -116,7 +125,7 @@ def validate_single_time_value(value: str, field_name: str, min_val: int, max_va
     # Handle ranges (n-m)
     if '-' in value:
         range_parts = value.split('-')
-        if len(range_parts) == 2:
+        if len(range_parts) == RANGE_PARTS_COUNT:
             start_str, end_str = range_parts
             if start_str.isdigit() and end_str.isdigit():
                 start_val = int(start_str)
@@ -145,7 +154,7 @@ def check_cron_daemon() -> None:
     """Check if cron daemon is running"""
     try:
         result = subprocess.run(['systemctl', 'is-active', 'cron'],
-                                capture_output=True, text=True, timeout=5)
+                                capture_output=True, text=True, timeout=5, check=False)
         if result.returncode != 0 or result.stdout.strip() != 'active':
             logger.warning("Cron daemon is not running")
         else:
@@ -162,7 +171,7 @@ def check_system_crontab_permissions() -> None:
         stat_info = os.stat(crontab_file)
         mode = stat_info.st_mode & 0o777
 
-        if mode != 0o644:
+        if mode != SYSTEM_CRONTAB_PERMISSIONS:
             logger.warning(f"System crontab has incorrect permissions: {oct(mode)} (should be 644)")
         else:
             logger.debug(f"System crontab permissions check: {oct(mode)} (correct)")
@@ -192,8 +201,8 @@ def check_line_user(line: str, line_number: int, file_name: str, file_path: Opti
 
     # Parse regular crontab line
     parts = line.split()
-    if len(parts) < 6:
-        errors.append(f"insufficient fields (minimum 6 required for user crontab, found {len(parts)})")
+    if len(parts) < USER_CRONTAB_MIN_FIELDS:
+        errors.append(f"insufficient fields (minimum {USER_CRONTAB_MIN_FIELDS} required for user crontab, found {len(parts)})")
         # Return errors with line number and content
         formatted_errors = []
         line_content = get_line_content(file_path, line_number) if file_path else line
@@ -271,8 +280,8 @@ def check_line_system(line: str, line_number: int, file_name: str, file_path: Op
 
     # Parse regular crontab line
     parts = line.split()
-    if len(parts) < 7:
-        errors.append(f"insufficient fields (minimum 7 required for system crontab, found {len(parts)})")
+    if len(parts) < SYSTEM_CRONTAB_MIN_FIELDS:
+        errors.append(f"insufficient fields (minimum {SYSTEM_CRONTAB_MIN_FIELDS} required for system crontab, found {len(parts)})")
         # Return errors with line number and content
         formatted_errors = []
         line_content = get_line_content(file_path, line_number) if file_path else line
@@ -291,8 +300,8 @@ def check_line_system(line: str, line_number: int, file_name: str, file_path: Op
         minute = minute[1:]  # Remove the dash prefix
 
     # Check for too many fields (more than 7) - but only if command doesn't contain spaces
-    if len(parts) > 7 and ' ' not in command:
-        errors.append(f"too many fields (maximum 7 required for system crontab, found {len(parts)})")
+    if len(parts) > SYSTEM_CRONTAB_MAX_FIELDS and ' ' not in command:
+        errors.append(f"too many fields (maximum {SYSTEM_CRONTAB_MAX_FIELDS} required for system crontab, found {len(parts)})")
         # Return errors with line number and content
         formatted_errors = []
         line_content = get_line_content(file_path, line_number) if file_path else line
@@ -302,7 +311,7 @@ def check_line_system(line: str, line_number: int, file_name: str, file_path: Op
         return formatted_errors
 
     # Check for extra fields in command (like "extra" in "root extra /usr/bin/backup.sh")
-    if len(parts) > 7:
+    if len(parts) > SYSTEM_CRONTAB_MAX_FIELDS:
         extra_field = parts[6]
         if extra_field == 'extra':
             errors.append(f"extra field '{extra_field}' in command")
@@ -376,8 +385,8 @@ def check_line_special(line: str, line_number: int, file_name: str, file_path: O
     errors: List[str] = []
 
     parts = line.split()
-    if len(parts) < 2:
-        errors.append("insufficient fields for special keyword (minimum 2 required)")
+    if len(parts) < SPECIAL_KEYWORD_MIN_FIELDS:
+        errors.append(f"insufficient fields for special keyword (minimum {SPECIAL_KEYWORD_MIN_FIELDS} required)")
         # Return errors with line number and content
         formatted_errors = []
         line_content = get_line_content(file_path, line_number) if file_path else line
@@ -391,7 +400,7 @@ def check_line_special(line: str, line_number: int, file_name: str, file_path: O
     # For system crontab, special keywords need user and command
     # For user crontab, special keywords only need command
     # We need to determine if this is system crontab by checking if we have 3 parts
-    if len(parts) >= 3:
+    if len(parts) >= SYSTEM_SPECIAL_MIN_FIELDS:
         # This looks like system crontab format: @keyword user command
         user = parts[1]
         command = ' '.join(parts[2:])

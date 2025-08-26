@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# mypy: ignore-errors
 """
 Tests for checkcrontab package
 """
+from unittest.mock import MagicMock, patch
+
 from checkcrontab import checker
 from checkcrontab import main as check_crontab
 from checkcrontab.logging_config import setup_logging
-from unittest.mock import patch, MagicMock
-
 
 # ============================================================================
 # User crontab line checking tests
@@ -199,8 +199,12 @@ def test_system_valid_file_returns_zero(mock_permissions, mock_daemon, mock_exis
     """Test that system_valid.txt returns exit code 0 (no errors)"""
     # Mock platform to return Linux
     mock_platform.return_value = "Linux"
-    # Mock GitHub Actions environment
-    mock_env.return_value = None
+    # Mock environment variables
+    def mock_env_side_effect(key, default=None):
+        if key == 'GITHUB_ACTIONS':
+            return 'true'
+        return default
+    mock_env.side_effect = mock_env_side_effect
     # Mock file existence
     mock_exists.return_value = True
     # Mock system checks to not raise exceptions
@@ -222,8 +226,12 @@ def test_system_incorrect_file_returns_non_zero(mock_permissions, mock_daemon, m
     """Test that system_incorrect.txt returns exit code 1 (has errors)"""
     # Mock platform to return Linux
     mock_platform.return_value = "Linux"
-    # Mock GitHub Actions environment
-    mock_env.return_value = None
+    # Mock environment variables
+    def mock_env_side_effect(key, default=None):
+        if key == 'GITHUB_ACTIONS':
+            return 'true'
+        return default
+    mock_env.side_effect = mock_env_side_effect
     # Mock file existence
     mock_exists.return_value = True
     # Mock system checks to not raise exceptions
@@ -245,8 +253,12 @@ def test_user_incorrect_file_returns_non_zero(mock_permissions, mock_daemon, moc
     """Test that user_incorrect.txt returns exit code 1 (has errors)"""
     # Mock platform to return Linux
     mock_platform.return_value = "Linux"
-    # Mock GitHub Actions environment
-    mock_env.return_value = None
+    # Mock environment variables
+    def mock_env_side_effect(key, default=None):
+        if key == 'GITHUB_ACTIONS':
+            return 'true'
+        return default
+    mock_env.side_effect = mock_env_side_effect
     # Mock file existence
     mock_exists.return_value = True
     # Mock system checks to not raise exceptions
@@ -268,8 +280,12 @@ def test_user_valid_file_returns_zero(mock_permissions, mock_daemon, mock_exists
     """Test that user_valid.txt returns exit code 0 (no errors)"""
     # Mock platform to return Linux
     mock_platform.return_value = "Linux"
-    # Mock GitHub Actions environment
-    mock_env.return_value = None
+    # Mock environment variables
+    def mock_env_side_effect(key, default=None):
+        if key == 'GITHUB_ACTIONS':
+            return 'true'
+        return default
+    mock_env.side_effect = mock_env_side_effect
     # Mock file existence
     mock_exists.return_value = True
     # Mock system checks to not raise exceptions

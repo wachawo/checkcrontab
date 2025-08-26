@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Main entry point for checkcrontab
 """
@@ -12,21 +11,21 @@ import sys
 import traceback
 from typing import List, Tuple
 
-
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 try:
     # Use as python3 -m checkcrontab
-    from . import __version__ as VERSION
     from . import __description__ as DESCRIPTION
-    from . import logging_config
-    from . import checker
+    from . import __version__ as VERSION
+    from . import checker, logging_config
 except ImportError:
     # Use as python3 checkcrontab/main.py
     try:
-        from checkcrontab import __version__ as VERSION
         from checkcrontab import __description__ as DESCRIPTION
-        from checkcrontab import logging_config  # type: ignore[import-not-found,no-redef]
-        from checkcrontab import checker  # type: ignore[import-not-found,no-redef]
+        from checkcrontab import __version__ as VERSION
+        from checkcrontab import (
+            checker,  # type: ignore[import-not-found,no-redef]
+            logging_config,  # type: ignore[import-not-found,no-redef]
+        )
     except Exception as e:
         logging.warning(f"{type(e).__name__} {str(e)}\n{traceback.format_exc()}")
         sys.exit(2)
@@ -43,7 +42,7 @@ def check_file(file_path: str, is_system_crontab: bool = False) -> Tuple[int, Li
     checked_lines = 0
 
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path) as f:
             lines = f.readlines()
     except Exception as e:
         logger.error(f"Error reading file {file_path}: {e}")
@@ -158,7 +157,7 @@ Usage examples:
         logger.info("Skipping checks on non-Linux system")
 
     # Remove duplicates while preserving order
-    seen: set = set()
+    seen = set()
     unique_file_list: List[str] = []
     for file_path in file_list:
         if file_path not in seen:

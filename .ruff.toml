@@ -1,0 +1,8 @@
+line-length = 180
+lint.select = ["E","F","I","UP","B","SIM","C4","PL"]
+lint.ignore = ["E501"]
+fix = true
+
+[lint.pylint]
+max-branches = 30
+max-statements = 80
