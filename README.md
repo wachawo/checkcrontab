@@ -67,6 +67,8 @@ checkcrontab --version
 - ✅ **Special keyword support** (@reboot, @daily, etc.)
 - ✅ **Multi-line command support**
 
+📖 **[Detailed Features Documentation](docs/FEATURES.md)** - Comprehensive guide to supported syntax, valid values, examples, and error messages.
+
 ### Development Tools
 
 ```bash

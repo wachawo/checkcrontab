@@ -4,15 +4,15 @@
 [![PyPI](https://img.shields.io/pypi/v/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 [![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 
-A Python script for checking syntax of crontab files in Linux.
+A Python script for checking syntax of crontab files. Cross-platform support for Linux, macOS, and Windows.
 
 [English](../README.md) | [Español](README_ES.md) | [Português](README_PT.md) | [Français](README_FR.md) | [Deutsch](README_DE.md) | [Italiano](README_IT.md) | [Русский](README_RU.md) | [中文](README_ZH.md) | [日本語](README_JA.md) | [हिन्दी](README_HI.md)
 
 ### Requirements
 
 - **Python 3.7 or higher**
-- Linux/Unix system with systemctl
-- Read access to `/etc/crontab`
+- Linux/Unix system with systemctl (for daemon checks)
+- Read access to `/etc/crontab` (on Linux)
 
 ### Installation
 
