@@ -7,7 +7,7 @@ import os
 import re
 import subprocess
 import logging
-from typing import Optional
+from typing import Optional, List
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ def clean_line_for_output(line: str) -> str:
     return line
 
 
-def check_dangerous_commands(command: str) -> list[str]:
+def check_dangerous_commands(command: str) -> List[str]:
     """Check for dangerous commands in crontab"""
     errors = []
     dangerous_patterns = [

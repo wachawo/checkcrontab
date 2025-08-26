@@ -3,9 +3,10 @@
 """
 Tests for checkcrontab package
 """
-from unittest.mock import patch, MagicMock
-from checkcrontab import checker, main
+from checkcrontab import checker
+from checkcrontab import main as check_crontab
 from checkcrontab.logging_config import setup_logging
+from unittest.mock import patch, MagicMock
 
 
 # ============================================================================
@@ -208,7 +209,7 @@ def test_system_valid_file_returns_zero(mock_permissions, mock_daemon, mock_exis
 
     # Test with system_valid.txt
     with patch('sys.argv', ['checkcrontab', 'examples/system_valid.txt']):
-        exit_code = main.main()
+        exit_code = check_crontab.main()
         assert exit_code == 0
 
 
@@ -231,7 +232,7 @@ def test_system_incorrect_file_returns_non_zero(mock_permissions, mock_daemon, m
 
     # Test with system_incorrect.txt
     with patch('sys.argv', ['checkcrontab', 'examples/system_incorrect.txt']):
-        exit_code = main.main()
+        exit_code = check_crontab.main()
         assert exit_code == 1
 
 
@@ -254,7 +255,7 @@ def test_user_incorrect_file_returns_non_zero(mock_permissions, mock_daemon, moc
 
     # Test with user_incorrect.txt
     with patch('sys.argv', ['checkcrontab', 'examples/user_incorrect.txt']):
-        exit_code = main.main()
+        exit_code = check_crontab.main()
         assert exit_code == 1
 
 
@@ -277,5 +278,5 @@ def test_user_valid_file_returns_zero(mock_permissions, mock_daemon, mock_exists
 
     # Test with user_valid.txt
     with patch('sys.argv', ['checkcrontab', 'examples/user_valid.txt']):
-        exit_code = main.main()
+        exit_code = check_crontab.main()
         assert exit_code == 0
