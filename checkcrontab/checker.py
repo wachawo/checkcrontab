@@ -285,6 +285,11 @@ def check_line_system(line: str, line_number: int, file_name: str, file_path: Op
     minute, hour, day, month, weekday, user = parts[:6]
     command = ' '.join(parts[6:])
 
+    # Handle dash prefix in minutes field (suppress syslog logging)
+    # This is only allowed in system crontab
+    if minute.startswith('-'):
+        minute = minute[1:]  # Remove the dash prefix
+
     # Check for too many fields (more than 7) - but only if command doesn't contain spaces
     if len(parts) > 7 and ' ' not in command:
         errors.append(f"too many fields (maximum 7 required for system crontab, found {len(parts)})")

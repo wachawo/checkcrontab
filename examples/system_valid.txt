@@ -32,6 +32,13 @@
 0 2 * * * root /usr/bin/script.sh && echo "backup completed"
 
 # ========================================
+# VALID SYSTEM CRONTAB WITH '-' PREFIX (SUPPRESS SYSLOG)
+# ========================================
+
+# Valid system crontab with '-' prefix to suppress syslog logging
+-0 2 * * * root - /usr/bin/backup.sh
+
+# ========================================
 # VALID ENVIRONMENT VARIABLES
 # ========================================
 

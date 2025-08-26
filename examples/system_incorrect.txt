@@ -49,17 +49,16 @@
 * * * * 8 root /usr/bin/script.sh
 
 # Negative values
--1 * * * * root /usr/bin/script.sh
 * -1 * * * root /usr/bin/script.sh
-* * -1 * * root /usr/bin/script.sh
-* * * -1 * root /usr/bin/script.sh
+* * -1 * * * root /usr/bin/script.sh
+* * * -1 * * root /usr/bin/script.sh
 * * * * -1 root /usr/bin/script.sh
 
 # Non-numeric values
 abc * * * * root /usr/bin/script.sh
 * abc * * * root /usr/bin/script.sh
-* * abc * * root /usr/bin/script.sh
-* * * abc * root /usr/bin/script.sh
+* * abc * * * root /usr/bin/script.sh
+* * * abc * * root /usr/bin/script.sh
 * * * * abc root /usr/bin/script.sh
 
 # ========================================

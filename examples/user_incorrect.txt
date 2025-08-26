@@ -229,4 +229,7 @@ PATH /usr/local/bin
 # To shoot oneself in the foot 
 0 2 * * * root /usr/bin/script.sh; rm -rf /
 
+# '-' prefix to suppress syslog logging
+-0 2 * * * /usr/bin/backup.sh
+
 # File should end with newline
