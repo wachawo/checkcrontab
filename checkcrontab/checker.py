@@ -6,6 +6,7 @@ import logging
 import os
 import re
 import subprocess
+import traceback
 from typing import List, Optional
 
 logger = logging.getLogger(__name__)
@@ -37,7 +38,8 @@ def get_line_content(file_path: str, line_number: int) -> str:
             if 1 <= line_number <= len(lines):
                 return lines[line_number - 1].rstrip('\n')
         return ""
-    except Exception:
+    except Exception as e:
+        logging.warning(f"{type(e).__name__} {str(e)}\n{traceback.format_exc()}")
         return ""
 
 
@@ -397,41 +399,40 @@ def check_line_special(line: str, line_number: int, file_name: str, file_path: O
 
     keyword = parts[0]
 
-    # For system crontab, special keywords need user and command
-    # For user crontab, special keywords only need command
-    # We need to determine if this is system crontab by checking if we have 3 parts
-    if len(parts) >= SYSTEM_SPECIAL_MIN_FIELDS:
-        # This looks like system crontab format: @keyword user command
-        user = parts[1]
-        command = ' '.join(parts[2:])
+    # Determine if this is system crontab based on file path
+    is_system_crontab = file_path and (file_path == "/etc/crontab" or file_path.startswith("/etc/cron.d/"))
 
-        # Validate special keyword
-        valid_keywords = ['@reboot', '@yearly', '@annually', '@monthly', '@weekly', '@daily', '@midnight', '@hourly']
-        if keyword not in valid_keywords:
-            errors.append(f"invalid special keyword: '{keyword}'")
+    # Validate special keyword
+    valid_keywords = ['@reboot', '@yearly', '@annually', '@monthly', '@weekly', '@daily', '@midnight', '@hourly']
+    if keyword not in valid_keywords:
+        errors.append(f"invalid special keyword: '{keyword}'")
 
-        # Validate user field for system crontab
-        if not user or user.startswith('#'):
-            errors.append("invalid user field")
+    if is_system_crontab:
+        # System crontab format: @keyword user command
+        if len(parts) < SYSTEM_SPECIAL_MIN_FIELDS:
+            errors.append(f"insufficient fields for system crontab special keyword (minimum {SYSTEM_SPECIAL_MIN_FIELDS} required)")
+        else:
+            user = parts[1]
+            command = ' '.join(parts[2:])
 
-        if not command:
-            errors.append("missing command")
+            # Validate user field for system crontab
+            if not user or user.startswith('#'):
+                errors.append("invalid user field")
+            elif '"' in user or '@' in user or ' ' in user:
+                errors.append(f"invalid user field format: '{user}'")
+
+            if not command:
+                errors.append("missing command")
     else:
-        # This looks like user crontab format: @keyword command
+        # User crontab format: @keyword command
         command = ' '.join(parts[1:])
 
-        # Validate special keyword
-        valid_keywords = ['@reboot', '@yearly', '@annually', '@monthly', '@weekly', '@daily', '@midnight', '@hourly']
-        if keyword not in valid_keywords:
-            errors.append(f"invalid special keyword: '{keyword}'")
-
         if not command:
             errors.append("missing command")
 
-        # For system crontab files, even @keyword command format needs user field
-        # We can detect this by checking if the file name contains "system"
-        if file_path and "system" in os.path.basename(file_path):
-            errors.append("missing user field for system crontab")
+        # Check if there are too many fields (user field in user crontab)
+        if len(parts) > 2:
+            errors.append("too many fields for user crontab special keyword (should be: @keyword command)")
 
     # Return errors with line number and content
     formatted_errors = []

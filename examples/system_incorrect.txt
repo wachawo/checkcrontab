@@ -180,4 +180,7 @@ abc * * * * root /usr/bin/script.sh
 # Invalid format with missing fields
 0 2 * * root /usr/bin/backup.sh
 
+# Incorrect special keyword usage
+@reboot /usr/bin/script.sh
+
 # File should end with newline

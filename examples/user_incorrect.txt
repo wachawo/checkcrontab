@@ -232,4 +232,7 @@ PATH /usr/local/bin
 # '-' prefix to suppress syslog logging
 -0 2 * * * /usr/bin/backup.sh
 
+# Incorrect special keyword usage
+@reboot root /usr/bin/script.sh
+
 # File should end with newline

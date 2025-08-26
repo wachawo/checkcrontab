@@ -10,8 +10,20 @@ from checkcrontab import main as check_crontab
 from checkcrontab.logging_config import setup_logging
 
 # ============================================================================
+# Logging tests
+# ============================================================================
+
+
+def test_setup_logging():
+    """Test logging setup"""
+    # Should not raise any exceptions
+    setup_logging(debug=False, no_colors=False)
+    setup_logging(debug=True, no_colors=True)
+
+# ============================================================================
 # User crontab line checking tests
 # ============================================================================
+
 
 def test_valid_user_crontab_line():
     """Test valid user crontab line"""
@@ -97,9 +109,16 @@ def test_invalid_system_crontab_line_invalid_user():
 # Special keyword line checking tests
 # ============================================================================
 
-def test_valid_special_keyword_line():
+def test_valid_user_special_keyword_line():
     """Test valid special keyword line"""
     line = "@reboot /usr/bin/backup.sh"
+    errors = checker.check_line_special(line, 1, "test.txt")
+    assert errors == []
+
+
+def test_valid_system_special_keyword_line():
+    """Test valid special keyword line"""
+    line = "@reboot root /usr/bin/backup.sh"
     errors = checker.check_line_special(line, 1, "test.txt")
     assert errors == []
 
@@ -174,21 +193,10 @@ def test_check_system_crontab_permissions_file_not_exists(mock_exists):
     # Should not raise any exceptions
     checker.check_system_crontab_permissions()
 
-
-# ============================================================================
-# Logging tests
-# ============================================================================
-
-def test_setup_logging():
-    """Test logging setup"""
-    # Should not raise any exceptions
-    setup_logging(debug=False, no_colors=False)
-    setup_logging(debug=True, no_colors=True)
-
-
 # ============================================================================
 # File validation tests
 # ============================================================================
+
 
 @patch('checkcrontab.main.platform.system')
 @patch('checkcrontab.main.os.getenv')
@@ -200,6 +208,7 @@ def test_system_valid_file_returns_zero(mock_permissions, mock_daemon, mock_exis
     # Mock platform to return Linux
     mock_platform.return_value = "Linux"
     # Mock environment variables
+
     def mock_env_side_effect(key, default=None):
         if key == 'GITHUB_ACTIONS':
             return 'true'
@@ -227,6 +236,7 @@ def test_system_incorrect_file_returns_non_zero(mock_permissions, mock_daemon, m
     # Mock platform to return Linux
     mock_platform.return_value = "Linux"
     # Mock environment variables
+
     def mock_env_side_effect(key, default=None):
         if key == 'GITHUB_ACTIONS':
             return 'true'
@@ -254,6 +264,7 @@ def test_user_incorrect_file_returns_non_zero(mock_permissions, mock_daemon, moc
     # Mock platform to return Linux
     mock_platform.return_value = "Linux"
     # Mock environment variables
+
     def mock_env_side_effect(key, default=None):
         if key == 'GITHUB_ACTIONS':
             return 'true'
@@ -281,6 +292,7 @@ def test_user_valid_file_returns_zero(mock_permissions, mock_daemon, mock_exists
     # Mock platform to return Linux
     mock_platform.return_value = "Linux"
     # Mock environment variables
+
     def mock_env_side_effect(key, default=None):
         if key == 'GITHUB_ACTIONS':
             return 'true'
