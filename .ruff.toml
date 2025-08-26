@@ -2,6 +2,8 @@ line-length = 180
 lint.select = ["E","F","I","UP","B","SIM","C4","PL"]
 lint.ignore = ["E501"]
 fix = true
+include = ["*.py"]
+exclude = ["examples/*", "*.md", "*.json", "*.yaml", "*.yml", "*.toml"]
 
 [lint.pylint]
 max-branches = 30

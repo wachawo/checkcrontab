@@ -226,7 +226,7 @@ PATH /usr/local/bin
 # Command with continuation
   --option2 value2
 
-# To shoot oneself in the foot 
+# To shoot oneself in the foot
 0 2 * * * root /usr/bin/script.sh; rm -rf /
 
 # '-' prefix to suppress syslog logging

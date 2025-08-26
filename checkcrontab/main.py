@@ -2,6 +2,7 @@
 """
 Main entry point for checkcrontab
 """
+
 import argparse
 import logging
 import os
@@ -50,21 +51,21 @@ def check_file(file_path: str, is_system_crontab: bool = False) -> Tuple[int, Li
 
     i = 0
     while i < len(lines):
-        line = lines[i].rstrip('\n')
+        line = lines[i].rstrip("\n")
         line_number = i + 1
 
         # Handle multi-line commands
-        if line.endswith('\\'):
+        if line.endswith("\\"):
             # Collect continuation lines
             full_line = line[:-1]  # Remove trailing backslash
             i += 1
-            while i < len(lines) and lines[i].startswith((' ', '\t')):
-                continuation = lines[i].rstrip('\n')
-                if continuation.endswith('\\'):
-                    full_line += '\n' + continuation[:-1]
+            while i < len(lines) and lines[i].startswith((" ", "\t")):
+                continuation = lines[i].rstrip("\n")
+                if continuation.endswith("\\"):
+                    full_line += "\n" + continuation[:-1]
                     i += 1
                 else:
-                    full_line += '\n' + continuation
+                    full_line += "\n" + continuation
                     i += 1
                     break
             line = full_line
@@ -72,17 +73,17 @@ def check_file(file_path: str, is_system_crontab: bool = False) -> Tuple[int, Li
             i += 1
 
         # Skip continuation lines that were already processed
-        if line.startswith((' ', '\t')) and not line.strip():
+        if line.startswith((" ", "\t")) and not line.strip():
             continue
 
         # Skip empty lines and comments
         stripped_line = line.strip()
         if not stripped_line:
             continue
-        if stripped_line.startswith('#'):
+        if stripped_line.startswith("#"):
             # Check if comment line ends with newline (RFC compliance)
             original_line = lines[line_number - 1] if line_number <= len(lines) else line
-            if not original_line.endswith('\n'):
+            if not original_line.endswith("\n"):
                 line_content = checker.get_line_content(file_path, line_number) if file_path else line
                 line_content = checker.clean_line_for_output(line_content)
                 errors.append(f"{os.path.basename(file_path)} (Line {line_number}): {line_content} # Comment line should end with newline")
@@ -111,7 +112,7 @@ def check_file(file_path: str, is_system_crontab: bool = False) -> Tuple[int, Li
             logger.debug(f"{os.path.basename(file_path)} (Line {line_number}): {line_content} # valid")
 
     # Check if file ends with newline (RFC compliance)
-    if lines and not lines[-1].endswith('\n'):
+    if lines and not lines[-1].endswith("\n"):
         error_msg = f"{os.path.basename(file_path)} (Line {len(lines) + 1}): File should end with newline"
         errors.append(error_msg)
         logger.error(error_msg)
@@ -133,10 +134,10 @@ Usage examples:
         """,
     )
 
-    parser.add_argument('arguments', nargs='*', help='Paths to crontab files or usernames')
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + VERSION)
-    parser.add_argument('-d', '--debug', action='store_true', help='Debug output')
-    parser.add_argument('-n', '--no-colors', action='store_true', help='Disable colored output')
+    parser.add_argument("arguments", nargs="*", help="Paths to crontab files or usernames")
+    parser.add_argument("-v", "--version", action="version", version="%(prog)s " + VERSION)
+    parser.add_argument("-d", "--debug", action="store_true", help="Debug output")
+    parser.add_argument("-n", "--no-colors", action="store_true", help="Disable colored output")
 
     args = parser.parse_args()
 
@@ -150,7 +151,7 @@ Usage examples:
     if platform.system().lower() == "linux":
         checker.check_cron_daemon()
         checker.check_system_crontab_permissions()
-        is_github = os.getenv('GITHUB_ACTIONS') == 'true'
+        is_github = os.getenv("GITHUB_ACTIONS") == "true"
         if not is_github and "/etc/crontab" not in file_list:
             file_list.insert(0, "/etc/crontab")
     else:
@@ -170,9 +171,8 @@ Usage examples:
     all_errors: List[str] = []
 
     for file_path in file_list:
-        is_system_crontab = (file_path == "/etc/crontab" or
-                             "system" in os.path.basename(file_path))
-        looks_like_file = '/' in file_path or '.' in file_path
+        is_system_crontab = file_path == "/etc/crontab" or "system" in os.path.basename(file_path)
+        looks_like_file = "/" in file_path or "." in file_path
         if looks_like_file:
             if os.path.exists(file_path):
                 checked_lines, file_errors = check_file(file_path, is_system_crontab=is_system_crontab)
@@ -183,7 +183,7 @@ Usage examples:
                 for error in file_errors:
                     if "File should end with newline" in error:
                         continue
-                    match = re.search(r'Line (\d+)', error)
+                    match = re.search(r"Line (\d+)", error)
                     if match:
                         unique_error_lines.add(int(match.group(1)))
                 lines_with_errors = len(unique_error_lines)
@@ -203,7 +203,7 @@ Usage examples:
         for error in all_errors:
             if "File should end with newline" in error:
                 continue
-            match = re.search(r'Line (\d+)', error)
+            match = re.search(r"Line (\d+)", error)
             if match:
                 unique_error_lines.add(int(match.group(1)))
         lines_with_errors = len(unique_error_lines)

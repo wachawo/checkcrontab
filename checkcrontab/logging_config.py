@@ -2,6 +2,7 @@
 """
 Module for logging configuration and colored output
 """
+
 import copy
 import logging
 import platform
@@ -22,12 +23,12 @@ class ColoredFormatter(logging.Formatter):
         super().__init__(fmt, **kwargs)
         self._use_color = use_colors and self._get_color_compatibility()
         self.COLORS = {
-            "DEBUG": "\033[0;36m",     # CYAN
-            "INFO": "\033[0;32m",      # GREEN
-            "WARNING": "\033[0;33m",   # YELLOW
-            "ERROR": "\033[0;31m",     # RED
+            "DEBUG": "\033[0;36m",  # CYAN
+            "INFO": "\033[0;32m",  # GREEN
+            "WARNING": "\033[0;33m",  # YELLOW
+            "ERROR": "\033[0;31m",  # RED
             "CRITICAL": "\033[0;37;41m",  # WHITE ON RED
-            "RESET": "\033[0m",        # RESET COLOR
+            "RESET": "\033[0m",  # RESET COLOR
         }
 
     @classmethod
@@ -39,7 +40,7 @@ class ColoredFormatter(logging.Formatter):
 
         # Check Windows version for ANSI support
         try:
-            if hasattr(sys, 'getwindowsversion'):
+            if hasattr(sys, "getwindowsversion"):
                 win = sys.getwindowsversion()
                 # Windows 10 version 1511+ supports ANSI colors
                 if win.major >= WINDOWS_MAJOR_VERSION and win.build >= WINDOWS_BUILD_VERSION:
@@ -71,19 +72,10 @@ def setup_logging(debug: bool = False, no_colors: bool = False) -> None:
     level = logging.DEBUG if debug else logging.INFO
 
     # Configure logging
-    logging.basicConfig(
-        handlers=[logging.StreamHandler(sys.stderr)],
-        level=level,
-        format='%(asctime)s.%(msecs)03d [%(levelname)s]: %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    )
+    logging.basicConfig(handlers=[logging.StreamHandler(sys.stderr)], level=level, format="%(asctime)s.%(msecs)03d [%(levelname)s]: %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
 
     # Apply colored formatter
-    colored_formatter = ColoredFormatter(
-        fmt='%(asctime)s.%(msecs)03d [%(levelname)s]: %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S',
-        use_colors=not no_colors
-    )
+    colored_formatter = ColoredFormatter(fmt="%(asctime)s.%(msecs)03d [%(levelname)s]: %(message)s", datefmt="%Y-%m-%d %H:%M:%S", use_colors=not no_colors)
 
     root_logger = logging.getLogger()
     for handler in root_logger.handlers:

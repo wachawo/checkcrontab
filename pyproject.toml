@@ -60,3 +60,15 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-v --tb=short"
+
+[tool.ruff]
+line-length = 180
+lint.select = ["E","F","I","UP","B","SIM","C4","PL"]
+lint.ignore = ["E501"]
+fix = true
+include = ["*.py"]
+exclude = ["examples/*", "*.md", "*.json", "*.yaml", "*.yml", "*.toml"]
+
+[tool.ruff.lint.pylint]
+max-branches = 30
+max-statements = 80

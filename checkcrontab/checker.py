@@ -2,6 +2,7 @@
 """
 Module for checking crontab syntax and system requirements
 """
+
 import logging
 import os
 import re
@@ -24,20 +25,20 @@ WINDOWS_MAJOR_VERSION = 10
 WINDOWS_BUILD_VERSION = 10586
 
 # Regex patterns for time fields
-MINUTE_PATTERN = r'^(\*|([0-5]?[0-9])(-([0-5]?[0-9]))?(/([0-9]+))?(,([0-5]?[0-9])(-([0-5]?[0-9]))?(/([0-9]+))?)*|\*/([0-9]+))$'
-HOUR_PATTERN = r'^(\*|([0-9]|1[0-9]|2[0-3])(-([0-9]|1[0-9]|2[0-3]))?(/([0-9]|1[0-9]|2[0-3]))?(,([0-9]|1[0-9]|2[0-3])(-([0-9]|1[0-9]|2[0-3]))?(/([0-9]|1[0-9]|2[0-3]))?)*|\*/([0-9]|1[0-9]|2[0-3]))$'
-DAY_PATTERN = r'^(\*|([1-9]|[12][0-9]|3[01])(-([1-9]|[12][0-9]|3[01]))?(/([1-9]|[12][0-9]|3[01]))?(,([1-9]|[12][0-9]|3[01])(-([1-9]|[12][0-9]|3[01]))?(/([1-9]|[12][0-9]|3[01]))?)*|\*/([1-9]|[12][0-9]|3[01]))$'
-MONTH_PATTERN = r'^(\*|([1-9]|1[0-2])(-([1-9]|1[0-2]))?(/([1-9]|1[0-2]))?(,([1-9]|1[0-2])(-([1-9]|1[0-2]))?(/([1-9]|1[0-2]))?)*|\*/([1-9]|1[0-2]))$'
-WEEKDAY_PATTERN = r'^(\*|([0-7])(-([0-7]))?(/([0-7]))?(,([0-7])(-([0-7]))?)*|\*/([0-7]))$'
+MINUTE_PATTERN = r"^(\*|([0-5]?[0-9])(-([0-5]?[0-9]))?(/([0-9]+))?(,([0-5]?[0-9])(-([0-5]?[0-9]))?(/([0-9]+))?)*|\*/([0-9]+))$"
+HOUR_PATTERN = r"^(\*|([0-9]|1[0-9]|2[0-3])(-([0-9]|1[0-9]|2[0-3]))?(/([0-9]|1[0-9]|2[0-3]))?(,([0-9]|1[0-9]|2[0-3])(-([0-9]|1[0-9]|2[0-3]))?(/([0-9]|1[0-9]|2[0-3]))?)*|\*/([0-9]|1[0-9]|2[0-3]))$"
+DAY_PATTERN = r"^(\*|([1-9]|[12][0-9]|3[01])(-([1-9]|[12][0-9]|3[01]))?(/([1-9]|[12][0-9]|3[01]))?(,([1-9]|[12][0-9]|3[01])(-([1-9]|[12][0-9]|3[01]))?(/([1-9]|[12][0-9]|3[01]))?)*|\*/([1-9]|[12][0-9]|3[01]))$"
+MONTH_PATTERN = r"^(\*|([1-9]|1[0-2])(-([1-9]|1[0-2]))?(/([1-9]|1[0-2]))?(,([1-9]|1[0-2])(-([1-9]|1[0-2]))?(/([1-9]|1[0-2]))?)*|\*/([1-9]|1[0-2]))$"
+WEEKDAY_PATTERN = r"^(\*|([0-7])(-([0-7]))?(/([0-7]))?(,([0-7])(-([0-7]))?)*|\*/([0-7]))$"
 
 
 def get_line_content(file_path: str, line_number: int) -> str:
     """Get line content from file"""
     try:
-        with open(file_path, encoding='utf-8') as f:
+        with open(file_path, encoding="utf-8") as f:
             lines = f.readlines()
             if 1 <= line_number <= len(lines):
-                return lines[line_number - 1].rstrip('\n')
+                return lines[line_number - 1].rstrip("\n")
         return ""
     except Exception as e:
         logging.warning(f"{type(e).__name__} {str(e)}\n{traceback.format_exc()}")
@@ -47,9 +48,9 @@ def get_line_content(file_path: str, line_number: int) -> str:
 def clean_line_for_output(line: str) -> str:
     """Clean line for output: replace tabs and multiple spaces with single spaces"""
     # Replace tabs with spaces
-    line = line.replace('\t', ' ')
+    line = line.replace("\t", " ")
     # Replace multiple spaces with single space
-    line = re.sub(r' +', ' ', line)
+    line = re.sub(r" +", " ", line)
     return line
 
 
@@ -57,12 +58,12 @@ def check_dangerous_commands(command: str) -> List[str]:
     """Check for dangerous commands in crontab"""
     errors = []
     dangerous_patterns = [
-        (r'\brm\s+-rf\s+/', "dangerous command: 'rm -rf /'"),
-        (r'\brm\s+-rf\s+/.*', "dangerous command: 'rm -rf /'"),
-        (r'\brm\s+-rf\s+/\s*$', "dangerous command: 'rm -rf /'"),
-        (r'\brm\s+-rf\s+/\s*;', "dangerous command: 'rm -rf /'"),
-        (r'\brm\s+-rf\s+/\s*&&', "dangerous command: 'rm -rf /'"),
-        (r'\brm\s+-rf\s+/\s*\|\|', "dangerous command: 'rm -rf /'"),
+        (r"\brm\s+-rf\s+/", "dangerous command: 'rm -rf /'"),
+        (r"\brm\s+-rf\s+/.*", "dangerous command: 'rm -rf /'"),
+        (r"\brm\s+-rf\s+/\s*$", "dangerous command: 'rm -rf /'"),
+        (r"\brm\s+-rf\s+/\s*;", "dangerous command: 'rm -rf /'"),
+        (r"\brm\s+-rf\s+/\s*&&", "dangerous command: 'rm -rf /'"),
+        (r"\brm\s+-rf\s+/\s*\|\|", "dangerous command: 'rm -rf /'"),
     ]
 
     for pattern, message in dangerous_patterns:
@@ -77,12 +78,12 @@ def validate_time_field_logic(value: str, field_name: str, min_val: int, max_val
     errors: List[str] = []
 
     # Skip special values
-    if value in ['*']:
+    if value in ["*"]:
         return errors
 
     # Handle lists (comma-separated values)
-    if ',' in value:
-        parts = value.split(',')
+    if "," in value:
+        parts = value.split(",")
         seen_values = set()
         for part in parts:
             part_stripped = part.strip()
@@ -111,7 +112,7 @@ def validate_single_time_value(value: str, field_name: str, min_val: int, max_va
     errors: List[str] = []
 
     # Handle steps (*/n)
-    if value.startswith('*/'):
+    if value.startswith("*/"):
         step_part = value[2:]
         if step_part.isdigit():
             step_val = int(step_part)
@@ -126,8 +127,8 @@ def validate_single_time_value(value: str, field_name: str, min_val: int, max_va
         return errors
 
     # Handle ranges (n-m)
-    if '-' in value:
-        range_parts = value.split('-')
+    if "-" in value:
+        range_parts = value.split("-")
         if len(range_parts) == RANGE_PARTS_COUNT:
             start_str, end_str = range_parts
             if start_str.isdigit() and end_str.isdigit():
@@ -156,9 +157,8 @@ def validate_single_time_value(value: str, field_name: str, min_val: int, max_va
 def check_cron_daemon() -> None:
     """Check if cron daemon is running"""
     try:
-        result = subprocess.run(['systemctl', 'is-active', 'cron'],
-                                capture_output=True, text=True, timeout=5, check=False)
-        if result.returncode != 0 or result.stdout.strip() != 'active':
+        result = subprocess.run(["systemctl", "is-active", "cron"], capture_output=True, text=True, timeout=5, check=False)
+        if result.returncode != 0 or result.stdout.strip() != "active":
             logger.warning("Cron daemon is not running")
         else:
             logger.debug("Cron daemon status check: active")
@@ -195,11 +195,11 @@ def check_line_user(line: str, line_number: int, file_name: str, file_path: Opti
     errors: List[str] = []
 
     # Skip environment variables
-    if '=' in line and not any(char.isdigit() or char in '*@' for char in line.split('=')[0]):
+    if "=" in line and not any(char.isdigit() or char in "*@" for char in line.split("=")[0]):
         return errors
 
     # Check for special keywords
-    if line.startswith('@'):
+    if line.startswith("@"):
         return check_line_special(line, line_number, file_name, file_path)
 
     # Parse regular crontab line
@@ -216,7 +216,7 @@ def check_line_user(line: str, line_number: int, file_name: str, file_path: Opti
 
     # Extract time fields and command
     minute, hour, day, month, weekday = parts[:5]
-    command = ' '.join(parts[5:])
+    command = " ".join(parts[5:])
 
     if not command:
         errors.append("missing command")
@@ -274,11 +274,11 @@ def check_line_system(line: str, line_number: int, file_name: str, file_path: Op
     errors: List[str] = []
 
     # Skip environment variables
-    if '=' in line and not any(char.isdigit() or char in '*@' for char in line.split('=')[0]):
+    if "=" in line and not any(char.isdigit() or char in "*@" for char in line.split("=")[0]):
         return errors
 
     # Check for special keywords
-    if line.startswith('@'):
+    if line.startswith("@"):
         return check_line_special(line, line_number, file_name, file_path)
 
     # Parse regular crontab line
@@ -295,15 +295,15 @@ def check_line_system(line: str, line_number: int, file_name: str, file_path: Op
 
     # Extract time fields, user, and command
     minute, hour, day, month, weekday, user = parts[:6]
-    command = ' '.join(parts[6:])
+    command = " ".join(parts[6:])
 
     # Handle dash prefix in minutes field (suppress syslog logging)
     # This is only allowed in system crontab
-    if minute.startswith('-'):
+    if minute.startswith("-"):
         minute = minute[1:]  # Remove the dash prefix
 
     # Check for too many fields (more than 7) - but only if command doesn't contain spaces
-    if len(parts) > SYSTEM_CRONTAB_MAX_FIELDS and ' ' not in command:
+    if len(parts) > SYSTEM_CRONTAB_MAX_FIELDS and " " not in command:
         errors.append(f"too many fields (maximum {SYSTEM_CRONTAB_MAX_FIELDS} required for system crontab, found {len(parts)})")
         # Return errors with line number and content
         formatted_errors = []
@@ -316,7 +316,7 @@ def check_line_system(line: str, line_number: int, file_name: str, file_path: Op
     # Check for extra fields in command (like "extra" in "root extra /usr/bin/backup.sh")
     if len(parts) > SYSTEM_CRONTAB_MAX_FIELDS:
         extra_field = parts[6]
-        if extra_field == 'extra':
+        if extra_field == "extra":
             errors.append(f"extra field '{extra_field}' in command")
             # Return errors with line number and content
             formatted_errors = []
@@ -365,9 +365,9 @@ def check_line_system(line: str, line_number: int, file_name: str, file_path: Op
         errors.append(f"invalid day of week format: '{weekday}'")
 
     # Validate user field
-    if not user or user.startswith('#'):
+    if not user or user.startswith("#"):
         errors.append("invalid user field")
-    elif '"' in user or '@' in user or ' ' in user:
+    elif '"' in user or "@" in user or " " in user:
         errors.append(f"invalid user field format: '{user}'")
 
     # Return errors with line number and content
@@ -401,10 +401,10 @@ def check_line_special(line: str, line_number: int, file_name: str, file_path: O
     keyword = parts[0]
 
     # Determine if this is system crontab based on file path
-    is_system_crontab = file_path and (file_path == "/etc/crontab" or file_path.startswith("/etc/cron.d/"))
+    is_system_crontab = file_path and (file_path == "/etc/crontab" or file_path.startswith("/etc/cron.d/") or "system" in file_name.lower())
 
     # Validate special keyword
-    valid_keywords = ['@reboot', '@yearly', '@annually', '@monthly', '@weekly', '@daily', '@midnight', '@hourly']
+    valid_keywords = ["@reboot", "@yearly", "@annually", "@monthly", "@weekly", "@daily", "@midnight", "@hourly"]
     if keyword not in valid_keywords:
         errors.append(f"invalid special keyword: '{keyword}'")
 
@@ -414,19 +414,19 @@ def check_line_special(line: str, line_number: int, file_name: str, file_path: O
             errors.append(f"insufficient fields for system crontab special keyword (minimum {SYSTEM_SPECIAL_MIN_FIELDS} required)")
         else:
             user = parts[1]
-            command = ' '.join(parts[2:])
+            command = " ".join(parts[2:])
 
             # Validate user field for system crontab
-            if not user or user.startswith('#'):
+            if not user or user.startswith("#"):
                 errors.append("invalid user field")
-            elif '"' in user or '@' in user or ' ' in user:
+            elif '"' in user or "@" in user or " " in user:
                 errors.append(f"invalid user field format: '{user}'")
 
             if not command:
                 errors.append("missing command")
     else:
         # User crontab format: @keyword command
-        command = ' '.join(parts[1:])
+        command = " ".join(parts[1:])
 
         if not command:
             errors.append("missing command")

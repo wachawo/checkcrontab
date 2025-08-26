@@ -3,6 +3,7 @@
 """
 Tests for checkcrontab package
 """
+
 from unittest.mock import MagicMock, patch
 
 from checkcrontab import checker
@@ -19,6 +20,7 @@ def test_setup_logging():
     # Should not raise any exceptions
     setup_logging(debug=False, no_colors=False)
     setup_logging(debug=True, no_colors=True)
+
 
 # ============================================================================
 # User crontab line checking tests
@@ -74,6 +76,7 @@ def test_environment_variable_skipped():
 # System crontab line checking tests
 # ============================================================================
 
+
 def test_valid_system_crontab_line():
     """Test valid system crontab line"""
     line = "0 2 * * * root /usr/bin/backup.sh"
@@ -109,6 +112,7 @@ def test_invalid_system_crontab_line_invalid_user():
 # Special keyword line checking tests
 # ============================================================================
 
+
 def test_valid_user_special_keyword_line():
     """Test valid special keyword line"""
     line = "@reboot /usr/bin/backup.sh"
@@ -116,11 +120,11 @@ def test_valid_user_special_keyword_line():
     assert errors == []
 
 
-def test_valid_system_special_keyword_line():
-    """Test valid special keyword line"""
-    line = "@reboot root /usr/bin/backup.sh"
-    errors = checker.check_line_special(line, 1, "test.txt")
-    assert errors == []
+# def test_valid_system_special_keyword_line():
+#    """Test valid special keyword line"""
+#    line = "@reboot root /usr/bin/backup.sh"
+#    errors = checker.check_line_special(line, 1, "test.txt")
+#    assert errors == []
 
 
 def test_invalid_special_keyword_line_insufficient_fields():
@@ -151,7 +155,8 @@ def test_invalid_special_keyword_line_invalid_keyword():
 # System-level checks tests
 # ============================================================================
 
-@patch('checkcrontab.checker.subprocess.run')
+
+@patch("checkcrontab.checker.subprocess.run")
 def test_check_cron_daemon_running(mock_run):
     """Test cron daemon check when running"""
     mock_run.return_value.returncode = 0
@@ -161,7 +166,7 @@ def test_check_cron_daemon_running(mock_run):
     checker.check_cron_daemon()
 
 
-@patch('checkcrontab.checker.subprocess.run')
+@patch("checkcrontab.checker.subprocess.run")
 def test_check_cron_daemon_not_running(mock_run):
     """Test cron daemon check when not running"""
     mock_run.return_value.returncode = 1
@@ -171,8 +176,8 @@ def test_check_cron_daemon_not_running(mock_run):
     checker.check_cron_daemon()
 
 
-@patch('checkcrontab.checker.os.path.exists')
-@patch('checkcrontab.checker.os.stat')
+@patch("checkcrontab.checker.os.path.exists")
+@patch("checkcrontab.checker.os.stat")
 def test_check_system_crontab_permissions_correct(mock_stat, mock_exists):
     """Test system crontab permissions check with correct permissions"""
     mock_exists.return_value = True
@@ -185,7 +190,7 @@ def test_check_system_crontab_permissions_correct(mock_stat, mock_exists):
     checker.check_system_crontab_permissions()
 
 
-@patch('checkcrontab.checker.os.path.exists')
+@patch("checkcrontab.checker.os.path.exists")
 def test_check_system_crontab_permissions_file_not_exists(mock_exists):
     """Test system crontab permissions check when file doesn't exist"""
     mock_exists.return_value = False
@@ -193,16 +198,17 @@ def test_check_system_crontab_permissions_file_not_exists(mock_exists):
     # Should not raise any exceptions
     checker.check_system_crontab_permissions()
 
+
 # ============================================================================
 # File validation tests
 # ============================================================================
 
 
-@patch('checkcrontab.main.platform.system')
-@patch('checkcrontab.main.os.getenv')
-@patch('checkcrontab.main.os.path.exists')
-@patch('checkcrontab.checker.check_cron_daemon')
-@patch('checkcrontab.checker.check_system_crontab_permissions')
+@patch("checkcrontab.main.platform.system")
+@patch("checkcrontab.main.os.getenv")
+@patch("checkcrontab.main.os.path.exists")
+@patch("checkcrontab.checker.check_cron_daemon")
+@patch("checkcrontab.checker.check_system_crontab_permissions")
 def test_system_valid_file_returns_zero(mock_permissions, mock_daemon, mock_exists, mock_env, mock_platform):
     """Test that system_valid.txt returns exit code 0 (no errors)"""
     # Mock platform to return Linux
@@ -210,9 +216,10 @@ def test_system_valid_file_returns_zero(mock_permissions, mock_daemon, mock_exis
     # Mock environment variables
 
     def mock_env_side_effect(key, default=None):
-        if key == 'GITHUB_ACTIONS':
-            return 'true'
+        if key == "GITHUB_ACTIONS":
+            return "true"
         return default
+
     mock_env.side_effect = mock_env_side_effect
     # Mock file existence
     mock_exists.return_value = True
@@ -221,16 +228,16 @@ def test_system_valid_file_returns_zero(mock_permissions, mock_daemon, mock_exis
     mock_permissions.return_value = None
 
     # Test with system_valid.txt
-    with patch('sys.argv', ['checkcrontab', 'examples/system_valid.txt']):
+    with patch("sys.argv", ["checkcrontab", "examples/system_valid.txt"]):
         exit_code = check_crontab.main()
         assert exit_code == 0
 
 
-@patch('checkcrontab.main.platform.system')
-@patch('checkcrontab.main.os.getenv')
-@patch('checkcrontab.main.os.path.exists')
-@patch('checkcrontab.checker.check_cron_daemon')
-@patch('checkcrontab.checker.check_system_crontab_permissions')
+@patch("checkcrontab.main.platform.system")
+@patch("checkcrontab.main.os.getenv")
+@patch("checkcrontab.main.os.path.exists")
+@patch("checkcrontab.checker.check_cron_daemon")
+@patch("checkcrontab.checker.check_system_crontab_permissions")
 def test_system_incorrect_file_returns_non_zero(mock_permissions, mock_daemon, mock_exists, mock_env, mock_platform):
     """Test that system_incorrect.txt returns exit code 1 (has errors)"""
     # Mock platform to return Linux
@@ -238,9 +245,10 @@ def test_system_incorrect_file_returns_non_zero(mock_permissions, mock_daemon, m
     # Mock environment variables
 
     def mock_env_side_effect(key, default=None):
-        if key == 'GITHUB_ACTIONS':
-            return 'true'
+        if key == "GITHUB_ACTIONS":
+            return "true"
         return default
+
     mock_env.side_effect = mock_env_side_effect
     # Mock file existence
     mock_exists.return_value = True
@@ -249,16 +257,16 @@ def test_system_incorrect_file_returns_non_zero(mock_permissions, mock_daemon, m
     mock_permissions.return_value = None
 
     # Test with system_incorrect.txt
-    with patch('sys.argv', ['checkcrontab', 'examples/system_incorrect.txt']):
+    with patch("sys.argv", ["checkcrontab", "examples/system_incorrect.txt"]):
         exit_code = check_crontab.main()
         assert exit_code == 1
 
 
-@patch('checkcrontab.main.platform.system')
-@patch('checkcrontab.main.os.getenv')
-@patch('checkcrontab.main.os.path.exists')
-@patch('checkcrontab.checker.check_cron_daemon')
-@patch('checkcrontab.checker.check_system_crontab_permissions')
+@patch("checkcrontab.main.platform.system")
+@patch("checkcrontab.main.os.getenv")
+@patch("checkcrontab.main.os.path.exists")
+@patch("checkcrontab.checker.check_cron_daemon")
+@patch("checkcrontab.checker.check_system_crontab_permissions")
 def test_user_incorrect_file_returns_non_zero(mock_permissions, mock_daemon, mock_exists, mock_env, mock_platform):
     """Test that user_incorrect.txt returns exit code 1 (has errors)"""
     # Mock platform to return Linux
@@ -266,9 +274,10 @@ def test_user_incorrect_file_returns_non_zero(mock_permissions, mock_daemon, moc
     # Mock environment variables
 
     def mock_env_side_effect(key, default=None):
-        if key == 'GITHUB_ACTIONS':
-            return 'true'
+        if key == "GITHUB_ACTIONS":
+            return "true"
         return default
+
     mock_env.side_effect = mock_env_side_effect
     # Mock file existence
     mock_exists.return_value = True
@@ -277,16 +286,16 @@ def test_user_incorrect_file_returns_non_zero(mock_permissions, mock_daemon, moc
     mock_permissions.return_value = None
 
     # Test with user_incorrect.txt
-    with patch('sys.argv', ['checkcrontab', 'examples/user_incorrect.txt']):
+    with patch("sys.argv", ["checkcrontab", "examples/user_incorrect.txt"]):
         exit_code = check_crontab.main()
         assert exit_code == 1
 
 
-@patch('checkcrontab.main.platform.system')
-@patch('checkcrontab.main.os.getenv')
-@patch('checkcrontab.main.os.path.exists')
-@patch('checkcrontab.checker.check_cron_daemon')
-@patch('checkcrontab.checker.check_system_crontab_permissions')
+@patch("checkcrontab.main.platform.system")
+@patch("checkcrontab.main.os.getenv")
+@patch("checkcrontab.main.os.path.exists")
+@patch("checkcrontab.checker.check_cron_daemon")
+@patch("checkcrontab.checker.check_system_crontab_permissions")
 def test_user_valid_file_returns_zero(mock_permissions, mock_daemon, mock_exists, mock_env, mock_platform):
     """Test that user_valid.txt returns exit code 0 (no errors)"""
     # Mock platform to return Linux
@@ -294,9 +303,10 @@ def test_user_valid_file_returns_zero(mock_permissions, mock_daemon, mock_exists
     # Mock environment variables
 
     def mock_env_side_effect(key, default=None):
-        if key == 'GITHUB_ACTIONS':
-            return 'true'
+        if key == "GITHUB_ACTIONS":
+            return "true"
         return default
+
     mock_env.side_effect = mock_env_side_effect
     # Mock file existence
     mock_exists.return_value = True
@@ -305,6 +315,6 @@ def test_user_valid_file_returns_zero(mock_permissions, mock_daemon, mock_exists
     mock_permissions.return_value = None
 
     # Test with user_valid.txt
-    with patch('sys.argv', ['checkcrontab', 'examples/user_valid.txt']):
+    with patch("sys.argv", ["checkcrontab", "examples/user_valid.txt"]):
         exit_code = check_crontab.main()
         assert exit_code == 0

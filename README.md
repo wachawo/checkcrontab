@@ -45,7 +45,7 @@ checkcrontab --help
 ### Development Tools
 
 ```bash
-pip3 install pre-commit flake8 pytest
+pip3 install pre-commit flake8 pytest mypy ruff
 pre-commit install
 pre-commit run --all-files
 pre-commit autoupdate
@@ -54,4 +54,3 @@ pre-commit autoupdate
 ### License
 
 MIT License
-

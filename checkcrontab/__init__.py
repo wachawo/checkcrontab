@@ -5,8 +5,8 @@ Checkcrontab package
 
 __version__ = "0.0.2"
 __description__ = "A Python script for checking syntax of crontab files"
-__author__ = 'Aleksandr Pimenov'
-__email__ = 'wachawo@gmail.com'
+__author__ = "Aleksandr Pimenov"
+__email__ = "wachawo@gmail.com"
 
 # Import main functions
 from . import checker, logging_config, main
