@@ -24,8 +24,8 @@ except ImportError:
     try:
         from checkcrontab import __version__ as VERSION
         from checkcrontab import __description__ as DESCRIPTION
-        from checkcrontab import logging_config # type: ignore[import-not-found,no-redef]
-        from checkcrontab import checker # type: ignore[import-not-found,no-redef]
+        from checkcrontab import logging_config  # type: ignore[import-not-found,no-redef]
+        from checkcrontab import checker  # type: ignore[import-not-found,no-redef]
     except Exception as e:
         logging.warning(f"{type(e).__name__} {str(e)}\n{traceback.format_exc()}")
         sys.exit(2)
@@ -119,7 +119,7 @@ def check_file(file_path: str, is_system_crontab: bool = False) -> tuple[int, li
     return checked_lines, errors
 
 
-def main():
+def main() -> int:
     """Main function"""
     parser = argparse.ArgumentParser(
         description=DESCRIPTION,
