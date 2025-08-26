@@ -122,13 +122,15 @@ Usage examples:
     %(prog)s /path/to/user/crontab     # Check system and file crontab
     %(prog)s username                  # Check system and user crontab
     %(prog)s file1 file2 username      # Check multiple files and user crontab
-    %(prog)s -s system.cron -u user.cron  # Check with explicit type flags
+    %(prog)s -S system.cron -U user.cron  # Check with explicit type flags
+    %(prog)s -u username1 -u username2  # Check specific usernames
         """,
     )
 
     parser.add_argument("arguments", nargs="*", help="Paths to crontab files or usernames")
-    parser.add_argument("-s", "--system", action="append", help="System crontab files")
-    parser.add_argument("-u", "--user", action="append", help="User crontab files")
+    parser.add_argument("-S", "--system", action="append", help="System crontab files")
+    parser.add_argument("-U", "--user", action="append", help="User crontab files")
+    parser.add_argument("-u", "--username", action="append", help="Usernames to check")
     parser.add_argument("-v", "--version", action="version", version="%(prog)s " + VERSION)
     parser.add_argument("-d", "--debug", action="store_true", help="Debug output")
     parser.add_argument("-n", "--no-colors", action="store_true", help="Disable colored output")
@@ -149,6 +151,11 @@ Usage examples:
     if args.user:
         for file_path in args.user:
             file_list.append((file_path, False))
+
+    # Add usernames with explicit flag
+    if args.username:
+        for username in args.username:
+            logger.warning(f"User crontab checking not implemented yet for: {username}")
 
     # Add arguments with smart detection
     for arg in args.arguments:
