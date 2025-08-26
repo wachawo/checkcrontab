@@ -1,47 +1,48 @@
-### Checkcrontab - Crontab ファイル検証ツール
+## Checkcrontab - check syntax in crontab files
 
 [![CI](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml/badge.svg)](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 [![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 
-Linux/Unix システムで crontab ファイルの構文と正確性をチェックする Python スクリプト。
+A Python script for checking syntax of crontab files in Linux.
 
-**翻訳:** [English](https://github.com/wachawo/checkcrontab/blob/main/README.md) | [Русский](https://github.com/wachawo/checkcrontab/blob/main/docs/README_RU.md) | [Español](https://github.com/wachawo/checkcrontab/blob/main/docs/README_ES.md) | [Português](https://github.com/wachawo/checkcrontab/blob/main/docs/README_PT.md) | [Français](https://github.com/wachawo/checkcrontab/blob/main/docs/README_FR.md) | [Deutsch](https://github.com/wachawo/checkcrontab/blob/main/docs/README_DE.md) | [Italiano](https://github.com/wachawo/checkcrontab/blob/main/docs/README_IT.md) | [中文](https://github.com/wachawo/checkcrontab/blob/main/docs/README_ZH.md) | [हिन्दी](https://github.com/wachawo/checkcrontab/blob/main/docs/README_HI.md)
+[English](../README.md) | [Español](README_ES.md) | [Português](README_PT.md) | [Français](README_FR.md) | [Deutsch](README_DE.md) | [Italiano](README_IT.md) | [Русский](README_RU.md) | [中文](README_ZH.md) | [日本語](README_JA.md) | [हिन्दी](README_HI.md)
 
-#### 要件
+### Requirements
 
-- **Python 3.8 以上**
-- systemctl を持つ Linux/Unix システム
-- `/etc/crontab` への読み取りアクセス
+- **Python 3.7 or higher**
+- Linux/Unix system with systemctl
+- Read access to `/etc/crontab`
 
-#### インストール
+### Installation
 
 ```bash
 pip3 install checkcrontab
 ```
 
-または GitHub から:
+Or from GitHub:
 
 ```bash
 pip3 install git+https://github.com/wachawo/checkcrontab.git
 ```
 
-#### 使用方法
+### Usage
 
 ```bash
-# システム crontab をチェック
+# Check system crontab
 checkcrontab
-# crontab ファイルをチェック
+
+# Check crontab file
 checkcrontab /etc/crontab
 
-# ユーザー crontab をチェック
+# Check user crontab
 checkcrontab username
 
-# ヘルプを表示
+# Show help
 checkcrontab --help
 ```
 
-#### 開発ツール
+### Development Tools
 
 ```bash
 pip3 install pre-commit flake8 pytest
@@ -50,6 +51,6 @@ pre-commit run --all-files
 pre-commit autoupdate
 ```
 
-#### ライセンス
+### License
 
 MIT License

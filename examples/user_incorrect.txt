@@ -1,0 +1,232 @@
+# ========================================
+# INVALID USER CRONTAB EXAMPLES
+# ========================================
+
+# User crontab format: minute hour day month weekday command
+
+# ========================================
+# INSUFFICIENT FIELDS
+# ========================================
+
+# Only 5 fields (missing command)
+0 2 * * *
+
+# Only 4 fields
+0 2 * * /usr/bin/backup.sh
+
+# Only 3 fields
+0 2 * /usr/bin/backup.sh
+
+# Only 2 fields
+0 2 /usr/bin/backup.sh
+
+# Only 1 field
+0 /usr/bin/backup.sh
+
+# Empty line (no fields)
+/usr/bin/backup.sh
+
+# ========================================
+# INVALID TIME VALUES
+# ========================================
+
+# Invalid minutes (60)
+60 * * * * /usr/bin/script.sh
+
+# Invalid hours (24)
+* 24 * * * /usr/bin/script.sh
+
+# Invalid day of month (32)
+* * 32 * * /usr/bin/script.sh
+
+# Invalid month (13)
+* * * 13 * /usr/bin/script.sh
+
+# Invalid day of week (8)
+* * * * 8 /usr/bin/script.sh
+
+# Negative values
+-1 * * * * /usr/bin/script.sh
+* -1 * * * /usr/bin/script.sh
+* * -1 * * /usr/bin/script.sh
+* * * -1 * /usr/bin/script.sh
+* * * * -1 /usr/bin/script.sh
+
+# Non-numeric values
+abc * * * * /usr/bin/script.sh
+* abc * * * /usr/bin/script.sh
+* * abc * * /usr/bin/script.sh
+* * * abc * /usr/bin/script.sh
+* * * * abc /usr/bin/script.sh
+
+# Empty values
+ * * * * /usr/bin/script.sh
+*  * * * /usr/bin/script.sh
+* *  * * /usr/bin/script.sh
+* * *  * /usr/bin/script.sh
+* * * *  /usr/bin/script.sh
+
+# Values with letters
+1a * * * * /usr/bin/script.sh
+* 1a * * * /usr/bin/script.sh
+* * 1a * * /usr/bin/script.sh
+* * * 1a * /usr/bin/script.sh
+* * * * 1a /usr/bin/script.sh
+
+# Values with symbols
+1@ * * * * /usr/bin/script.sh
+* 1@ * * * /usr/bin/script.sh
+* * 1@ * * /usr/bin/script.sh
+* * * 1@ * /usr/bin/script.sh
+* * * * 1@ /usr/bin/script.sh
+
+# ========================================
+# INVALID SPECIAL KEYWORDS
+# ========================================
+
+# Invalid special keyword
+@invalid /usr/bin/script.sh
+
+# Case sensitive (should be lowercase)
+@Reboot /usr/bin/script.sh
+@REBOOT /usr/bin/script.sh
+
+# Invalid special keyword with extra text
+@reboot_extra /usr/bin/script.sh
+
+# Missing command for special keyword
+@reboot
+
+# Just @ symbol
+@ /usr/bin/script.sh
+
+# ========================================
+# INVALID RANGES
+# ========================================
+
+# Range with incorrect order (start > end)
+0 5-3 * * * /usr/bin/script.sh
+
+# Range with non-numeric values
+0 a-z * * * /usr/bin/script.sh
+
+# Range with empty values
+0 - * * * /usr/bin/script.sh
+
+# Range with symbols
+0 1-@ * * * /usr/bin/script.sh
+
+# Range with spaces
+0 1 - 5 * * * /usr/bin/script.sh
+
+# Range with letters in numbers
+0 1a-5b * * * /usr/bin/script.sh
+
+# ========================================
+# INVALID LISTS
+# ========================================
+
+# List with empty values
+0 1,,3 * * * /usr/bin/script.sh
+
+# List with non-numeric values
+0 1,abc,3 * * * /usr/bin/script.sh
+
+# List with symbols
+0 1,@,3 * * * /usr/bin/script.sh
+
+# List with spaces
+0 1, 2,3 * * * /usr/bin/script.sh
+
+# List with trailing comma
+0 1, * * * /usr/bin/script.sh
+
+# List with letters in numbers
+0 1a,2b,3c * * * /usr/bin/script.sh
+
+# List with duplicate values
+0 1,1,2 * * * /usr/bin/script.sh
+
+# ========================================
+# INVALID STEPS
+# ========================================
+
+# Step with invalid value
+*/-1 * * * * /usr/bin/script.sh
+
+# Step with non-numeric value
+*/abc * * * * /usr/bin/script.sh
+
+# Step with empty value
+*/ * * * * /usr/bin/script.sh
+
+# Step with symbol
+*/@ * * * * /usr/bin/script.sh
+
+# Step with invalid range
+*/60 * * * * /usr/bin/script.sh
+
+# ========================================
+# INVALID COMMAND FIELD
+# ========================================
+
+# Empty command
+0 2 * * *
+
+# Command with invalid characters
+
+# Command with multiple commands
+
+# Command with pipe
+
+# ========================================
+# INVALID FORMATS
+# ========================================
+
+# Too many fields
+
+# Wrong field order
+
+# Fields with extra spaces
+
+# Fields with tabs
+
+# ========================================
+# MIXED ERRORS
+# ========================================
+
+# Multiple errors in one line
+60 25 32 13 8 /usr/bin/script.sh
+
+# Invalid format with extra fields
+
+# Invalid format with missing fields
+0 2 * * /usr/bin/backup.sh
+
+# ========================================
+# EDGE CASES
+# ========================================
+
+# This is not a comment (no #)
+This is not a crontab entry
+
+# Just random text
+line 2
+line 3"
+
+# Environment variable without =
+PATH /usr/local/bin
+
+# Invalid environment variable
+
+# Command with newlines
+  --verbose
+  --debug
+
+# Command with continuation
+  --option2 value2
+
+# To shoot oneself in the foot 
+0 2 * * * root /usr/bin/script.sh; rm -rf /
+
+# File should end with newline

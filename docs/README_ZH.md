@@ -1,48 +1,48 @@
-### Checkcrontab - Crontab 文件验证器
+## Checkcrontab - check syntax in crontab files
 
 [![CI](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml/badge.svg)](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 [![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 
-用于检查 Linux/Unix 系统中 crontab 文件语法和正确性的 Python 脚本。
+A Python script for checking syntax of crontab files in Linux.
 
-**翻译:** [English](https://github.com/wachawo/checkcrontab/blob/main/README.md) | [Русский](https://github.com/wachawo/checkcrontab/blob/main/docs/README_RU.md) | [Español](https://github.com/wachawo/checkcrontab/blob/main/docs/README_ES.md) | [Português](https://github.com/wachawo/checkcrontab/blob/main/docs/README_PT.md) | [Français](https://github.com/wachawo/checkcrontab/blob/main/docs/README_FR.md) | [Deutsch](https://github.com/wachawo/checkcrontab/blob/main/docs/README_DE.md) | [Italiano](https://github.com/wachawo/checkcrontab/blob/main/docs/README_IT.md) | [日本語](https://github.com/wachawo/checkcrontab/blob/main/docs/README_JA.md) | [हिन्दी](https://github.com/wachawo/checkcrontab/blob/main/docs/README_HI.md)
+[English](../README.md) | [Español](README_ES.md) | [Português](README_PT.md) | [Français](README_FR.md) | [Deutsch](README_DE.md) | [Italiano](README_IT.md) | [Русский](README_RU.md) | [中文](README_ZH.md) | [日本語](README_JA.md) | [हिन्दी](README_HI.md)
 
-#### 要求
+### Requirements
 
-- **Python 3.8 或更高版本**
-- 带有 systemctl 的 Linux/Unix 系统
-- 对 `/etc/crontab` 的读取权限
+- **Python 3.7 or higher**
+- Linux/Unix system with systemctl
+- Read access to `/etc/crontab`
 
-#### 安装
+### Installation
 
 ```bash
 pip3 install checkcrontab
 ```
 
-或从 GitHub 安装:
+Or from GitHub:
 
 ```bash
 pip3 install git+https://github.com/wachawo/checkcrontab.git
 ```
 
-#### 使用方法
+### Usage
 
 ```bash
-# 检查系统 crontab
+# Check system crontab
 checkcrontab
 
-# 检查 crontab 文件
+# Check crontab file
 checkcrontab /etc/crontab
 
-# 检查用户 crontab
+# Check user crontab
 checkcrontab username
 
-# 显示帮助
+# Show help
 checkcrontab --help
 ```
 
-#### 开发工具
+### Development Tools
 
 ```bash
 pip3 install pre-commit flake8 pytest
@@ -51,6 +51,6 @@ pre-commit run --all-files
 pre-commit autoupdate
 ```
 
-#### 许可证
+### License
 
 MIT License

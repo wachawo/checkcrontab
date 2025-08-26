@@ -50,7 +50,12 @@ jobs:
     - name: Test CLI functionality
       run: |
         python -m checkcrontab
-        checkcrontab examples/valid.txt
+        checkcrontab examples/system_valid.txt
+
+    - name: Test CLI functionality
+      run: |
+        python -m checkcrontab
+        checkcrontab examples/user_valid.txt
 
   build:
     needs: test

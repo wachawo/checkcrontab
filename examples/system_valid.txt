@@ -1,0 +1,41 @@
+# ========================================
+# VALID SYSTEM CRONTAB EXAMPLES
+# ========================================
+
+# System crontab format: minute hour day month weekday user command
+
+# ========================================
+# VALID TIME VALUES WITH STEPS
+# ========================================
+
+# Valid step values for minutes
+*/13 * * * * root /usr/bin/script.sh
+*/8 * * * * root /usr/bin/script.sh
+*/24 * * * * root /usr/bin/script.sh
+*/32 * * * * root /usr/bin/script.sh
+
+# ========================================
+# VALID SPECIAL KEYWORDS
+# ========================================
+
+# Valid special keyword with user and command
+@reboot root /usr/bin/script.sh
+
+# ========================================
+# VALID REGULAR CRONTAB LINES
+# ========================================
+
+# Valid system crontab line
+0 2 * * * root /usr/bin/backup.sh
+
+# Valid with complex command
+0 2 * * * root /usr/bin/script.sh && echo "backup completed"
+
+# ========================================
+# VALID ENVIRONMENT VARIABLES
+# ========================================
+
+# Valid environment variable
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+MAILTO=root

@@ -1,579 +1,129 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Script for checking syntax and correctness of crontab files
-Usage: python3 -m checkcrontab [path_to_user_crontab]
+Main entry point for checkcrontab
 """
-import copy
-import sys
-import os
-import re
-import subprocess
 import argparse
 import logging
+import os
 import platform
+import re
+import sys
 import traceback
-from typing import List, Optional
-from collections import namedtuple
-
-# Named tuples for representing crontab entries
-system_cron_entry = namedtuple('system_cron_entry', [
-    'minute', 'hour', 'day', 'month', 'weekday',
-    'user', 'command', 'line_number', 'file_name'
-])
-
-user_cron_entry = namedtuple('user_cron_entry', [
-    'minute', 'hour', 'day', 'month', 'weekday',
-    'command', 'line_number', 'file_name'
-])
-
-# Regular expressions for time field validation
-# Updated to support combinations of ranges and steps
-MINUTE_PATTERN = r'^(\*|([0-5]?[0-9])(-([0-5]?[0-9]))?(/([0-5]?[0-9]))?(,([0-5]?[0-9])(-([0-5]?[0-9]))?(/([0-5]?[0-9]))?)*|\*/([0-5]?[0-9]))$'
-HOUR_PATTERN = r'^(\*|([0-9]|1[0-9]|2[0-3])(-([0-9]|1[0-9]|2[0-3]))?(/([0-9]|1[0-9]|2[0-3]))?(,([0-9]|1[0-9]|2[0-3])(-([0-9]|1[0-9]|2[0-3]))?(/([0-9]|1[0-9]|2[0-3]))?)*|\*/([0-9]|1[0-9]|2[0-3]))$'
-DAY_PATTERN = r'^(\*|([1-9]|[12][0-9]|3[01])(-([1-9]|[12][0-9]|3[01]))?(/([1-9]|[12][0-9]|3[01]))?(,([1-9]|[12][0-9]|3[01])(-([1-9]|[12][0-9]|3[01]))?(/([1-9]|[12][0-9]|3[01]))?)*|\*/([1-9]|[12][0-9]|3[01]))$'
-MONTH_PATTERN = r'^(\*|([1-9]|1[0-2])(-([1-9]|1[0-2]))?(/([1-9]|1[0-2]))?(,([1-9]|1[0-2])(-([1-9]|1[0-2]))?(/([1-9]|1[0-2]))?)*|\*/([1-9]|1[0-2]))$'
-WEEKDAY_PATTERN = r'^(\*|([0-7])(-([0-7]))?(/([0-7]))?(,([0-7])(-([0-7]))?(/([0-7]))?)*|\*/([0-7]))$'
+from typing import List, Tuple
 
 
-class ColoredFormatter(logging.Formatter):
-    """Enhanced colored formatter with Windows support"""
-
-    def __init__(self, fmt: str = None, **kwargs) -> None:
-        super().__init__(fmt, **kwargs)
-        self._use_color = self._get_color_compatibility()
-        self.COLORS = {
-            "DEBUG": "\033[0;36m",     # CYAN
-            "INFO": "\033[0;32m",      # GREEN
-            "WARNING": "\033[0;33m",   # YELLOW
-            "ERROR": "\033[0;31m",     # RED
-            "CRITICAL": "\033[0;37;41m",  # WHITE ON RED
-            "RESET": "\033[0m",        # RESET COLOR
-        }
-
-    @classmethod
-    def _get_color_compatibility(cls) -> bool:
-        """Check if system supports ANSI colors"""
-        # Always use colors on Unix-like systems
-        if platform.system().lower() != "windows":
-            return True
-
-        # Check Windows version for ANSI support
-        try:
-            win = sys.getwindowsversion()
-            # Windows 10 version 1511+ supports ANSI colors
-            if win.major >= 10 and win.build >= 10586:
-                return True
-        except Exception:
-            pass
-
-        return False
-
-    def format(self, record: logging.LogRecord) -> str:
-        """Format log record with colors if supported"""
-        if not self._use_color:
-            return super().format(record)
-
-        # Create a copy to avoid modifying the original record
-        colored_record = copy.copy(record)
-        levelname = colored_record.levelname
-
-        # Apply color to levelname
-        color_seq = self.COLORS.get(levelname, self.COLORS["RESET"])
-        colored_record.levelname = f"{color_seq}{levelname}{self.COLORS['RESET']}"
-
-        return super().format(colored_record)
-
-
-# Logging configuration
-logging.basicConfig(
-    handlers=[logging.StreamHandler(sys.stderr)],
-    level=logging.INFO,
-    format='%(asctime)s.%(msecs)03d [%(levelname)s]: %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-
-# Apply colored formatter
-colored_formatter = ColoredFormatter(
-    fmt='%(asctime)s.%(msecs)03d [%(levelname)s]: %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-
-root_logger = logging.getLogger()
-for handler in root_logger.handlers:
-    handler.setFormatter(colored_formatter)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+try:
+    # Use as python3 -m checkcrontab
+    from . import __version__ as VERSION
+    from . import __description__ as DESCRIPTION
+    from . import logging_config
+    from . import checker
+except ImportError:
+    # Use as python3 checkcrontab/main.py
+    try:
+        from checkcrontab import __version__ as VERSION
+        from checkcrontab import __description__ as DESCRIPTION
+        from checkcrontab import logging_config  # type: ignore[import-not-found,no-redef]
+        from checkcrontab import checker  # type: ignore[import-not-found,no-redef]
+    except Exception as e:
+        logging.warning(f"{type(e).__name__} {str(e)}\n{traceback.format_exc()}")
+        sys.exit(2)
 
 logger = logging.getLogger(__name__)
-# logger.propagate = False
 
 
-def check_cron_daemon() -> bool:
-    """Check cron daemon activity"""
-    # Skip on non-Linux systems
-    if platform.system().lower() != "linux":
-        logger.info("Skipping cron daemon check on non-Linux system")
-        return True
-
-    try:
-        # Check cron daemon
-        result = subprocess.run(['systemctl', 'is-active', '--quiet', 'cron'],
-                                capture_output=True, text=True)
-        if result.returncode == 0:
-            logger.info("Cron daemon is active")
-            return True
-
-        # Check crond daemon
-        result = subprocess.run(['systemctl', 'is-active', '--quiet', 'crond'],
-                                capture_output=True, text=True)
-        if result.returncode == 0:
-            logger.info("Crond daemon is active")
-            return True
-
-        logger.warning("Cron daemon is not active")
-        return False
-
-    except FileNotFoundError:
-        logger.warning("Failed to check cron daemon status")
-        return False
-
-
-def check_system_crontab_permissions() -> bool:
-    """Check system crontab permissions"""
-    crontab_file = "/etc/crontab"
-
-    if not os.path.exists(crontab_file):
-        logger.warning(f"File {crontab_file} does not exist")
-        return True  # Don't treat as error, just warn
-
-    if not os.access(crontab_file, os.R_OK):
-        logger.warning(f"File {crontab_file} is not readable")
-        return True  # Don't treat as error, just warn
+def check_file(file_path: str, is_system_crontab: bool = False) -> Tuple[int, List[str]]:
+    """
+    Check crontab file line by line
+    Returns: (checked_lines_count, errors_list)
+    """
+    errors = []
+    checked_lines = 0
 
     try:
-        stat_info = os.stat(crontab_file)
-        permissions = oct(stat_info.st_mode)[-3:]
-
-        if permissions != "644":
-            logger.warning("System crontab: permissions {} (recommended 644)".format(permissions))
-        else:
-            logger.info("System crontab: permissions are correct")
-
-        return True
-
+        with open(file_path, 'r') as f:
+            lines = f.readlines()
     except Exception as e:
-        logger.warning(f"Error checking permissions: {e}")
-        return True  # Don't treat as error, just warn
+        logger.error(f"Error reading file {file_path}: {e}")
+        return 0, [f"Error reading file: {e}"]
 
+    i = 0
+    while i < len(lines):
+        line = lines[i].rstrip('\n')
+        line_number = i + 1
 
-def parse_cron_line(line: str, line_number: int, file_name: str, errors: List[str], is_system_crontab: bool = False):
-    """Parse crontab line"""
-    # Remove comments
-    line = re.sub(r'#.*$', '', line).strip()
-
-    if not line:
-        return None
-
-    # Skip environment variables
-    if '=' in line and not line.startswith('#'):
-        return None
-
-    # Split line into fields
-    parts = line.split()
-
-    # Check for special keywords (@reboot, @yearly, @monthly, @weekly, @daily, @hourly)
-    if parts and parts[0].startswith('@'):
-        special_keyword = parts[0]
-        valid_keywords = ['@reboot', '@yearly', '@monthly', '@weekly', '@daily', '@hourly']
-
-        if special_keyword not in valid_keywords:
-            errors.append(f"Line {line_number} in {file_name} - "
-                          f"invalid special keyword: '{special_keyword}'")
-            return None
-
-        # For special keywords, the format depends on whether it's system or user crontab
-        if is_system_crontab:
-            # System crontab: @keyword user command
-            if len(parts) < 3:
-                errors.append(f"Line {line_number} in {file_name} - insufficient fields "
-                              f"for special keyword (minimum 3 required: @keyword user command, found {len(parts)})")
-                return None
-
-            user = parts[1]
-            command = ' '.join(parts[2:])
-
-            if not command:
-                errors.append(f"Line {line_number} in {file_name} - missing command")
-                return None
-
-            # Create a special entry with the keyword as the "minute" field for compatibility
-            return system_cron_entry(
-                minute=special_keyword,  # Store the special keyword here
-                hour='*',               # Placeholder values for time fields
-                day='*',
-                month='*',
-                weekday='*',
-                user=user,
-                command=command,
-                line_number=line_number,
-                file_name=file_name
-            )
+        # Handle multi-line commands
+        if line.endswith('\\'):
+            # Collect continuation lines
+            full_line = line[:-1]  # Remove trailing backslash
+            i += 1
+            while i < len(lines) and lines[i].startswith((' ', '\t')):
+                continuation = lines[i].rstrip('\n')
+                if continuation.endswith('\\'):
+                    full_line += '\n' + continuation[:-1]
+                    i += 1
+                else:
+                    full_line += '\n' + continuation
+                    i += 1
+                    break
+            line = full_line
         else:
-            # User crontab: @keyword command
-            if len(parts) < 2:
-                errors.append(f"Line {line_number} in {file_name} - insufficient fields "
-                              f"for special keyword (minimum 2 required: @keyword command, found {len(parts)})")
-                return None
-
-            command = ' '.join(parts[1:])
-
-            if not command:
-                errors.append(f"Line {line_number} in {file_name} - missing command")
-                return None
-
-            # Create a special entry with the keyword as the "minute" field for compatibility
-            return user_cron_entry(
-                minute=special_keyword,  # Store the special keyword here
-                hour='*',               # Placeholder values for time fields
-                day='*',
-                month='*',
-                weekday='*',
-                command=command,
-                line_number=line_number,
-                file_name=file_name
-            )
-
-    # Standard time-based crontab entries
-    if is_system_crontab:
-        # System crontab: 7 fields (including user)
-        if len(parts) < 7:
-            errors.append(f"Line {line_number} in {file_name} - insufficient fields "
-                          f"(minimum 7 required for system crontab, found {len(parts)})")
-            return None
-
-        # Extract time fields, user and command
-        minute, hour, day, month, weekday, user = parts[:6]
-        command = ' '.join(parts[6:])
-
-        if not command:
-            errors.append(f"Line {line_number} in {file_name} - missing command")
-            return None
-
-        return system_cron_entry(
-            minute=minute,
-            hour=hour,
-            day=day,
-            month=month,
-            weekday=weekday,
-            user=user,
-            command=command,
-            line_number=line_number,
-            file_name=file_name
-        )
-    else:
-        # User crontab: 6 fields
-        if len(parts) < 6:
-            errors.append(f"Line {line_number} in {file_name} - insufficient fields "
-                          f"(minimum 6 required for user crontab, found {len(parts)})")
-            return None
-
-        # Extract time fields and command
-        minute, hour, day, month, weekday = parts[:5]
-        command = ' '.join(parts[5:])
-
-        if not command:
-            errors.append(f"Line {line_number} in {file_name} - missing command")
-            return None
-
-        return user_cron_entry(
-            minute=minute,
-            hour=hour,
-            day=day,
-            month=month,
-            weekday=weekday,
-            command=command,
-            line_number=line_number,
-            file_name=file_name
-        )
-
-
-def validate_time_field(value: str, field_name: str, pattern: str,
-                        line_number: int, file_name: str, errors: List[str]) -> bool:
-    """Validate time field"""
-    if not re.match(pattern, value):
-        errors.append(f"Line {line_number} in {file_name} - "
-                      f"invalid {field_name} format: '{value}'")
-        return False
-    return True
-
-
-def validate_cron_entry(entry, errors: List[str]) -> bool:
-    """Validate crontab entry"""
-    is_valid = True
-
-    # Check if this is a special keyword entry
-    if entry.minute.startswith('@'):
-        # For special keywords, skip time field validation
-        # Only validate user field for system crontab
-        if hasattr(entry, 'user'):
-            if not entry.user or entry.user.strip() == '':
-                errors.append(f"Line {entry.line_number} in {entry.file_name} - "
-                              f"missing user")
-                is_valid = False
-        return is_valid
-
-    # Validate each time field for standard crontab entries
-    if not validate_time_field(entry.minute, "minutes", MINUTE_PATTERN,
-                               entry.line_number, entry.file_name, errors):
-        is_valid = False
-
-    if not validate_time_field(entry.hour, "hours", HOUR_PATTERN,
-                               entry.line_number, entry.file_name, errors):
-        is_valid = False
-
-    if not validate_time_field(entry.day, "day of month", DAY_PATTERN,
-                               entry.line_number, entry.file_name, errors):
-        is_valid = False
-
-    if not validate_time_field(entry.month, "month", MONTH_PATTERN,
-                               entry.line_number, entry.file_name, errors):
-        is_valid = False
-
-    if not validate_time_field(entry.weekday, "day of week", WEEKDAY_PATTERN,
-                               entry.line_number, entry.file_name, errors):
-        is_valid = False
-
-    # Check user for system crontab
-    if hasattr(entry, 'user'):
-        if not entry.user or entry.user.strip() == '':
-            errors.append(f"Line {entry.line_number} in {entry.file_name} - "
-                          f"missing user")
-            is_valid = False
-
-    return is_valid
-
-
-def check_crontab_file(file_path: str, errors: List[str], is_system_crontab: bool = False) -> int:
-    """Check crontab file"""
-    file_name = os.path.basename(file_path)
-    total_errors = 0
-    total_entries = 0
-
-    if not os.path.exists(file_path):
-        logger.warning(f"File {file_path} does not exist")
-        return 0  # Don't treat as error, just warn
-
-    if not os.access(file_path, os.R_OK):
-        logger.warning(f"File {file_path} is not readable")
-        return 0  # Don't treat as error, just warn
-
-    # Check if file ends with newline
-    try:
-        with open(file_path, 'rb') as f:
-            f.seek(-1, 2)
-            last_byte = f.read(1)
-            if last_byte != b'\n':
-                logger.error(f"{file_path}: does not end with newline")
-                total_errors += 1
-    except Exception as e:
-        logger.error(f"{type(e).__name__} {str(e)}\n{traceback.format_exc()}")
-        pass
-
-    try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-
-        # Split content into lines, but handle multi-line commands properly
-        lines = content.split('\n')
-        line_number = 0
-        i = 0
-
-        while i < len(lines):
-            line = lines[i]
-            line_number = i + 1
-
-            # Skip empty lines and comments
-            stripped_line = line.strip()
-            if not stripped_line or stripped_line.startswith('#'):
-                i += 1
-                continue
-
-            # Check if this line is a continuation of a previous command
-            # (starts with whitespace and doesn't look like a cron entry)
-            if line.startswith(' ') or line.startswith('\t'):
-                # This is a continuation line, skip it
-                i += 1
-                continue
-
-            # Check if this looks like a cron entry (starts with time fields)
-            parts = stripped_line.split()
-            if len(parts) >= 5 and all(part.replace('*', '').replace(',', '').replace('-', '').replace('/', '').isdigit()
-                                       or part in ['*', '@reboot', '@yearly', '@monthly', '@weekly', '@daily', '@hourly'] for part in parts[:5]):
-                # This looks like a cron entry, process it
-                entry = parse_cron_line(line, line_number, file_name, errors, is_system_crontab)
-                if entry:
-                    total_entries += 1
-                    if not validate_cron_entry(entry, errors):
-                        total_errors += 1
-            else:
-                # This doesn't look like a cron entry, skip it
-                pass
-
             i += 1
 
-    except Exception as e:
-        logger.error(f"{type(e).__name__} {str(e)}\n{traceback.format_exc()}")
-        return 1
+        # Skip continuation lines that were already processed
+        if line.startswith((' ', '\t')) and not line.strip():
+            continue
 
-    # Output results
-    if total_errors == 0:
-        logger.info(f"{file_path}: {total_entries}/{total_entries} lines are correct")
-    else:
-        logger.error(f"{file_path}: {total_entries - total_errors}/{total_entries} lines are correct")
+        # Skip empty lines and comments
+        stripped_line = line.strip()
+        if not stripped_line:
+            continue
+        if stripped_line.startswith('#'):
+            # Check if comment line ends with newline (RFC compliance)
+            original_line = lines[line_number - 1] if line_number <= len(lines) else line
+            if not original_line.endswith('\n'):
+                line_content = checker.get_line_content(file_path, line_number) if file_path else line
+                line_content = checker.clean_line_for_output(line_content)
+                errors.append(f"{os.path.basename(file_path)} (Line {line_number}): {line_content} # Comment line should end with newline")
+            continue
 
-    return total_errors
+        # This is a line to check
+        checked_lines += 1
 
-
-def get_line_content(file_name: str, line_number: int) -> Optional[str]:
-    """Get line content from file"""
-    try:
-        # Try to find file in current directory
-        if os.path.exists(file_name):
-            with open(file_name, 'r', encoding='utf-8') as f:
-                lines = f.readlines()
-                if 1 <= line_number <= len(lines):
-                    return lines[line_number - 1].strip()
-
-        # Try system crontab
-        if file_name == "crontab" and os.path.exists("/etc/crontab"):
-            with open("/etc/crontab", 'r', encoding='utf-8') as f:
-                lines = f.readlines()
-                if 1 <= line_number <= len(lines):
-                    return lines[line_number - 1].strip()
-
-        return None
-
-    except Exception as e:
-        logger.error(f"{type(e).__name__} {str(e)}\n{traceback.format_exc()}")
-        return None
-
-
-def print_errors(errors: List[str]) -> None:
-    """Print errors with line quoting"""
-    logger.error("Found errors:")
-
-    for error in errors:
-        # Parse error message
-        parts = error.split(" - ", 1)
-        if len(parts) >= 2:
-            location = parts[0]  # "Line X in file.txt"
-            description = " - ".join(parts[1:])  # error description
-
-            # Extract line number and file name
-            match = re.search(r'Line (\d+) in (.+)', location)
-            if match:
-                line_num = int(match.group(1))
-                file_name = match.group(2)
-                line_content = get_line_content(file_name, line_num)
-
-                if line_content:
-                    # Replace tabs with spaces and remove duplication in description
-                    clean_line = line_content.replace('\t', ' ')
-                    # Remove comment from line as error description already contains needed information
-                    clean_line = re.sub(r'\s+#.*$', '', clean_line)
-                    logger.error(f"{file_name} (Line {line_num}): {clean_line} - {description}")
-                else:
-                    logger.error(f"{file_name} (Line {line_num}): {description}")
+        # Determine line type and check accordingly
+        if is_system_crontab:
+            line_errors = checker.check_line_system(line, line_number, os.path.basename(file_path), file_path)
         else:
-            logger.error(f"  {error}")
+            line_errors = checker.check_line_user(line, line_number, os.path.basename(file_path), file_path)
+
+        # Output result immediately in order of processing
+        line_content = checker.get_line_content(file_path, line_number) if file_path else line
+        line_content = checker.clean_line_for_output(line_content)
+
+        if line_errors:
+            # Output all errors for this line
+            for error in line_errors:
+                logger.error(error)
+            errors.extend(line_errors)
+        elif logger.isEnabledFor(logging.DEBUG):
+            # Output valid lines in debug mode
+            logger.debug(f"{os.path.basename(file_path)} (Line {line_number}): {line_content} # valid")
+
+    # Check if file ends with newline (RFC compliance)
+    if lines and not lines[-1].endswith('\n'):
+        error_msg = f"{os.path.basename(file_path)} (Line {len(lines) + 1}): File should end with newline"
+        errors.append(error_msg)
+        logger.error(error_msg)
+
+    return checked_lines, errors
 
 
-def get_user_crontab_path(username: str) -> Optional[str]:
-    """Get user crontab path"""
-    try:
-        # Check if user exists
-        result = subprocess.run(['id', username], capture_output=True, text=True)
-        if result.returncode != 0:
-            return None
-
-        # Get user crontab path
-        crontab_path = f"/var/spool/cron/crontabs/{username}"
-        if os.path.exists(crontab_path):
-            return crontab_path
-
-        # Alternative path for some systems
-        crontab_path = f"/var/spool/cron/{username}"
-        if os.path.exists(crontab_path):
-            return crontab_path
-
-        return None
-
-    except Exception as e:
-        logger.error(f"{type(e).__name__} {str(e)}\n{traceback.format_exc()}")
-        return None
-
-
-def check_user_crontab(username: str, errors: List[str]) -> int:
-    """Check user crontab by username"""
-    try:
-        # Check if user exists
-        result = subprocess.run(['id', username], capture_output=True, text=True)
-        if result.returncode != 0:
-            logger.warning(f"User '{username}' not found")
-            return 0  # Don't treat as error, just warn
-
-        # Try to get crontab content using 'crontab -l' command
-        # This works even if the user doesn't have direct file access
-        if username == os.getenv('USER') or username == os.getenv('LOGNAME'):
-            # Current user - use 'crontab -l'
-            result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
-            if result.returncode != 0:
-                if "no crontab" in result.stderr.lower():
-                    logger.warning(f"User '{username}' has no crontab")
-                    return 0  # Don't treat as error, just warn
-                else:
-                    logger.warning(f"Failed to read crontab for user '{username}': {result.stderr.strip()}")
-                    return 0  # Don't treat as error, just warn
-            crontab_content = result.stdout
-        else:
-            # Other user - try to use 'sudo crontab -u username -l'
-            result = subprocess.run(['sudo', 'crontab', '-u', username, '-l'],
-                                    capture_output=True, text=True)
-            if result.returncode != 0:
-                if "no crontab" in result.stderr.lower():
-                    logger.warning(f"User '{username}' has no crontab")
-                    return 0  # Don't treat as error, just warn
-                else:
-                    logger.warning(f"Failed to read crontab for user '{username}': {result.stderr.strip()}")
-                    return 0  # Don't treat as error, just warn
-            crontab_content = result.stdout
-
-        # Create a temporary file with the crontab content
-        import tempfile
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.crontab', delete=False) as temp_file:
-            temp_file.write(crontab_content)
-            temp_file_path = temp_file.name
-
-        try:
-            # Check the temporary file
-            total_errors = check_crontab_file(temp_file_path, errors, is_system_crontab=False)
-            return total_errors
-        finally:
-            # Clean up temporary file
-            try:
-                os.unlink(temp_file_path)
-            except Exception as e:
-                logger.error(f"{type(e).__name__} {str(e)}\n{traceback.format_exc()}")
-                pass
-
-    except Exception as e:
-        logger.error(f"Error checking crontab for user '{username}': {e}")
-        return 1
-
-
-def main():
+def main() -> int:
     """Main function"""
     parser = argparse.ArgumentParser(
-        description="Check syntax and correctness of crontab files",
+        description=DESCRIPTION,
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Usage examples:
@@ -584,74 +134,83 @@ Usage examples:
         """,
     )
 
-    parser.add_argument('user_inputs', nargs='*', help='Paths to crontab files or usernames')
-    parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output')
+    parser.add_argument('arguments', nargs='*', help='Paths to crontab files or usernames')
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + VERSION)
+    parser.add_argument('-d', '--debug', action='store_true', help='Debug output')
+    parser.add_argument('-n', '--no-colors', action='store_true', help='Disable colored output')
 
     args = parser.parse_args()
 
-    # Set logging level
-    if args.verbose:
-        logging.getLogger().setLevel(logging.DEBUG)
-        logger.debug("Verbose mode enabled")
+    # Setup logging
+    logging_config.setup_logging(args.debug, args.no_colors)
 
     # Prepare list of files to check
-    file_list = []
+    file_list: List[str] = []
+    file_list.extend(args.arguments)
 
     if platform.system().lower() == "linux":
-        # Check cron daemon
-        check_cron_daemon()
-        # Check system crontab permissions
-        check_system_crontab_permissions()
-
-        # Add /etc/crontab first for Linux systems if not in GitHub
+        checker.check_cron_daemon()
+        checker.check_system_crontab_permissions()
         is_github = os.getenv('GITHUB_ACTIONS') == 'true'
-        if not is_github:
-            file_list.append("/etc/crontab")
+        if not is_github and "/etc/crontab" not in file_list:
+            file_list.insert(0, "/etc/crontab")
     else:
         logger.info("Skipping checks on non-Linux system")
 
-    # Add user inputs
-    file_list.extend(args.user_inputs)
+    # Remove duplicates while preserving order
+    seen: set = set()
+    unique_file_list: List[str] = []
+    for file_path in file_list:
+        if file_path not in seen:
+            seen.add(file_path)
+            unique_file_list.append(file_path)
+    file_list = unique_file_list
 
-    # Remove duplicates
-    file_list = list(set(file_list))
-
-    # Validate crontab files one by one
-    errors = []
+    total_checked_lines = 0
     total_errors = 0
+    all_errors: List[str] = []
 
     for file_path in file_list:
-        # Determine if this is a system crontab
-        is_system_crontab = file_path == "/etc/crontab"
-
-        # Check if it looks like a file path (contains '/' or '.' or has extension)
+        is_system_crontab = (file_path == "/etc/crontab" or
+                             "system" in os.path.basename(file_path))
         looks_like_file = '/' in file_path or '.' in file_path
-
         if looks_like_file:
-            # Treat as file path
             if os.path.exists(file_path):
-                # This is an existing file path
-                file_errors = check_crontab_file(file_path, errors, is_system_crontab=is_system_crontab)
-                total_errors += file_errors
+                checked_lines, file_errors = check_file(file_path, is_system_crontab=is_system_crontab)
+                total_checked_lines += checked_lines
+                total_errors += len(file_errors)
+                all_errors.extend(file_errors)
+                unique_error_lines = set()
+                for error in file_errors:
+                    if "File should end with newline" in error:
+                        continue
+                    match = re.search(r'Line (\d+)', error)
+                    if match:
+                        unique_error_lines.add(int(match.group(1)))
+                lines_with_errors = len(unique_error_lines)
+                if file_errors:
+                    logger.error(f"{file_path}: {lines_with_errors}/{checked_lines} lines with errors. Total {len(file_errors)} errors.")
+                else:
+                    logger.info(f"{file_path}: 0/{checked_lines} lines without errors. No errors.")
             else:
-                # File doesn't exist, warn but don't treat as error
                 logger.warning(f"File {file_path} does not exist")
         else:
-            # Treat as username
-            user_errors = check_user_crontab(file_path, errors)
-            total_errors += user_errors
+            logger.warning(f"User crontab checking not implemented yet for: {file_path}")
 
-    # Print all errors
-    if errors:
-        print_errors(errors)
-
-    # Final result
     if total_errors == 0:
         logger.info("All checks passed successfully!")
-        return 0
     else:
-        logger.error(f"Found errors: {total_errors}")
-        return 1
+        unique_error_lines = set()
+        for error in all_errors:
+            if "File should end with newline" in error:
+                continue
+            match = re.search(r'Line (\d+)', error)
+            if match:
+                unique_error_lines.add(int(match.group(1)))
+        lines_with_errors = len(unique_error_lines)
+        logger.error(f"Total: {lines_with_errors} lines with errors found in {total_checked_lines} checked lines")
+
+    return 0 if total_errors == 0 else 1
 
 
 if __name__ == "__main__":
