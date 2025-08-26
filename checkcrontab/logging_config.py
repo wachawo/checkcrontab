@@ -10,6 +10,10 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
+# Windows version constants
+WINDOWS_MAJOR_VERSION = 10
+WINDOWS_BUILD_VERSION = 10586
+
 
 class ColoredFormatter(logging.Formatter):
     """Enhanced colored formatter with Windows support"""
@@ -38,7 +42,7 @@ class ColoredFormatter(logging.Formatter):
             if hasattr(sys, 'getwindowsversion'):
                 win = sys.getwindowsversion()
                 # Windows 10 version 1511+ supports ANSI colors
-                if win.major >= 10 and win.build >= 10586:
+                if win.major >= WINDOWS_MAJOR_VERSION and win.build >= WINDOWS_BUILD_VERSION:
                     return True
         except Exception:
             pass
