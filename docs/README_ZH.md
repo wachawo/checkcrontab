@@ -1,75 +1,75 @@
-## Checkcrontab - check syntax in crontab files
+## Checkcrontab - 检查 crontab 文件语法
 
 [![CI](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml/badge.svg)](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 [![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 
-A Python script for checking syntax of crontab files. Cross-platform support for Linux, macOS, and Windows.
+一个用于检查 crontab 文件语法的 Python 脚本。支持 Linux、macOS 和 Windows 跨平台。
 
-[English](../README.md) | [Español](README_ES.md) | [Português](README_PT.md) | [Français](README_FR.md) | [Deutsch](README_DE.md) | [Italiano](README_IT.md) | [Русский](README_RU.md) | [中文](README_ZH.md) | [日本語](README_JA.md) | [हिन्दी](README_HI.md)
+[English](https://github.com/wachawo/checkcrontab/blob/main/README.md) | [Español](https://github.com/wachawo/checkcrontab/blob/main/docs/README_ES.md) | [Português](https://github.com/wachawo/checkcrontab/blob/main/docs/README_PT.md) | [Français](https://github.com/wachawo/checkcrontab/blob/main/docs/README_FR.md) | [Deutsch](https://github.com/wachawo/checkcrontab/blob/main/docs/README_DE.md) | [Italiano](https://github.com/wachawo/checkcrontab/blob/main/docs/README_IT.md) | [Русский](https://github.com/wachawo/checkcrontab/blob/main/docs/README_RU.md) | [中文](https://github.com/wachawo/checkcrontab/blob/main/docs/README_ZH.md) | [日本語](https://github.com/wachawo/checkcrontab/blob/main/docs/README_JA.md) | [हिन्दी](https://github.com/wachawo/checkcrontab/blob/main/docs/README_HI.md)
 
-### Requirements
+### 系统要求
 
-- **Python 3.7 or higher**
-- Linux/Unix system with systemctl (for daemon checks)
-- Read access to `/etc/crontab` (on Linux)
+- **Python 3.7 或更高版本**
+- 带有 systemctl 的 Linux/Unix 系统（用于守护进程检查）
+- 对 `/etc/crontab` 的读取权限（在 Linux 上）
 
-### Installation
+### 安装
 
 ```bash
 pip3 install checkcrontab
 ```
 
-Or from GitHub:
+或从 GitHub 安装：
 
 ```bash
 pip3 install git+https://github.com/wachawo/checkcrontab.git
 ```
 
-### Usage
+### 使用方法
 
 ```bash
-# Check system crontab (Linux only)
+# 检查系统 crontab（仅限 Linux）
 checkcrontab
 
-# Check crontab file
-checkcrontab /path/to/crontab
+# 检查 crontab 文件
+checkcrontab /etc/crontab
 
-# Check user crontab
+# 检查用户 crontab
 checkcrontab username
 
-# Check with explicit type flags
+# 使用显式类型标志检查
 checkcrontab -S system.cron -U user.cron -u username1 -u username2
 
-# Show help
+# 显示帮助
 checkcrontab --help
 
-# Show version
+# 显示版本
 checkcrontab --version
 ```
 
-### Command Line Options
+### 命令行选项
 
-- `-S, --system` - System crontab files
-- `-U, --user` - User crontab files  
-- `-u, --username` - Usernames to check
-- `-v, --version` - Show version
-- `-d, --debug` - Debug output
-- `-n, --no-colors` - Disable colored output
+- `-S, --system` - 系统 crontab 文件
+- `-U, --user` - 用户 crontab 文件
+- `-u, --username` - 要检查的用户名
+- `-v, --version` - 显示版本
+- `-d, --debug` - 调试输出
+- `-n, --no-colors` - 禁用彩色输出
 
-### Features
+### 功能特性
 
-- ✅ **Cross-platform support** (Linux, macOS, Windows)
-- ✅ **System and user crontab validation**
-- ✅ **Time field validation** (minutes, hours, days, months, weekdays)
-- ✅ **User existence validation** (Linux/macOS)
-- ✅ **Dangerous command detection**
-- ✅ **Special keyword support** (@reboot, @daily, etc.)
-- ✅ **Multi-line command support**
+- **跨平台支持** (Linux, macOS, Windows)
+- **系统和用户 crontab 验证**
+- **时间字段验证** (分钟、小时、日期、月份、星期)
+- **用户存在性验证** (Linux/macOS)
+- **危险命令检测**
+- **特殊关键字支持** (@reboot, @daily, 等)
+- **多行命令支持**
 
-📖 **[Detailed Features Documentation](FEATURES.md)** - Comprehensive guide to supported syntax, valid values, examples, and error messages.
+**[功能文档](https://github.com/wachawo/checkcrontab/blob/main/docs/FEATURES.md)** - 支持的语法、有效值、示例和错误消息的综合指南。
 
-### Development Tools
+### 开发工具
 
 ```bash
 pip3 install pre-commit flake8 pytest mypy ruff
@@ -78,6 +78,6 @@ pre-commit run --all-files
 pre-commit autoupdate
 ```
 
-### License
+### 许可证
 
-MIT License
+MIT 许可证

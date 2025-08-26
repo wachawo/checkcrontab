@@ -1,75 +1,75 @@
-## Checkcrontab - check syntax in crontab files
+## Checkcrontab - verificar sintaxe em arquivos crontab
 
 [![CI](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml/badge.svg)](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 [![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 
-A Python script for checking syntax of crontab files. Cross-platform support for Linux, macOS, and Windows.
+Um script Python para verificar a sintaxe de arquivos crontab. Suporte multiplataforma para Linux, macOS e Windows.
 
-[English](../README.md) | [Español](README_ES.md) | [Português](README_PT.md) | [Français](README_FR.md) | [Deutsch](README_DE.md) | [Italiano](README_IT.md) | [Русский](README_RU.md) | [中文](README_ZH.md) | [日本語](README_JA.md) | [हिन्दी](README_HI.md)
+[English](https://github.com/wachawo/checkcrontab/blob/main/README.md) | [Español](https://github.com/wachawo/checkcrontab/blob/main/docs/README_ES.md) | [Português](https://github.com/wachawo/checkcrontab/blob/main/docs/README_PT.md) | [Français](https://github.com/wachawo/checkcrontab/blob/main/docs/README_FR.md) | [Deutsch](https://github.com/wachawo/checkcrontab/blob/main/docs/README_DE.md) | [Italiano](https://github.com/wachawo/checkcrontab/blob/main/docs/README_IT.md) | [Русский](https://github.com/wachawo/checkcrontab/blob/main/docs/README_RU.md) | [中文](https://github.com/wachawo/checkcrontab/blob/main/docs/README_ZH.md) | [日本語](https://github.com/wachawo/checkcrontab/blob/main/docs/README_JA.md) | [हिन्दी](https://github.com/wachawo/checkcrontab/blob/main/docs/README_HI.md)
 
-### Requirements
+### Requisitos
 
-- **Python 3.7 or higher**
-- Linux/Unix system with systemctl (for daemon checks)
-- Read access to `/etc/crontab` (on Linux)
+- **Python 3.7 ou superior**
+- Sistema Linux/Unix com systemctl (para verificações de daemon)
+- Acesso de leitura a `/etc/crontab` (no Linux)
 
-### Installation
+### Instalação
 
 ```bash
 pip3 install checkcrontab
 ```
 
-Or from GitHub:
+Ou do GitHub:
 
 ```bash
 pip3 install git+https://github.com/wachawo/checkcrontab.git
 ```
 
-### Usage
+### Uso
 
 ```bash
-# Check system crontab (Linux only)
+# Verificar crontab do sistema (apenas Linux)
 checkcrontab
 
-# Check crontab file
-checkcrontab /path/to/crontab
+# Verificar arquivo crontab
+checkcrontab /etc/crontab
 
-# Check user crontab
+# Verificar crontab do usuário
 checkcrontab username
 
-# Check with explicit type flags
+# Verificar com flags de tipo explícitos
 checkcrontab -S system.cron -U user.cron -u username1 -u username2
 
-# Show help
+# Mostrar ajuda
 checkcrontab --help
 
-# Show version
+# Mostrar versão
 checkcrontab --version
 ```
 
-### Command Line Options
+### Opções da linha de comando
 
-- `-S, --system` - System crontab files
-- `-U, --user` - User crontab files  
-- `-u, --username` - Usernames to check
-- `-v, --version` - Show version
-- `-d, --debug` - Debug output
-- `-n, --no-colors` - Disable colored output
+- `-S, --system` - Arquivos crontab do sistema
+- `-U, --user` - Arquivos crontab do usuário
+- `-u, --username` - Nomes de usuário para verificar
+- `-v, --version` - Mostrar versão
+- `-d, --debug` - Saída de debug
+- `-n, --no-colors` - Desabilitar saída colorida
 
-### Features
+### Recursos
 
-- ✅ **Cross-platform support** (Linux, macOS, Windows)
-- ✅ **System and user crontab validation**
-- ✅ **Time field validation** (minutes, hours, days, months, weekdays)
-- ✅ **User existence validation** (Linux/macOS)
-- ✅ **Dangerous command detection**
-- ✅ **Special keyword support** (@reboot, @daily, etc.)
-- ✅ **Multi-line command support**
+- **Suporte multiplataforma** (Linux, macOS, Windows)
+- **Validação de crontab do sistema e usuário**
+- **Validação de campos de tempo** (minutos, horas, dias, meses, dias da semana)
+- **Validação de existência do usuário** (Linux/macOS)
+- **Detecção de comandos perigosos**
+- **Suporte a palavras-chave especiais** (@reboot, @daily, etc.)
+- **Suporte a comandos multi-linha**
 
-📖 **[Detailed Features Documentation](FEATURES.md)** - Comprehensive guide to supported syntax, valid values, examples, and error messages.
+**[Documentação de recursos](https://github.com/wachawo/checkcrontab/blob/main/docs/FEATURES.md)** - Guia abrangente da sintaxe suportada, valores válidos, exemplos e mensagens de erro.
 
-### Development Tools
+### Ferramentas de desenvolvimento
 
 ```bash
 pip3 install pre-commit flake8 pytest mypy ruff
@@ -78,6 +78,6 @@ pre-commit run --all-files
 pre-commit autoupdate
 ```
 
-### License
+### Licença
 
-MIT License
+Licença MIT

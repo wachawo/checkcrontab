@@ -1,75 +1,75 @@
-## Checkcrontab - check syntax in crontab files
+## Checkcrontab - crontab फ़ाइलों में सिंटैक्स की जांच
 
 [![CI](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml/badge.svg)](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 [![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 
-A Python script for checking syntax of crontab files. Cross-platform support for Linux, macOS, and Windows.
+crontab फ़ाइलों के सिंटैक्स की जांच के लिए एक Python स्क्रिप्ट।Linux, macOS, और Windows के लिए क्रॉस-प्लेटफ़ॉर्म समर्थन।
 
-[English](../README.md) | [Español](README_ES.md) | [Português](README_PT.md) | [Français](README_FR.md) | [Deutsch](README_DE.md) | [Italiano](README_IT.md) | [Русский](README_RU.md) | [中文](README_ZH.md) | [日本語](README_JA.md) | [हिन्दी](README_HI.md)
+[English](https://github.com/wachawo/checkcrontab/blob/main/README.md) | [Español](https://github.com/wachawo/checkcrontab/blob/main/docs/README_ES.md) | [Português](https://github.com/wachawo/checkcrontab/blob/main/docs/README_PT.md) | [Français](https://github.com/wachawo/checkcrontab/blob/main/docs/README_FR.md) | [Deutsch](https://github.com/wachawo/checkcrontab/blob/main/docs/README_DE.md) | [Italiano](https://github.com/wachawo/checkcrontab/blob/main/docs/README_IT.md) | [Русский](https://github.com/wachawo/checkcrontab/blob/main/docs/README_RU.md) | [中文](https://github.com/wachawo/checkcrontab/blob/main/docs/README_ZH.md) | [日本語](https://github.com/wachawo/checkcrontab/blob/main/docs/README_JA.md) | [हिन्दी](https://github.com/wachawo/checkcrontab/blob/main/docs/README_HI.md)
 
-### Requirements
+### आवश्यकताएं
 
-- **Python 3.7 or higher**
-- Linux/Unix system with systemctl (for daemon checks)
-- Read access to `/etc/crontab` (on Linux)
+- **Python 3.7 या उससे ऊपर**
+- systemctl के साथ Linux/Unix सिस्टम (डेमन चेक के लिए)
+- `/etc/crontab` तक पढ़ने का अधिकार (Linux पर)
 
-### Installation
+### इंस्टॉलेशन
 
 ```bash
 pip3 install checkcrontab
 ```
 
-Or from GitHub:
+या GitHub से:
 
 ```bash
 pip3 install git+https://github.com/wachawo/checkcrontab.git
 ```
 
-### Usage
+### उपयोग
 
 ```bash
-# Check system crontab (Linux only)
+# सिस्टम crontab की जांच करें (केवल Linux)
 checkcrontab
 
-# Check crontab file
-checkcrontab /path/to/crontab
+# crontab फ़ाइल की जांच करें
+checkcrontab /etc/crontab
 
-# Check user crontab
+# उपयोगकर्ता crontab की जांच करें
 checkcrontab username
 
-# Check with explicit type flags
+# स्पष्ट प्रकार के फ्लैग के साथ जांच करें
 checkcrontab -S system.cron -U user.cron -u username1 -u username2
 
-# Show help
+# सहायता दिखाएं
 checkcrontab --help
 
-# Show version
+# संस्करण दिखाएं
 checkcrontab --version
 ```
 
-### Command Line Options
+### कमांड लाइन विकल्प
 
-- `-S, --system` - System crontab files
-- `-U, --user` - User crontab files  
-- `-u, --username` - Usernames to check
-- `-v, --version` - Show version
-- `-d, --debug` - Debug output
-- `-n, --no-colors` - Disable colored output
+- `-S, --system` - सिस्टम crontab फ़ाइलें
+- `-U, --user` - उपयोगकर्ता crontab फ़ाइलें
+- `-u, --username` - जांच करने के लिए उपयोगकर्ता नाम
+- `-v, --version` - संस्करण दिखाएं
+- `-d, --debug` - डीबग आउटपुट
+- `-n, --no-colors` - रंगीन आउटपुट अक्षम करें
 
-### Features
+### सुविधाएं
 
-- ✅ **Cross-platform support** (Linux, macOS, Windows)
-- ✅ **System and user crontab validation**
-- ✅ **Time field validation** (minutes, hours, days, months, weekdays)
-- ✅ **User existence validation** (Linux/macOS)
-- ✅ **Dangerous command detection**
-- ✅ **Special keyword support** (@reboot, @daily, etc.)
-- ✅ **Multi-line command support**
+- **क्रॉस-प्लेटफ़ॉर्म समर्थन** (Linux, macOS, Windows)
+- **सिस्टम और उपयोगकर्ता crontab सत्यापन**
+- **समय फ़ील्ड सत्यापन** (मिनट, घंटे, दिन, महीने, सप्ताह के दिन)
+- **उपयोगकर्ता अस्तित्व सत्यापन** (Linux/macOS)
+- **खतरनाक कमांड का पता लगाना**
+- **विशेष कीवर्ड समर्थन** (@reboot, @daily, आदि)
+- **बहु-पंक्ति कमांड समर्थन**
 
-📖 **[Detailed Features Documentation](FEATURES.md)** - Comprehensive guide to supported syntax, valid values, examples, and error messages.
+**[सुविधा दस्तावेज़](https://github.com/wachawo/checkcrontab/blob/main/docs/FEATURES.md)** - समर्थित सिंटैक्स, मान्य मान, उदाहरण और त्रुटि संदेशों का व्यापक गाइड।
 
-### Development Tools
+### विकास उपकरण
 
 ```bash
 pip3 install pre-commit flake8 pytest mypy ruff
@@ -78,6 +78,6 @@ pre-commit run --all-files
 pre-commit autoupdate
 ```
 
-### License
+### लाइसेंस
 
-MIT License
+MIT लाइसेंस

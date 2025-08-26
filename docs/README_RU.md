@@ -6,7 +6,7 @@
 
 A Python script for checking syntax of crontab files. Cross-platform support for Linux, macOS, and Windows.
 
-[English](../README.md) | [Español](README_ES.md) | [Português](README_PT.md) | [Français](README_FR.md) | [Deutsch](README_DE.md) | [Italiano](README_IT.md) | [Русский](README_RU.md) | [中文](README_ZH.md) | [日本語](README_JA.md) | [हिन्दी](README_HI.md)
+[English](https://github.com/wachawo/checkcrontab/blob/main/README.md) | [Español](https://github.com/wachawo/checkcrontab/blob/main/docs/README_ES.md) | [Português](https://github.com/wachawo/checkcrontab/blob/main/docs/README_PT.md) | [Français](https://github.com/wachawo/checkcrontab/blob/main/docs/README_FR.md) | [Deutsch](https://github.com/wachawo/checkcrontab/blob/main/docs/README_DE.md) | [Italiano](https://github.com/wachawo/checkcrontab/blob/main/docs/README_IT.md) | **[Русский](https://github.com/wachawo/checkcrontab/blob/main/docs/README_RU.md)** | [中文](https://github.com/wachawo/checkcrontab/blob/main/docs/README_ZH.md) | [日本語](https://github.com/wachawo/checkcrontab/blob/main/docs/README_JA.md) | [हिन्दी](https://github.com/wachawo/checkcrontab/blob/main/docs/README_HI.md)
 
 ### Requirements
 
@@ -33,7 +33,7 @@ pip3 install git+https://github.com/wachawo/checkcrontab.git
 checkcrontab
 
 # Check crontab file
-checkcrontab /path/to/crontab
+checkcrontab /etc/crontab
 
 # Check user crontab
 checkcrontab username
@@ -51,7 +51,7 @@ checkcrontab --version
 ### Command Line Options
 
 - `-S, --system` - System crontab files
-- `-U, --user` - User crontab files  
+- `-U, --user` - User crontab files
 - `-u, --username` - Usernames to check
 - `-v, --version` - Show version
 - `-d, --debug` - Debug output
@@ -59,15 +59,19 @@ checkcrontab --version
 
 ### Features
 
-- ✅ **Cross-platform support** (Linux, macOS, Windows)
-- ✅ **System and user crontab validation**
-- ✅ **Time field validation** (minutes, hours, days, months, weekdays)
-- ✅ **User existence validation** (Linux/macOS)
-- ✅ **Dangerous command detection**
-- ✅ **Special keyword support** (@reboot, @daily, etc.)
-- ✅ **Multi-line command support**
+- **Cross-platform support** (Linux, macOS, Windows)
+- **System and user crontab validation**
+- **Time field validation** (minutes, hours, days, months, weekdays)
+- **User existence validation** (Linux/macOS)
+- **Dangerous command detection**
+- **Special keyword support** (@reboot, @daily, etc.)
+- **Multi-line command support**
 
-📖 **[Detailed Features Documentation](FEATURES.md)** - Comprehensive guide to supported syntax, valid values, examples, and error messages.
+### Documentation
+
+- **[Syntax Reference](https://github.com/wachawo/checkcrontab/blob/main/docs/SYNTAX.md)** - Supported crontab syntax and examples
+- **[Error Messages](https://github.com/wachawo/checkcrontab/blob/main/docs/ERRORS.md)** - Complete list of error messages and warnings
+- **[Advanced Usage](https://github.com/wachawo/checkcrontab/blob/main/docs/ADVANCED.md)** - Advanced features and examples
 
 ### Development Tools
 
