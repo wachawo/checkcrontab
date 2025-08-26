@@ -9,8 +9,9 @@ import os
 import platform
 import re
 import sys
+import tempfile
 import traceback
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 try:
@@ -111,6 +112,29 @@ def check_file(file_path: str, is_system_crontab: bool = False) -> Tuple[int, Li
     return checked_lines, errors
 
 
+def find_user_crontab(username: str) -> Optional[str]:
+    """Find user crontab file path or get content via crontab command"""
+    # First try to find existing file
+    possible_paths = [
+        f"/var/spool/cron/crontabs/{username}",
+        f"/var/spool/cron/{username}",
+        f"/tmp/crontab.{username}",
+    ]
+    for path in possible_paths:
+        if os.path.exists(path):
+            return path
+
+    # If no file found, try to get via crontab command
+    crontab_content = checker.get_crontab(username)
+    if crontab_content:
+        # Create temporary file with crontab content (context manager per SIM115)
+        with tempfile.NamedTemporaryFile(mode="w", suffix=f".{username}", delete=False) as tmp:
+            tmp.write(crontab_content)
+            temp_path = tmp.name
+        return temp_path
+    return None
+
+
 def main() -> int:
     """Main function"""
     parser = argparse.ArgumentParser(
@@ -142,6 +166,7 @@ Usage examples:
 
     # Prepare list of files to check with their types
     file_list: List[Tuple[str, bool]] = []  # (file_path, is_system_crontab)
+    temp_files: List[str] = []  # Track temporary files for cleanup
 
     # Add files with explicit flags
     if args.system:
@@ -155,7 +180,13 @@ Usage examples:
     # Add usernames with explicit flag
     if args.username:
         for username in args.username:
-            logger.warning(f"User crontab checking not implemented yet for: {username}")
+            crontab_path = find_user_crontab(username)
+            if crontab_path:
+                temp_files.append(crontab_path)
+                file_list.append((crontab_path, False))  # User crontab
+                logger.info(f"Found user crontab for {username}: {crontab_path}")
+            else:
+                logger.warning(f"User crontab not found for: {username}")
 
     # Add arguments with smart detection
     for arg in args.arguments:
@@ -165,8 +196,14 @@ Usage examples:
             is_system_crontab = arg == "/etc/crontab" or arg.startswith("/etc/cron.d") or "system" in os.path.basename(arg)
             file_list.append((arg, is_system_crontab))
         else:
-            # If not a file, treat as username (for future implementation)
-            logger.warning(f"User crontab checking not implemented yet for: {arg}")
+            # If not a file, treat as username
+            crontab_path = find_user_crontab(arg)
+            if crontab_path:
+                temp_files.append(crontab_path)
+                file_list.append((crontab_path, False))  # User crontab
+                logger.info(f"Found user crontab for {arg}: {crontab_path}")
+            else:
+                logger.warning(f"User crontab not found for: {arg}")
 
     # Add system crontab on Linux if not already included
     if platform.system().lower() == "linux":
@@ -224,6 +261,13 @@ Usage examples:
                 unique_error_lines.add(int(match.group(1)))
         lines_with_errors = len(unique_error_lines)
         logger.error(f"Total: {lines_with_errors} lines with errors found in {total_checked_lines} checked lines")
+
+    # Clean up temporary files
+    for temp_file in temp_files:
+        try:
+            os.unlink(temp_file)
+        except Exception as e:
+            logger.debug(f"Failed to remove temporary file {temp_file}: {e}")
 
     return 0 if total_errors == 0 else 1
 

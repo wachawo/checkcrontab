@@ -66,11 +66,10 @@ def check_dangerous_commands(command: str) -> List[str]:
         (r"\brm\s+-rf\s+/\s*\|\|", "dangerous command: 'rm -rf /'"),
     ]
 
-    # Check if any dangerous pattern matches and return only one error
     for pattern, message in dangerous_patterns:
         if re.search(pattern, command, re.IGNORECASE):
             errors.append(message)
-            break  # Return only the first match
+            break  # Only report one error per dangerous command
 
     return errors
 
@@ -480,3 +479,33 @@ def validate_single_time_value(value: str, field_name: str, min_val: int, max_va
             errors.append(f"value {num_val} out of bounds ({min_val}-{max_val}) for {field_name}: '{value}'")
 
     return errors
+
+
+def get_crontab(username: str) -> Optional[str]:
+    """
+    Get user crontab content using 'crontab -l -u username'
+    Returns the crontab content as string or None if not found/error
+    """
+    try:
+        # Try to get user crontab using crontab command
+        result = subprocess.run(["crontab", "-l", "-u", username], capture_output=True, text=True, timeout=10, check=False)
+
+        if result.returncode == 0:
+            return result.stdout
+        elif result.returncode == 1 and "no crontab for" in result.stderr.lower():
+            # User has no crontab
+            logger.info(f"No crontab found for user: {username}")
+            return None
+        else:
+            logger.warning(f"Error getting crontab for {username}: {result.stderr}")
+            return None
+
+    except subprocess.TimeoutExpired:
+        logger.warning(f"Timeout getting crontab for user: {username}")
+        return None
+    except FileNotFoundError:
+        logger.warning(f"crontab command not found for user: {username}")
+        return None
+    except Exception as e:
+        logger.warning(f"Unexpected error getting crontab for {username}: {e}")
+        return None
