@@ -24,8 +24,8 @@ except ImportError:
     try:
         from checkcrontab import __version__ as VERSION
         from checkcrontab import __description__ as DESCRIPTION
-        import logging_config
-        import checker
+        from checkcrontab import logging_config # type: ignore[import-not-found,no-redef]
+        from checkcrontab import checker # type: ignore[import-not-found,no-redef]
     except Exception as e:
         logging.warning(f"{type(e).__name__} {str(e)}\n{traceback.format_exc()}")
         sys.exit(2)
@@ -81,7 +81,6 @@ def check_file(file_path: str, is_system_crontab: bool = False) -> tuple[int, li
             continue
         if stripped_line.startswith('#'):
             # Check if comment line ends with newline (RFC compliance)
-            # Note: line already has newline stripped, so we check if original line ended with newline
             original_line = lines[line_number - 1] if line_number <= len(lines) else line
             if not original_line.endswith('\n'):
                 line_content = checker.get_line_content(file_path, line_number) if file_path else line
@@ -145,18 +144,12 @@ Usage examples:
     logging_config.setup_logging(args.debug, args.no_colors)
 
     # Prepare list of files to check
-    file_list = []
-
-    # Add user inputs first
+    file_list: list[str] = []
     file_list.extend(args.arguments)
 
     if platform.system().lower() == "linux":
-        # Check cron daemon
         checker.check_cron_daemon()
-        # Check system crontab permissions
         checker.check_system_crontab_permissions()
-
-        # Add /etc/crontab first for Linux systems if not in GitHub
         is_github = os.getenv('GITHUB_ACTIONS') == 'true'
         if not is_github and "/etc/crontab" not in file_list:
             file_list.insert(0, "/etc/crontab")
@@ -164,76 +157,55 @@ Usage examples:
         logger.info("Skipping checks on non-Linux system")
 
     # Remove duplicates while preserving order
-    seen = set()
-    unique_file_list = []
+    seen: set[str] = set()
+    unique_file_list: list[str] = []
     for file_path in file_list:
         if file_path not in seen:
             seen.add(file_path)
             unique_file_list.append(file_path)
     file_list = unique_file_list
 
-    # Check files
     total_checked_lines = 0
     total_errors = 0
-    all_errors = []
+    all_errors: list[str] = []
 
     for file_path in file_list:
-        # Determine if this is a system crontab
         is_system_crontab = (file_path == "/etc/crontab" or
                              "system" in os.path.basename(file_path))
-
-        # Check if it looks like a file path (contains '/' or '.' or has extension)
         looks_like_file = '/' in file_path or '.' in file_path
-
         if looks_like_file:
-            # Treat as file path
             if os.path.exists(file_path):
-                # This is an existing file path
                 checked_lines, file_errors = check_file(file_path, is_system_crontab=is_system_crontab)
                 total_checked_lines += checked_lines
                 total_errors += len(file_errors)
                 all_errors.extend(file_errors)
-
-                # Count unique lines with errors for this file
                 unique_error_lines = set()
                 for error in file_errors:
-                    # Skip "File should end with newline" errors from line count
                     if "File should end with newline" in error:
                         continue
-                    # Extract line number from error message
                     match = re.search(r'Line (\d+)', error)
                     if match:
                         unique_error_lines.add(int(match.group(1)))
-
                 lines_with_errors = len(unique_error_lines)
-
-                # Output file statistics
                 if file_errors:
                     logger.error(f"{file_path}: {lines_with_errors}/{checked_lines} lines with errors. Total {len(file_errors)} errors.")
                 else:
                     logger.info(f"{file_path}: 0/{checked_lines} lines without errors. No errors.")
             else:
-                # File doesn't exist, warn but don't treat as error
                 logger.warning(f"File {file_path} does not exist")
         else:
-            # Treat as username - TODO: implement user crontab checking
             logger.warning(f"User crontab checking not implemented yet for: {file_path}")
 
-    # Final result
     if total_errors == 0:
         logger.info("All checks passed successfully!")
     else:
-        # Count unique lines with errors across all files
         unique_error_lines = set()
         for error in all_errors:
-            # Skip "File should end with newline" errors from line count
             if "File should end with newline" in error:
                 continue
-            # Extract line number from error message
             match = re.search(r'Line (\d+)', error)
             if match:
                 unique_error_lines.add(int(match.group(1)))
-
         lines_with_errors = len(unique_error_lines)
         logger.error(f"Total: {lines_with_errors} lines with errors found in {total_checked_lines} checked lines")
 
