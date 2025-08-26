@@ -146,7 +146,7 @@ def check_day_of_week(weekday: str) -> List[str]:
 
 def check_user_exists(username: str) -> bool:
     """Check if user exists in the system"""
-    if username in ("root", "daemon"):  # users always exists for tests
+    if username in ("root", "pytest_user"):  # users always exists for tests
         return True
     try:
         result = subprocess.run(["id", username], capture_output=True, text=True, timeout=5, check=False)
