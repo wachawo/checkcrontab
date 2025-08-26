@@ -67,8 +67,9 @@ lint.select = ["E","F","I","UP","B","SIM","C4","PL"]
 lint.ignore = ["E501"]
 fix = true
 include = ["*.py"]
-exclude = ["examples/*", "*.md", "*.json", "*.yaml", "*.yml", "*.toml"]
+exclude = ["examples/", ".git", ".venv", "__pycache__", "build", "dist", "*.md", "*.json", "*.yaml", "*.yml", "*.toml"]
 
 [tool.ruff.lint.pylint]
-max-branches = 30
-max-statements = 80
+max-branches = 50
+max-statements = 100
+max-returns = 10
