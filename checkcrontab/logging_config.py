@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Module for logging configuration and colored output
 """
 import copy
-import sys
-import platform
 import logging
+import platform
+import sys
 from typing import Optional
 
 logger = logging.getLogger(__name__)

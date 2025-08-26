@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Checkcrontab package
 """
@@ -10,9 +9,7 @@ __author__ = 'Aleksandr Pimenov'
 __email__ = 'wachawo@gmail.com'
 
 # Import main functions
-from . import main
-from . import checker
-from . import logging_config
+from . import checker, logging_config, main
 
 __all__ = [
     "main",

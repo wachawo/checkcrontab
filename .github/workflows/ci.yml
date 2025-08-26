@@ -38,10 +38,10 @@ jobs:
         pip install -e .
         pip install pytest flake8 mypy ruff
 
-    - name: Run linting
-      run: |
-        flake8 checkcrontab/ --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 checkcrontab/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    #- name: Lint (flake8)
+    #  run: |
+    #    flake8 checkcrontab/ --count --select=E9,F63,F7,F82 --show-source --statistics
+    #    flake8 checkcrontab/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
     - name: Lint (ruff)
       run: ruff check . --output-format=github

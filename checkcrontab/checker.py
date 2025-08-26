@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Module for checking crontab syntax and system requirements
 """
+import logging
 import os
 import re
 import subprocess
-import logging
-from typing import Optional, List
+from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +21,7 @@ WEEKDAY_PATTERN = r'^(\*|([0-7])(-([0-7]))?(/([0-7]))?(,([0-7])(-([0-7]))?)*|\*/
 def get_line_content(file_path: str, line_number: int) -> str:
     """Get line content from file"""
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, encoding='utf-8') as f:
             lines = f.readlines()
             if 1 <= line_number <= len(lines):
                 return lines[line_number - 1].rstrip('\n')
@@ -145,7 +144,7 @@ def check_cron_daemon() -> None:
     """Check if cron daemon is running"""
     try:
         result = subprocess.run(['systemctl', 'is-active', 'cron'],
-                                capture_output=True, text=True, timeout=5)
+                                capture_output=True, text=True, timeout=5, check=False)
         if result.returncode != 0 or result.stdout.strip() != 'active':
             logger.warning("Cron daemon is not running")
         else:
