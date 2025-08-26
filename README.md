@@ -3,6 +3,7 @@
 [![CI](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml/badge.svg)](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 [![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/wachawo/checkcrontab/blob/main/LICENSE)
 
 A Python script for checking syntax of crontab files. Cross-platform support for Linux, macOS, and Windows.
 
@@ -11,8 +12,24 @@ A Python script for checking syntax of crontab files. Cross-platform support for
 ### Requirements
 
 - **Python 3.7 or higher**
-- Linux/Unix system with systemctl (for daemon checks)
-- Read access to `/etc/crontab` (on Linux)
+- **Linux/macOS**: Linux/Unix system with systemctl (for daemon checks), read access to `/etc/crontab`
+- **Windows**: No additional requirements (file-based validation only)
+
+### Platform Support
+
+**Linux/macOS (Full Support):**
+- System crontab validation (`/etc/crontab`)
+- User crontab validation (via `crontab -l -u username`)
+- User existence validation
+- Daemon/service checks via systemctl
+- All crontab syntax features
+
+**Windows (Limited Support):**
+- File-based crontab syntax validation
+- No user existence checks
+- No system crontab access
+- No daemon/service checks
+- All crontab syntax features supported
 
 ### Installation
 
@@ -48,6 +65,46 @@ checkcrontab --help
 checkcrontab --version
 ```
 
+### JSON Output
+
+For machine-readable output, use the `--json` flag:
+
+```bash
+checkcrontab --json examples/user_valid.txt
+```
+
+Example JSON output:
+
+```json
+{
+  "success": true,
+  "total_files": 2,
+  "total_rows": 27,
+  "total_rows_errors": 0,
+  "total_errors": 0,
+  "files": [
+    {
+      "file": "/etc/crontab",
+      "is_system_crontab": true,
+      "rows": 5,
+      "rows_errors": 0,
+      "errors_count": 0,
+      "errors": [],
+      "success": true
+    },
+    {
+      "file": "examples/user_valid.txt",
+      "is_system_crontab": false,
+      "rows": 22,
+      "rows_errors": 0,
+      "errors_count": 0,
+      "errors": [],
+      "success": true
+    }
+  ]
+}
+```
+
 ### Command Line Options
 
 - `-S, --system` - System crontab files
@@ -56,13 +113,15 @@ checkcrontab --version
 - `-v, --version` - Show version
 - `-d, --debug` - Debug output
 - `-n, --no-colors` - Disable colored output
+- `-j, --json` - Output results in JSON format
 
 ### Features
 
-- **Cross-platform support** (Linux, macOS, Windows)
-- **System and user crontab validation**
+- **Cross-platform syntax validation** (Linux, macOS, Windows)
+- **Platform-specific features:**
+  - **Linux/macOS**: System and user crontab validation, user existence checks, daemon validation
+  - **Windows**: File-based validation only
 - **Time field validation** (minutes, hours, days, months, weekdays)
-- **User existence validation** (Linux/macOS)
 - **Dangerous command detection**
 - **Special keyword support** (@reboot, @daily, etc.)
 - **Multi-line command support**
@@ -77,6 +136,29 @@ pre-commit install
 pre-commit run --all-files
 pre-commit autoupdate
 ```
+
+### Usage with pre-commit
+
+You can use checkcrontab as a pre-commit hook in your projects:
+
+1. Add to your `.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: https://github.com/wachawo/checkcrontab
+    rev: v1.0.0  # Use the latest version
+    hooks:
+      - id: checkcrontab
+```
+
+2. Install pre-commit:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+3. The hook will automatically check all `.cron`, `.crontab`, and `.tab` files in your repository.
 
 ### License
 

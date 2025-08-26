@@ -1,262 +1,283 @@
-# Checkcrontab Features Documentation
+# Crontab Syntax Features
 
-## Purpose & Overview
+## Exit Codes
 
-Checkcrontab is a cross-platform Python tool designed to validate crontab file syntax and detect common configuration errors. It supports both system crontab files (with user fields) and user crontab files, providing comprehensive validation across Linux, macOS, and Windows platforms.
+The `checkcrontab` command returns the following exit codes:
 
-### Intended Use Cases
+- **0** - Success: No errors found in any checked files
+- **1** - Errors found: One or more syntax errors detected in crontab files
+- **2** - System error: File access issues, permission problems, or other system-level errors
 
-- **CI/CD Pipeline Integration**: Validate crontab configurations before deployment
-- **Configuration Management**: Ensure crontab files comply with proper syntax
-- **System Administration**: Detect dangerous commands and invalid schedules
-- **Development**: Validate cron jobs during development and testing
+### Examples
 
-## Supported Syntax
+```bash
+# Success - no errors
+checkcrontab examples/user_valid.txt
+echo $?  # Returns 0
 
-### Time Field Format
+# Errors found
+checkcrontab examples/user_incorrect.txt
+echo $?  # Returns 1
 
-Crontab entries use five time fields followed by a command:
+# System error (file not found)
+checkcrontab nonexistent_file.txt
+echo $?  # Returns 2
 
+# JSON output
+checkcrontab --json examples/user_valid.txt
+```
+
+### JSON Output Format
+
+When using `--json` flag, the output is structured as follows:
+
+```json
+{
+  "success": boolean,
+  "total_files": number,
+  "total_rows": number,
+  "total_rows_errors": number,
+  "total_errors": number,
+  "files": [
+    {
+      "file": "string",
+      "is_system_crontab": boolean,
+      "rows": number,
+      "rows_errors": number,
+      "errors_count": number,
+      "errors": ["string"],
+      "success": boolean
+    }
+  ]
+}
+```
+
+## Platform Support
+
+### Linux/macOS (Full Support)
+- System crontab validation (`/etc/crontab`)
+- User crontab validation (via `crontab -l -u username`)
+- User existence validation
+- Daemon/service checks via systemctl
+- All crontab syntax features
+
+### Windows (Limited Support)
+- File-based crontab syntax validation
+- No user existence checks
+- No system crontab access
+- No daemon/service checks
+- All crontab syntax features supported
+
+### Cross-Platform Features
+- Syntax validation for all time fields
+- Special keyword validation
+- Dangerous command detection
+- Environment variable validation
+- Multi-line command support
+
+## Supported Crontab Syntax
+
+### Basic Format
+
+**User Crontab:**
 ```
 minute hour day month weekday command
 ```
 
-For system crontab files, a user field is required:
-
+**System Crontab:**
 ```
 minute hour day month weekday user command
 ```
 
-### Wildcards
+### Time Fields
 
-- `*` - Matches any value in the field
-- Examples: `* * * * * /usr/bin/script.sh` (every minute)
+#### Minutes (0-59)
+- Single value: `30`
+- Range: `0-30`
+- List: `0,15,30,45`
+- Step: `*/15` (every 15 minutes)
+- All: `*`
 
-### Ranges
+#### Hours (0-23)
+- Single value: `14`
+- Range: `9-17`
+- List: `0,6,12,18`
+- Step: `*/3` (every 3 hours)
+- All: `*`
 
-- `A-B` - Specifies a range from A to B (inclusive)
-- Examples:
-  - `0 9-17 * * * /usr/bin/work_hours.sh` (9 AM to 5 PM)
-  - `0 0 1-15 * * /usr/bin/first_half.sh` (first half of month)
+#### Day of Month (1-31)
+- Single value: `15`
+- Range: `1-15`
+- List: `1,15,30`
+- Step: `*/2` (every 2 days)
+- All: `*`
 
-### Lists
+#### Month (1-12)
+- Single value: `6`
+- Range: `1-6`
+- List: `1,6,12`
+- Step: `*/3` (every 3 months)
+- All: `*`
 
-- `A,B,C` - Comma-separated list of values
-- Examples:
-  - `0 0 * * 1,3,5 /usr/bin/mwf.sh` (Monday, Wednesday, Friday)
-  - `0 6,12,18 * * * /usr/bin/3times.sh` (6 AM, noon, 6 PM)
-
-### Steps
-
-- `*/N` - Every N units
-- `A-B/N` - Every N units within range A-B
-- Examples:
-  - `*/15 * * * * /usr/bin/quarter.sh` (every 15 minutes)
-  - `0 9-17/2 * * * /usr/bin/work.sh` (every 2 hours from 9 AM to 5 PM)
+#### Day of Week (0-7, where 0 and 7 are Sunday)
+- Single value: `1` (Monday)
+- Range: `1-5` (Monday to Friday)
+- List: `1,3,5` (Monday, Wednesday, Friday)
+- Step: `*/2` (every 2 days)
+- All: `*`
 
 ### Special Keywords
 
-Special scheduling keywords can replace the five time fields:
+#### User Crontab
+```
+@reboot    command
+@yearly    command
+@annually  command
+@monthly   command
+@weekly    command
+@daily     command
+@hourly    command
+```
 
-- `@reboot` - Run once at startup
-- `@yearly` or `@annually` - Run once a year (0 0 1 1 *)
-- `@monthly` - Run once a month (0 0 1 * *)
-- `@weekly` - Run once a week (0 0 * * 0)
-- `@daily` or `@midnight` - Run once a day (0 0 * * *)
-- `@hourly` - Run once an hour (0 * * * *)
-
-Examples:
-```bash
-@reboot /usr/bin/startup.sh
-@daily /usr/bin/backup.sh
-@weekly /usr/bin/maintenance.sh
+#### System Crontab
+```
+@reboot    user command
+@yearly    user command
+@annually  user command
+@monthly   user command
+@weekly    user command
+@daily     user command
+@hourly    user command
 ```
 
 ### Environment Variables
-
-Crontab files can set environment variables:
-
-```bash
+```
 SHELL=/bin/bash
-PATH=/usr/local/bin:/usr/bin:/bin
-MAILTO=admin@example.com
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+MAILTO=user@example.com
+HOME=/home/user
 ```
 
 ### Multi-line Commands
-
-Commands can span multiple lines using backslash continuation:
-
-```bash
-0 2 * * * /usr/bin/backup.sh \
-    --verbose \
-    --destination /backup/dir
+```
+0 2 * * * /usr/bin/script.sh \
+    && /usr/bin/another_script.sh \
+    || echo "Error occurred"
 ```
 
-### System Crontab Specifics
+### System Crontab Specific Features
 
-- **User Field**: Required between weekday and command
-- **Dash Prefix**: Optional `-` prefix to suppress syslog logging
-- **File Permissions**: Should have 644 permissions
+#### Dash Prefix (Syslog Suppression)
+```
+-0 2 * * * root /usr/bin/backup.sh
+```
+The `-` prefix before the minute field suppresses syslog logging.
 
-### Comments
+#### User Field Validation
+- Must be a valid system user
+- Cannot contain spaces, quotes, or special characters
+- On Linux/macOS: User must exist in the system
 
-Lines starting with `#` are treated as comments and ignored.
+## Validation Rules
 
-## Valid Values
+### Time Field Validation
+- Values must be within valid ranges
+- Negative values are not allowed
+- Non-numeric values are not allowed
+- Ranges must be in ascending order (e.g., `1-5`, not `5-1`)
+- Steps must be positive integers
 
-### Time Field Ranges
+### Command Field Validation
+- Command field is required
+- Dangerous commands are detected and flagged
+- Multi-line commands are supported with `\` continuation
 
-| Field | Range | Alternative Names |
-|-------|-------|-------------------|
-| Minute | 0-59 | None |
-| Hour | 0-23 | None |
-| Day of Month | 1-31 | None |
-| Month | 1-12 | jan, feb, mar, apr, may, jun, jul, aug, sep, oct, nov, dec |
-| Day of Week | 0-7 | sun, mon, tue, wed, thu, fri, sat (0 and 7 = Sunday) |
+### User Field Validation (System Crontab)
+- User field is required
+- User must be a valid username format
+- On Linux/macOS: User existence is verified
+- On Windows: User existence checks are skipped
 
-### Edge Cases and Boundary Values
+### Special Keyword Validation
+- Keywords are case-sensitive (must be lowercase)
+- Command is required after keyword
+- User field is required for system crontab
+- Extra arguments are allowed as part of the command
 
-- **Minute**: 0 (top of hour), 59 (last minute)
-- **Hour**: 0 (midnight), 23 (11 PM)
-- **Day**: 1 (first of month), 31 (last day - validated per month)
-- **Month**: 1 (January), 12 (December)
-- **Weekday**: 0 or 7 (Sunday), 6 (Saturday)
+## Error Messages
 
-### Step Value Constraints
+### Time Field Errors
+- `Invalid minutes value: X` - Value outside 0-59 range
+- `Invalid hours value: X` - Value outside 0-23 range
+- `Invalid day of month value: X` - Value outside 1-31 range
+- `Invalid month value: X` - Value outside 1-12 range
+- `Invalid day of week value: X` - Value outside 0-7 range
 
-- Step values must be positive integers
-- Step values cannot exceed the maximum value for the field
-- Examples: `*/60` is invalid for minutes (max 59), `*/25` is invalid for hours (max 23)
+### Structure Errors
+- `Insufficient fields for user crontab` - Less than 6 fields
+- `Insufficient fields for system crontab` - Less than 7 fields
+- `Too many fields for user crontab` - More than 6 fields
+- `Too many fields for system crontab` - More than 7 fields
+
+### User Field Errors
+- `Invalid user field format` - Contains invalid characters
+- `User does not exist: username` - User not found (Linux/macOS only)
+
+### Command Field Errors
+- `Missing command field` - No command specified
+- `Dangerous command detected: command` - Potentially harmful command
+
+### Special Keyword Errors
+- `Invalid special keyword: @keyword` - Unknown keyword
+- `Missing command for special keyword` - No command after keyword
+- `Missing user field for system crontab special keyword` - No user specified
 
 ## Examples
 
-### Valid Examples
+### Valid User Crontab Entries
+```
+# Basic entry
+0 2 * * * /usr/bin/backup.sh
 
-1. **Daily backup at 2 AM**
-   ```bash
-   0 2 * * * /usr/bin/backup.sh
-   ```
-   *Runs every day at 2:00 AM*
+# With step values
+*/15 * * * * /usr/bin/monitor.sh
 
-2. **Weekday business hours check**
-   ```bash
-   0 9-17 * * 1-5 /usr/bin/check_services.sh
-   ```
-   *Runs hourly from 9 AM to 5 PM, Monday through Friday*
+# With ranges
+0 8-17 * * 1-5 /usr/bin/business_hours.sh
 
-3. **Monthly report on first day**
-   ```bash
-   0 0 1 * * /usr/bin/monthly_report.sh
-   ```
-   *Runs at midnight on the first day of every month*
+# Special keyword
+@reboot /usr/bin/startup.sh
 
-4. **Every 15 minutes during peak hours**
-   ```bash
-   */15 9-17 * * * /usr/bin/monitor.sh
-   ```
-   *Runs every 15 minutes from 9 AM to 5 PM*
-
-5. **Weekend maintenance**
-   ```bash
-   0 3 * * 0,6 /usr/bin/maintenance.sh
-   ```
-   *Runs at 3 AM on Saturdays and Sundays*
-
-6. **System crontab with user field**
-   ```bash
-   0 2 * * * root /usr/bin/system_backup.sh
-   ```
-   *System crontab: runs as root at 2 AM daily*
-
-### Invalid Examples
-
-1. **Invalid minute value**
-   ```bash
-   60 * * * * /usr/bin/script.sh
-   ```
-   *Error: Minute must be 0-59*
-
-2. **Missing required fields**
-   ```bash
-   0 2 * * /usr/bin/backup.sh
-   ```
-   *Error: User crontab requires 6 fields minimum*
-
-3. **Invalid range order**
-   ```bash
-   0 17-9 * * * /usr/bin/script.sh
-   ```
-   *Error: Range start cannot be greater than end*
-
-4. **Invalid step value**
-   ```bash
-   */60 * * * * /usr/bin/script.sh
-   ```
-   *Error: Step value 60 exceeds maximum 59 for minutes*
-
-5. **Empty command**
-   ```bash
-   0 2 * * *
-   ```
-   *Error: Command field is required*
-
-## Error Messages Reference
-
-| Error Message | Trigger Condition | Example Input | Suggested Fix |
-|---------------|-------------------|---------------|---------------|
-| `insufficient fields (minimum X required for Y crontab, found Z)` | Wrong number of fields | `0 2 * *` | Add missing time fields or command |
-| `value X out of bounds (min-max) for field: 'value'` | Field value outside valid range | `60 * * * *` | Use value within valid range (0-59 for minutes) |
-| `invalid field format: 'value'` | Non-numeric or malformed field | `abc * * * *` | Use numeric values or valid patterns |
-| `invalid special keyword: '@value'` | Unknown special keyword | `@invalid command` | Use valid keywords (@reboot, @daily, etc.) |
-| `dangerous command: 'command'` | Potentially harmful command detected | `rm -rf /` | Review command for safety |
-| `empty value in field list: 'value'` | Empty element in comma list | `1,,3 * * * *` | Remove empty commas or add values |
-| `step value X exceeds maximum Y for field: 'value'` | Step larger than field maximum | `*/60 * * * *` | Use step value ≤ field maximum |
-| `invalid range X-Y in field: start > end` | Range start greater than end | `5-3 * * * *` | Ensure range start ≤ end |
-| `duplicate value 'X' in field list: 'value'` | Repeated value in comma list | `1,1,2 * * * *` | Remove duplicate values |
-| `invalid user field format: 'value'` | Malformed user field (system crontab) | `"root user" command` | Use simple username without quotes/spaces |
-| `insufficient fields for system crontab special keyword (minimum 3 required)` | Missing user/command in system special | `@reboot command` | Add user field: `@reboot root command` |
-| `user field not allowed in user crontab special keyword: 'user'` | User field in user crontab special | `@reboot root command` | Remove user field: `@reboot command` |
-| `File should end with newline` | File doesn't end with newline | (file without final \n) | Add newline at end of file |
-| `step value must be positive in field: 'value'` | Zero or negative step value | `*/-1 * * * *` | Use positive step values only |
-
-### Common Error Patterns
-
-- **Field Validation**: Each time field is validated against its specific range and format
-- **Structural Validation**: Proper number of fields for crontab type (user vs system)
-- **Semantic Validation**: Logical consistency (range order, step values)
-- **Security Validation**: Detection of potentially dangerous commands
-- **Format Validation**: Proper syntax for ranges, lists, and steps
-
-### Platform-Specific Considerations
-
-- **Linux/macOS**: User existence validation for system crontabs
-- **Windows**: Limited cron daemon detection capabilities
-- **Cross-platform**: File permission checks adapted per platform
-
-## Integration Examples
-
-### CI/CD Usage
-
-```bash
-# Validate all crontab files in project
-checkcrontab cron/*.cron
-
-# Validate with debug output
-checkcrontab --debug production.cron
-
-# Check multiple users
-checkcrontab -u www-data -u backup
+# Environment variable
+SHELL=/bin/bash
 ```
 
-### Development Workflow
+### Valid System Crontab Entries
+```
+# Basic entry
+0 2 * * * root /usr/bin/backup.sh
 
-```bash
-# Quick syntax check
-checkcrontab my-crontab.txt
+# With dash prefix
+-0 2 * * * root /usr/bin/backup.sh
 
-# Validate system crontab format
-checkcrontab -S system-crontab.txt
+# Special keyword
+@reboot root /usr/bin/startup.sh
 
-# Check with explicit type flags
-checkcrontab -S sys.cron -U user.cron
+# Environment variable
+SHELL=/bin/sh
+```
+
+### Invalid Entries
+```
+# Invalid minutes
+60 * * * * /usr/bin/script.sh
+
+# Missing command
+0 2 * * *
+
+# Invalid special keyword
+@invalid /usr/bin/script.sh
+
+# Invalid user (system crontab)
+0 2 * * * invalid_user /usr/bin/script.sh
 ```

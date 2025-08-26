@@ -1,20 +1,37 @@
-## Checkcrontab - crontab फ़ाइलों में सिंटैक्स की जांच
+## Checkcrontab - crontab फ़ाइलों में सिंटैक्स की जांच करें
 
 [![CI](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml/badge.svg)](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 [![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/wachawo/checkcrontab/blob/main/LICENSE)
 
-crontab फ़ाइलों के सिंटैक्स की जांच के लिए एक Python स्क्रिप्ट।Linux, macOS, और Windows के लिए क्रॉस-प्लेटफ़ॉर्म समर्थन।
+crontab फ़ाइलों के सिंटैक्स की जांच के लिए Python स्क्रिप्ट। Linux, macOS और Windows के लिए क्रॉस-प्लेटफ़ॉर्म समर्थन।
 
-[English](https://github.com/wachawo/checkcrontab/blob/main/README.md) | [Español](https://github.com/wachawo/checkcrontab/blob/main/docs/README_ES.md) | [Português](https://github.com/wachawo/checkcrontab/blob/main/docs/README_PT.md) | [Français](https://github.com/wachawo/checkcrontab/blob/main/docs/README_FR.md) | [Deutsch](https://github.com/wachawo/checkcrontab/blob/main/docs/README_DE.md) | [Italiano](https://github.com/wachawo/checkcrontab/blob/main/docs/README_IT.md) | [Русский](https://github.com/wachawo/checkcrontab/blob/main/docs/README_RU.md) | [中文](https://github.com/wachawo/checkcrontab/blob/main/docs/README_ZH.md) | [日本語](https://github.com/wachawo/checkcrontab/blob/main/docs/README_JA.md) | **[हिन्दी](https://github.com/wachawo/checkcrontab/blob/main/docs/README_HI.md)**
+**[English](https://github.com/wachawo/checkcrontab/blob/main/README.md)** | [Español](https://github.com/wachawo/checkcrontab/blob/main/docs/README_ES.md) | [Português](https://github.com/wachawo/checkcrontab/blob/main/docs/README_PT.md) | [Français](https://github.com/wachawo/checkcrontab/blob/main/docs/README_FR.md) | [Deutsch](https://github.com/wachawo/checkcrontab/blob/main/docs/README_DE.md) | [Italiano](https://github.com/wachawo/checkcrontab/blob/main/docs/README_IT.md) | [Русский](https://github.com/wachawo/checkcrontab/blob/main/docs/README_RU.md) | [中文](https://github.com/wachawo/checkcrontab/blob/main/docs/README_ZH.md) | [日本語](https://github.com/wachawo/checkcrontab/blob/main/docs/README_JA.md) | **[हिन्दी](https://github.com/wachawo/checkcrontab/blob/main/docs/README_HI.md)**
 
 ### आवश्यकताएं
 
 - **Python 3.7 या उससे ऊपर**
-- systemctl के साथ Linux/Unix सिस्टम (डेमन चेक के लिए)
-- `/etc/crontab` तक पढ़ने का अधिकार (Linux पर)
+- **Linux/macOS**: systemctl के साथ Linux/Unix सिस्टम (डेमन चेक के लिए), `/etc/crontab` तक पढ़ने का अधिकार
+- **Windows**: कोई अतिरिक्त आवश्यकता नहीं (केवल फ़ाइल-आधारित सत्यापन)
 
-### इंस्टॉलेशन
+### प्लेटफ़ॉर्म समर्थन
+
+**Linux/macOS (पूर्ण समर्थन):**
+- सिस्टम crontab सत्यापन (`/etc/crontab`)
+- उपयोगकर्ता crontab सत्यापन (`crontab -l -u username` के माध्यम से)
+- उपयोगकर्ता अस्तित्व सत्यापन
+- systemctl के माध्यम से डेमन/सेवा चेक
+- सभी crontab सिंटैक्स सुविधाएं
+
+**Windows (सीमित समर्थन):**
+- फ़ाइल-आधारित crontab सिंटैक्स सत्यापन
+- कोई उपयोगकर्ता अस्तित्व चेक नहीं
+- सिस्टम crontab तक कोई पहुंच नहीं
+- कोई डेमन/सेवा चेक नहीं
+- सभी crontab सिंटैक्स सुविधाएं समर्थित
+
+### स्थापना
 
 ```bash
 pip3 install checkcrontab
@@ -38,7 +55,7 @@ checkcrontab /etc/crontab
 # उपयोगकर्ता crontab की जांच करें
 checkcrontab username
 
-# स्पष्ट प्रकार के फ्लैग के साथ जांच करें
+# स्पष्ट प्रकार फ़्लैग के साथ जांच करें
 checkcrontab -S system.cron -U user.cron -u username1 -u username2
 
 # सहायता दिखाएं
@@ -46,6 +63,46 @@ checkcrontab --help
 
 # संस्करण दिखाएं
 checkcrontab --version
+```
+
+### JSON आउटपुट
+
+मशीन-पठनीय आउटपुट के लिए `--json` फ़्लैग का उपयोग करें:
+
+```bash
+checkcrontab --json examples/user_valid.txt
+```
+
+JSON आउटपुट उदाहरण:
+
+```json
+{
+  "success": true,
+  "total_files": 2,
+  "total_rows": 27,
+  "total_rows_errors": 0,
+  "total_errors": 0,
+  "files": [
+    {
+      "file": "/etc/crontab",
+      "is_system_crontab": true,
+      "rows": 5,
+      "rows_errors": 0,
+      "errors_count": 0,
+      "errors": [],
+      "success": true
+    },
+    {
+      "file": "examples/user_valid.txt",
+      "is_system_crontab": false,
+      "rows": 22,
+      "rows_errors": 0,
+      "errors_count": 0,
+      "errors": [],
+      "success": true
+    }
+  ]
+}
 ```
 
 ### कमांड लाइन विकल्प
@@ -56,18 +113,22 @@ checkcrontab --version
 - `-v, --version` - संस्करण दिखाएं
 - `-d, --debug` - डीबग आउटपुट
 - `-n, --no-colors` - रंगीन आउटपुट अक्षम करें
+- `-j, --json` - परिणाम JSON प्रारूप में आउटपुट करें
 
 ### सुविधाएं
 
-- **क्रॉस-प्लेटफ़ॉर्म समर्थन** (Linux, macOS, Windows)
-- **सिस्टम और उपयोगकर्ता crontab सत्यापन**
+- **क्रॉस-प्लेटफ़ॉर्म सिंटैक्स सत्यापन** (Linux, macOS, Windows)
+- **प्लेटफ़ॉर्म-विशिष्ट सुविधाएं:**
+  - **Linux/macOS**: सिस्टम और उपयोगकर्ता crontab सत्यापन, उपयोगकर्ता अस्तित्व जांच, डेमन सत्यापन
+  - **Windows**: केवल फ़ाइल-आधारित सत्यापन
 - **समय फ़ील्ड सत्यापन** (मिनट, घंटे, दिन, महीने, सप्ताह के दिन)
-- **उपयोगकर्ता अस्तित्व सत्यापन** (Linux/macOS)
 - **खतरनाक कमांड का पता लगाना**
 - **विशेष कीवर्ड समर्थन** (@reboot, @daily, आदि)
 - **बहु-पंक्ति कमांड समर्थन**
 
-**[सुविधा दस्तावेज़](https://github.com/wachawo/checkcrontab/blob/main/docs/FEATURES.md)** - समर्थित सिंटैक्स, मान्य मान, उदाहरण और त्रुटि संदेशों का व्यापक गाइड।
+### दस्तावेज़ीकरण
+
+- **[Features Documentation](https://github.com/wachawo/checkcrontab/blob/main/docs/FEATURES.md)** - सुविधाओं और क्षमताओं का विस्तृत दस्तावेज़ीकरण
 
 ### विकास उपकरण
 
@@ -78,6 +139,29 @@ pre-commit run --all-files
 pre-commit autoupdate
 ```
 
+### pre-commit के साथ उपयोग
+
+आप अपने प्रोजेक्ट्स में checkcrontab को pre-commit हुक के रूप में उपयोग कर सकते हैं:
+
+1. अपने `.pre-commit-config.yaml` में जोड़ें:
+
+```yaml
+repos:
+  - repo: https://github.com/wachawo/checkcrontab
+    rev: v1.0.0  # नवीनतम संस्करण का उपयोग करें
+    hooks:
+      - id: checkcrontab
+```
+
+2. pre-commit इंस्टॉल करें:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+3. हुक स्वचालित रूप से आपके रिपॉजिटरी में सभी `.cron`, `.crontab` और `.tab` फ़ाइलों की जांच करेगा।
+
 ### लाइसेंस
 
-MIT लाइसेंस
+MIT License

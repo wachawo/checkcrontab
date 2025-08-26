@@ -1,0 +1,10 @@
+- id: checkcrontab
+  name: checkcrontab
+  description: Check crontab files for syntax errors
+  entry: checkcrontab
+  language: python
+  types: [text]
+  files: \.(cron|crontab|tab)$
+  args: [--json]
+  pass_filenames: true
+  require_serial: true
