@@ -1,18 +1,35 @@
-## Checkcrontab - crontab ファイルの構文チェック
+## Checkcrontab - crontabファイルの構文をチェック
 
 [![CI](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml/badge.svg)](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 [![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/wachawo/checkcrontab/blob/main/LICENSE)
 
-crontab ファイルの構文をチェックする Python スクリプト。Linux、macOS、Windows のクロスプラットフォーム対応。
+crontabファイルの構文をチェックするPythonスクリプト。Linux、macOS、Windowsのクロスプラットフォームサポート。
 
-[English](https://github.com/wachawo/checkcrontab/blob/main/README.md) | [Español](https://github.com/wachawo/checkcrontab/blob/main/docs/README_ES.md) | [Português](https://github.com/wachawo/checkcrontab/blob/main/docs/README_PT.md) | [Français](https://github.com/wachawo/checkcrontab/blob/main/docs/README_FR.md) | [Deutsch](https://github.com/wachawo/checkcrontab/blob/main/docs/README_DE.md) | [Italiano](https://github.com/wachawo/checkcrontab/blob/main/docs/README_IT.md) | [Русский](https://github.com/wachawo/checkcrontab/blob/main/docs/README_RU.md) | [中文](https://github.com/wachawo/checkcrontab/blob/main/docs/README_ZH.md) | **[日本語](https://github.com/wachawo/checkcrontab/blob/main/docs/README_JA.md)** | [हिन्दी](https://github.com/wachawo/checkcrontab/blob/main/docs/README_HI.md)
+**[English](https://github.com/wachawo/checkcrontab/blob/main/README.md)** | [Español](https://github.com/wachawo/checkcrontab/blob/main/docs/README_ES.md) | [Português](https://github.com/wachawo/checkcrontab/blob/main/docs/README_PT.md) | [Français](https://github.com/wachawo/checkcrontab/blob/main/docs/README_FR.md) | [Deutsch](https://github.com/wachawo/checkcrontab/blob/main/docs/README_DE.md) | [Italiano](https://github.com/wachawo/checkcrontab/blob/main/docs/README_IT.md) | [Русский](https://github.com/wachawo/checkcrontab/blob/main/docs/README_RU.md) | [中文](https://github.com/wachawo/checkcrontab/blob/main/docs/README_ZH.md) | **[日本語](https://github.com/wachawo/checkcrontab/blob/main/docs/README_JA.md)** | [हिन्दी](https://github.com/wachawo/checkcrontab/blob/main/docs/README_HI.md)
 
 ### 要件
 
-- **Python 3.7 以上**
-- systemctl を備えた Linux/Unix システム（デーモンチェック用）
-- `/etc/crontab` への読み取りアクセス（Linux の場合）
+- **Python 3.7以上**
+- **Linux/macOS**: systemctl付きLinux/Unixシステム（デーモンチェック用）、`/etc/crontab`への読み取りアクセス
+- **Windows**: 追加要件なし（ファイルベースの検証のみ）
+
+### プラットフォームサポート
+
+**Linux/macOS（完全サポート）：**
+- システムcrontab検証（`/etc/crontab`）
+- ユーザーcrontab検証（`crontab -l -u username`経由）
+- ユーザー存在性検証
+- systemctl経由のデーモン/サービスチェック
+- すべてのcrontab構文機能
+
+**Windows（制限付きサポート）：**
+- ファイルベースのcrontab構文検証
+- ユーザー存在性チェックなし
+- システムcrontabアクセスなし
+- デーモン/サービスチェックなし
+- すべてのcrontab構文機能がサポート
 
 ### インストール
 
@@ -20,7 +37,7 @@ crontab ファイルの構文をチェックする Python スクリプト。Linu
 pip3 install checkcrontab
 ```
 
-または GitHub から：
+またはGitHubから：
 
 ```bash
 pip3 install git+https://github.com/wachawo/checkcrontab.git
@@ -29,13 +46,13 @@ pip3 install git+https://github.com/wachawo/checkcrontab.git
 ### 使用方法
 
 ```bash
-# システム crontab をチェック（Linux のみ）
+# システムcrontabをチェック（Linuxのみ）
 checkcrontab
 
-# crontab ファイルをチェック
+# crontabファイルをチェック
 checkcrontab /etc/crontab
 
-# ユーザー crontab をチェック
+# ユーザーcrontabをチェック
 checkcrontab username
 
 # 明示的なタイプフラグでチェック
@@ -48,26 +65,70 @@ checkcrontab --help
 checkcrontab --version
 ```
 
+### JSON出力
+
+機械可読な出力には`--json`フラグを使用：
+
+```bash
+checkcrontab --json examples/user_valid.txt
+```
+
+JSON出力例：
+
+```json
+{
+  "success": true,
+  "total_files": 2,
+  "total_rows": 27,
+  "total_rows_errors": 0,
+  "total_errors": 0,
+  "files": [
+    {
+      "file": "/etc/crontab",
+      "is_system_crontab": true,
+      "rows": 5,
+      "rows_errors": 0,
+      "errors_count": 0,
+      "errors": [],
+      "success": true
+    },
+    {
+      "file": "examples/user_valid.txt",
+      "is_system_crontab": false,
+      "rows": 22,
+      "rows_errors": 0,
+      "errors_count": 0,
+      "errors": [],
+      "success": true
+    }
+  ]
+}
+```
+
 ### コマンドラインオプション
 
-- `-S, --system` - システム crontab ファイル
-- `-U, --user` - ユーザー crontab ファイル
+- `-S, --system` - システムcrontabファイル
+- `-U, --user` - ユーザーcrontabファイル
 - `-u, --username` - チェックするユーザー名
 - `-v, --version` - バージョンを表示
 - `-d, --debug` - デバッグ出力
 - `-n, --no-colors` - カラー出力を無効化
+- `-j, --json` - 結果をJSON形式で出力
 
 ### 機能
 
-- **クロスプラットフォーム対応** (Linux, macOS, Windows)
-- **システムおよびユーザー crontab 検証**
-- **時間フィールド検証** (分、時、日、月、曜日)
-- **ユーザー存在性検証** (Linux/macOS)
+- **クロスプラットフォーム構文検証**（Linux、macOS、Windows）
+- **プラットフォーム固有機能：**
+  - **Linux/macOS**: システムおよびユーザーcrontab検証、ユーザー存在性チェック、デーモン検証
+  - **Windows**: ファイルベースの検証のみ
+- **時間フィールド検証**（分、時、日、月、曜日）
 - **危険なコマンド検出**
-- **特殊キーワード対応** (@reboot, @daily, など)
-- **複数行コマンド対応**
+- **特別なキーワードサポート**（@reboot、@dailyなど）
+- **複数行コマンドサポート**
 
-**[機能ドキュメント](https://github.com/wachawo/checkcrontab/blob/main/docs/FEATURES.md)** - サポートされる構文、有効な値、例、エラーメッセージの包括的なガイド。
+### ドキュメント
+
+- **[Features Documentation](https://github.com/wachawo/checkcrontab/blob/main/docs/FEATURES.md)** - 機能と機能の詳細ドキュメント
 
 ### 開発ツール
 
@@ -78,6 +139,29 @@ pre-commit run --all-files
 pre-commit autoupdate
 ```
 
+### pre-commitでの使用
+
+プロジェクトでcheckcrontabをpre-commitフックとして使用できます：
+
+1. `.pre-commit-config.yaml`に追加：
+
+```yaml
+repos:
+  - repo: https://github.com/wachawo/checkcrontab
+    rev: v1.0.0  # 最新バージョンを使用
+    hooks:
+      - id: checkcrontab
+```
+
+2. pre-commitをインストール：
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+3. フックは自動的にリポジトリ内のすべての`.cron`、`.crontab`、`.tab`ファイルをチェックします。
+
 ### ライセンス
 
-MIT ライセンス
+MIT License

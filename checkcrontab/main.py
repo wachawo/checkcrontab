@@ -4,6 +4,7 @@ Main entry point for checkcrontab
 """
 
 import argparse
+import json
 import logging
 import os
 import platform
@@ -15,10 +16,10 @@ from typing import List, Optional, Tuple
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 try:
-    # Use as python3 -m checkcrontab
-    from . import __description__ as DESCRIPTION
-    from . import __version__ as VERSION
-    from . import checker, logging_config
+    # Use as python3 -m checkcrontab  # type: ignore
+    from . import __description__ as DESCRIPTION  # type: ignore
+    from . import __version__ as VERSION  # type: ignore
+    from . import checker, logging_config  # type: ignore
 except ImportError:
     # Use as python3 checkcrontab/main.py
     try:
@@ -38,10 +39,10 @@ logger = logging.getLogger(__name__)
 def check_file(file_path: str, is_system_crontab: bool = False) -> Tuple[int, List[str]]:
     """
     Check crontab file line by line
-    Returns: (checked_lines_count, errors_list)
+    Returns: (rows_checked_count, errors_list)
     """
     errors = []
-    checked_lines = 0
+    rows_checked = 0
 
     try:
         with open(file_path) as f:
@@ -85,7 +86,7 @@ def check_file(file_path: str, is_system_crontab: bool = False) -> Tuple[int, Li
             continue
 
         # This is a line to check
-        checked_lines += 1
+        rows_checked += 1
 
         # Check line using unified function with system crontab flag
         line_errors = checker.check_line(line, line_number, os.path.basename(file_path), file_path, is_system_crontab=is_system_crontab)
@@ -109,7 +110,7 @@ def check_file(file_path: str, is_system_crontab: bool = False) -> Tuple[int, Li
         errors.append(error_msg)
         logger.error(error_msg)
 
-    return checked_lines, errors
+    return rows_checked, errors
 
 
 def find_user_crontab(username: str) -> Optional[str]:
@@ -143,7 +144,7 @@ def main() -> int:
         epilog="""
 Usage examples:
     %(prog)s                           # Check only system crontab (Linux) or no files
-    %(prog)s /path/to/user/crontab     # Check system and file crontab
+    %(prog)s /etc/crontab              # Check system and file crontab
     %(prog)s username                  # Check system and user crontab
     %(prog)s file1 file2 username      # Check multiple files and user crontab
     %(prog)s -S system.cron -U user.cron  # Check with explicit type flags
@@ -158,6 +159,7 @@ Usage examples:
     parser.add_argument("-v", "--version", action="version", version="%(prog)s " + VERSION)
     parser.add_argument("-d", "--debug", action="store_true", help="Debug output")
     parser.add_argument("-n", "--no-colors", action="store_true", help="Disable colored output")
+    parser.add_argument("-j", "--json", action="store_true", help="Output results in JSON format")
 
     args = parser.parse_args()
 
@@ -207,13 +209,16 @@ Usage examples:
 
     # Add system crontab on Linux if not already included
     if platform.system().lower() == "linux":
-        checker.check_daemon()
-        checker.check_permissions()
         is_github = os.getenv("GITHUB_ACTIONS") == "true"
+        # Only check daemon and permissions on Linux and not in GitHub Actions
+        if not is_github:
+            checker.check_daemon()
+            checker.check_permissions()
+        # Add system crontab if not in GitHub Actions and not already included
         if not is_github and not any(file_path == "/etc/crontab" for file_path, _ in file_list):
             file_list.insert(0, ("/etc/crontab", True))
     else:
-        logger.info("Skipping checks on non-Linux system")
+        logger.info("Skipping system checks on non-Linux system")
 
     # Remove duplicates while preserving order
     seen = set()
@@ -224,14 +229,18 @@ Usage examples:
             unique_file_list.append((file_path, is_system))
     file_list = unique_file_list
 
-    total_checked_lines = 0
+    total_rows = 0
+    total_rows_errors = 0
     total_errors = 0
     all_errors: List[str] = []
 
+    # Prepare JSON structure if needed
+    json_output = {"success": True, "total_files": len(file_list), "total_rows": 0, "total_rows_errors": 0, "total_errors": 0, "files": []} if args.json else None
+
     for file_path, is_system_crontab in file_list:
         if os.path.exists(file_path):
-            checked_lines, file_errors = check_file(file_path, is_system_crontab=is_system_crontab)
-            total_checked_lines += checked_lines
+            rows_checked, file_errors = check_file(file_path, is_system_crontab=is_system_crontab)
+            total_rows += rows_checked
             total_errors += len(file_errors)
             all_errors.extend(file_errors)
             unique_error_lines = set()
@@ -241,15 +250,60 @@ Usage examples:
                 match = re.search(r"Line (\d+)", error)
                 if match:
                     unique_error_lines.add(int(match.group(1)))
-            lines_with_errors = len(unique_error_lines)
-            if file_errors:
-                logger.error(f"{file_path}: {lines_with_errors}/{checked_lines} lines with errors. Total {len(file_errors)} errors.")
+            rows_errors = len(unique_error_lines)
+            total_rows_errors += rows_errors
+            if args.json:
+                # Add file info to JSON structure
+                file_info = {
+                    "file": file_path,
+                    "is_system_crontab": is_system_crontab,
+                    "rows": rows_checked,
+                    "rows_errors": rows_errors,
+                    "errors_count": len(file_errors),
+                    "errors": file_errors,
+                    "success": len(file_errors) == 0,
+                }
+                json_output["files"].append(file_info)  # type: ignore
+            # Standard output
+            elif file_errors:
+                logger.error(f"{file_path}: {rows_errors}/{rows_checked} lines with errors. Total {len(file_errors)} errors.")
             else:
-                logger.info(f"{file_path}: 0/{checked_lines} lines without errors. No errors.")
+                logger.info(f"{file_path}: 0/{rows_checked} lines without errors. No errors.")
+        elif args.json:
+            file_info = {
+                "file": file_path,
+                "is_system_crontab": is_system_crontab,
+                "rows": 0,
+                "rows_errors": 0,
+                "errors_count": 1,
+                "errors": [f"File {file_path} does not exist"],
+                "success": False,
+            }
+            json_output["files"].append(file_info)  # type: ignore
         else:
             logger.warning(f"File {file_path} does not exist")
 
-    if total_errors == 0:
+    # Update JSON structure
+    if args.json:
+        json_output["total_rows"] = total_rows  # type: ignore
+        json_output["total_rows_errors"] = total_rows_errors  # type: ignore
+        json_output["total_errors"] = total_errors  # type: ignore
+        json_output["success"] = total_errors == 0  # type: ignore
+
+        # Calculate unique error lines
+        unique_error_lines = set()
+        for error in all_errors:
+            if "File should end with newline" in error:
+                continue
+            match = re.search(r"Line (\d+)", error)
+            if match:
+                unique_error_lines.add(int(match.group(1)))
+        json_output["rows_errors"] = len(unique_error_lines)  # type: ignore
+
+        # Output JSON
+        print(json.dumps(json_output, indent=2))
+    # Standard output
+    elif total_errors == 0:
         logger.info("All checks passed successfully!")
     else:
         unique_error_lines = set()
@@ -259,8 +313,8 @@ Usage examples:
             match = re.search(r"Line (\d+)", error)
             if match:
                 unique_error_lines.add(int(match.group(1)))
-        lines_with_errors = len(unique_error_lines)
-        logger.error(f"Total: {lines_with_errors} lines with errors found in {total_checked_lines} checked lines")
+        rows_errors = len(unique_error_lines)
+        logger.error(f"Total: {rows_errors} lines with errors found in {total_rows} checked lines")
 
     # Clean up temporary files
     for temp_file in temp_files:

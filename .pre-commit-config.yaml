@@ -11,11 +11,11 @@ repos:
     hooks:
     - id: ruff
       args: ["--fix", "--line-length=180", "--select=E,F,I,UP,B,SIM,C4,PL", "--ignore=E501"]
-      exclude: ^examples/
+      exclude: ^examples/, ^tests/
       files: \.py$
     - id: ruff-format
       args: ["--line-length=180"]
-      exclude: ^examples/
+      exclude: ^examples/, ^tests/
       files: \.py$
 
   - repo: https://github.com/pre-commit/mirrors-mypy
