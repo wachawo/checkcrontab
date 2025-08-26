@@ -7,7 +7,7 @@ import os
 import re
 import subprocess
 import logging
-from typing import List
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ def clean_line_for_output(line: str) -> str:
     return line
 
 
-def check_dangerous_commands(command: str) -> List[str]:
+def check_dangerous_commands(command: str) -> list[str]:
     """Check for dangerous commands in crontab"""
     errors = []
     dangerous_patterns = [
@@ -60,9 +60,9 @@ def check_dangerous_commands(command: str) -> List[str]:
     return errors
 
 
-def validate_time_field_logic(value: str, field_name: str, min_val: int, max_val: int) -> List[str]:
+def validate_time_field_logic(value: str, field_name: str, min_val: int, max_val: int) -> list[str]:
     """Validate time field logic (ranges, lists, steps)"""
-    errors: List[str] = []
+    errors: list[str] = []
 
     # Skip special values
     if value in ['*']:
@@ -94,9 +94,9 @@ def validate_time_field_logic(value: str, field_name: str, min_val: int, max_val
     return errors
 
 
-def validate_single_time_value(value: str, field_name: str, min_val: int, max_val: int) -> List[str]:
+def validate_single_time_value(value: str, field_name: str, min_val: int, max_val: int) -> list[str]:
     """Validate single time value, range, or step"""
-    errors: List[str] = []
+    errors: list[str] = []
 
     # Handle steps (*/n)
     if value.startswith('*/'):
@@ -175,12 +175,12 @@ def check_system_crontab_permissions() -> None:
         logger.debug("System crontab file does not exist")
 
 
-def check_line_user(line: str, line_number: int, file_name: str, file_path: str | None = None) -> List[str]:
+def check_line_user(line: str, line_number: int, file_name: str, file_path: Optional[str] = None) -> list[str]:
     """
     Check a single user crontab line
     Returns: list of error messages
     """
-    errors: List[str] = []
+    errors: list[str] = []
 
     # Skip environment variables
     if '=' in line and not any(char.isdigit() or char in '*@' for char in line.split('=')[0]):
@@ -254,12 +254,12 @@ def check_line_user(line: str, line_number: int, file_name: str, file_path: str 
     return formatted_errors
 
 
-def check_line_system(line: str, line_number: int, file_name: str, file_path: str | None = None) -> List[str]:
+def check_line_system(line: str, line_number: int, file_name: str, file_path: Optional[str] = None) -> list[str]:
     """
     Check a single system crontab line
     Returns: list of error messages
     """
-    errors: List[str] = []
+    errors: list[str] = []
 
     # Skip environment variables
     if '=' in line and not any(char.isdigit() or char in '*@' for char in line.split('=')[0]):
@@ -298,7 +298,6 @@ def check_line_system(line: str, line_number: int, file_name: str, file_path: st
 
     # Check for extra fields in command (like "extra" in "root extra /usr/bin/backup.sh")
     if len(parts) > 7:
-        # Check if the extra field is not part of the command
         extra_field = parts[6]
         if extra_field == 'extra':
             errors.append(f"extra field '{extra_field}' in command")
@@ -364,12 +363,12 @@ def check_line_system(line: str, line_number: int, file_name: str, file_path: st
     return formatted_errors
 
 
-def check_line_special(line: str, line_number: int, file_name: str, file_path: str | None = None) -> List[str]:
+def check_line_special(line: str, line_number: int, file_name: str, file_path: Optional[str] = None) -> list[str]:
     """
     Check a special keyword line (@reboot, @yearly, etc.)
     Returns: list of error messages
     """
-    errors: List[str] = []
+    errors: list[str] = []
 
     parts = line.split()
     if len(parts) < 2:
