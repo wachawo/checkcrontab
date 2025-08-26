@@ -47,3 +47,14 @@
 SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 MAILTO=root
+
+
+# =======================================
+# MULTIPLE LINES
+# =======================================
+
+# Multiple valid lines
+15 3 * * * root /usr/bin/daily_task.sh \
+      && /usr/bin/another_task.sh
+15 3 * * * root \
+      /usr/bin/script.sh

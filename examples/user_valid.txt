@@ -56,3 +56,11 @@
 SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 MAILTO=user@example.com
+
+# =======================================
+# MULTIPLE LINES
+# =======================================
+
+# Multiple valid lines
+15 3 * * * /usr/bin/daily_task.sh \
+      && /usr/bin/another_task.sh
