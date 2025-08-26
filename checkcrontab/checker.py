@@ -162,12 +162,12 @@ def check_user_exists(username: str) -> bool:
 def check_user(user: str) -> List[str]:
     """Check user field validation"""
     errors: List[str] = []
-    if platform.system().lower() == "windows":
-        return errors
     if not user or user.startswith("#"):
         errors.append("invalid user field")
     elif '"' in user or "@" in user or " " in user:
         errors.append(f"invalid user field format: '{user}'")
+    elif platform.system().lower() == "windows":
+        return errors
     # Check if user exists in the system (only on Linux/macOS)
     elif not check_user_exists(user):
         # On Linux/macOS, log warning instead of error
