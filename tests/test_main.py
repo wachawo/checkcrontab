@@ -119,15 +119,22 @@ def test_check_day_of_week():
 def test_check_user():
     """Test user field validation"""
     # Valid users
-    assert checker.check_user("root") == []
-    assert checker.check_user("pytest_user") == []
+    errors, warnings = checker.check_user("root")
+    assert errors == [] and warnings == []
+    errors, warnings = checker.check_user("pytest_user")
+    assert errors == [] and warnings == []
 
     # Invalid users
-    assert len(checker.check_user("")) == 1
-    assert len(checker.check_user("#root")) == 1
-    assert len(checker.check_user('"root"')) == 1
-    assert len(checker.check_user("root@localhost")) == 1
-    assert len(checker.check_user("root user")) == 1
+    errors, warnings = checker.check_user("")
+    assert len(errors) == 1 and warnings == []
+    errors, warnings = checker.check_user("#root")
+    assert len(errors) == 1 and warnings == []
+    errors, warnings = checker.check_user('"root"')
+    assert len(errors) == 1 and warnings == []
+    errors, warnings = checker.check_user("root@localhost")
+    assert len(errors) == 1 and warnings == []
+    errors, warnings = checker.check_user("root user")
+    assert len(errors) == 1 and warnings == []
 
 
 def test_check_command():
@@ -262,7 +269,7 @@ def test_invalid_system_crontab_line_invalid_user():
     line = "0 2 * * * #root /usr/bin/backup.sh"
     errors = checker.check_line(line, 1, "test.txt", is_system_crontab=True)
     assert len(errors) == 1
-    assert "invalid user field" in errors[0]
+    assert "invalid user format" in errors[0]
 
 
 # ============================================================================

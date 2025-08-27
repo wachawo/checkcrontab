@@ -9,7 +9,7 @@ import platform
 import re
 import subprocess
 import traceback
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -159,20 +159,20 @@ def check_user_exists(username: str) -> bool:
         return True
 
 
-def check_user(user: str) -> List[str]:
+def check_user(username: str) -> Tuple[List[str], List[str]]:
     """Check user field validation"""
     errors: List[str] = []
-    if not user or user.startswith("#"):
-        errors.append("invalid user field")
-    elif '"' in user or "@" in user or " " in user:
-        errors.append(f"invalid user field format: '{user}'")
+    warnings: List[str] = []
+    if not username or username.startswith("#") or '"' in username or "@" in username or " " in username or not re.compile(r"^[a-zA-Z][a-zA-Z0-9_-]{0,31}$").match(username):
+        errors.append(f"invalid user format: '{username}'")
     elif platform.system().lower() == "windows":
-        return errors
+        # Skip user existence check on Windows
+        return errors, warnings
     # Check if user exists in the system (only on Linux/macOS)
-    elif not check_user_exists(user):
+    elif not check_user_exists(username):
         # On Linux/macOS, log warning instead of error
-        logger.warning(f"user does not exist: '{user}'")
-    return errors
+        warnings.append(f"user does not exist: '{username}'")
+    return errors, warnings
 
 
 def check_command(command: str) -> List[str]:
@@ -191,44 +191,39 @@ def check_command(command: str) -> List[str]:
 
 def check_special(keyword: str, parts: List[str], is_system_crontab: bool = False) -> List[str]:
     """Check special keyword validation"""
-    errors = []
+    errors: List[str] = []
 
     # Validate special keyword
     valid_keywords = ["@reboot", "@yearly", "@annually", "@monthly", "@weekly", "@daily", "@midnight", "@hourly"]
     if keyword not in valid_keywords:
-        errors.append(f"invalid special keyword: '{keyword}'")
+        errors.append(f"{keyword} {' '.join(parts)} # invalid special keyword '{keyword}'")
+        return errors
 
     if is_system_crontab:
         # System crontab format: @keyword user command
         if len(parts) < SYSTEM_SPECIAL_MIN_FIELDS:
-            errors.append(f"insufficient fields for system crontab special keyword (minimum {SYSTEM_SPECIAL_MIN_FIELDS} required)")
+            errors.append(f"{keyword} {' '.join(parts)} # (minimum {SYSTEM_SPECIAL_MIN_FIELDS} required for system crontab)")
         else:
             user = parts[1]
             command = " ".join(parts[2:])
 
             # Validate user field for system crontab
-            user_errors = check_user(user)
+            user_errors, user_warnings = check_user(user)
             errors.extend(user_errors)
+            for warning in user_warnings:
+                logger.warning(f"{keyword} {' '.join(parts)} # {warning}")
 
             # Validate command
             command_errors = check_command(command)
             errors.extend(command_errors)
-    else:
-        # User crontab format: @keyword command
-        # Check if first argument is an existing user (which would be wrong for user crontab)
-        # Only check on Linux/macOS where user existence can be verified
-        if len(parts) > 1 and platform.system().lower() != "windows":
-            first_arg = parts[1]
-            if check_user_exists(first_arg):
-                # On Linux/macOS, log warning instead of error
-                logger.warning(f"user field not allowed in user crontab special keyword: '{first_arg}'")
-
-        # All parts after keyword are considered part of the command
+    # User crontab format: @keyword command
+    elif len(parts) > 1:
         command = " ".join(parts[1:])
-
         # Validate command
         command_errors = check_command(command)
         errors.extend(command_errors)
+    else:
+        errors.append(f"{keyword} {' '.join(parts)} # (minimum 2 required for user crontab)")
 
     return errors
 
@@ -359,8 +354,10 @@ def check_line(line: str, line_number: int, file_name: str, file_path: Optional[
                 return formatted_errors
 
         # Validate user field
-        user_errors = check_user(user)
+        user_errors, user_warnings = check_user(user)
         errors.extend(user_errors)
+        for warning in user_warnings:
+            logger.warning(f"{file_name} (Line {line_number}): {line} # {warning}")
     else:
         # User crontab format: minute hour day month weekday command
         command = " ".join(parts[5:])

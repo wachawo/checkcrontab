@@ -166,6 +166,7 @@ abc * * * * root /usr/bin/script.sh
 
 # Command with invalid characters
 0 2 * * * root /usr/bin/script.sh; rm -rf /
+0 12 * * * root /usr/bin/script.sh; rm -rf / tmp/file.txt
 
 # ========================================
 # MIXED ERRORS
@@ -173,6 +174,7 @@ abc * * * * root /usr/bin/script.sh
 
 # Multiple errors in one line
 60 25 32 13 8 invalid_user /usr/bin/script.sh
+* * * * * user@localhost /usr/bin/script.sh
 
 # Invalid format with extra fields
 0 2 * * * root extra /usr/bin/backup.sh
