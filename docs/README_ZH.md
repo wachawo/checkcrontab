@@ -54,6 +54,18 @@ checkcrontab /etc/crontab
 
 # 检查用户 crontab
 checkcrontab username
+# 严格模式（将警告视为错误）
+checkcrontab --strict examples/user_valid.txt
+
+# 始终以成功代码退出
+checkcrontab --exit-zero examples/user_valid.txt
+
+# 严格模式（将警告视为错误）
+checkcrontab --strict examples/user_valid.txt
+
+# 始终以成功代码退出
+checkcrontab --exit-zero examples/user_valid.txt
+
 
 # 使用显式类型标志检查
 checkcrontab -S system.cron -U user.cron -u username1 -u username2
@@ -63,6 +75,18 @@ checkcrontab --help
 
 # 显示版本
 checkcrontab --version
+# 严格模式（将警告视为错误）
+checkcrontab --strict examples/user_valid.txt
+
+# 始终以成功代码退出
+checkcrontab --exit-zero examples/user_valid.txt
+
+# 严格模式（将警告视为错误）
+checkcrontab --strict examples/user_valid.txt
+
+# 始终以成功代码退出
+checkcrontab --exit-zero examples/user_valid.txt
+
 ```
 
 ### JSON 输出
@@ -113,7 +137,9 @@ JSON 输出示例：
 - `-v, --version` - 显示版本
 - `-d, --debug` - 调试输出
 - `-n, --no-colors` - 禁用彩色输出
-- `-j, --json` - 以 JSON 格式输出结果
+- `--format {text,json,sarif}` - 输出格式（默认：text）
+- `--strict` - 将警告视为错误
+- `--exit-zero` - 始终以代码 0 退出
 
 ### 功能
 
@@ -148,7 +174,7 @@ pre-commit autoupdate
 ```yaml
 repos:
   - repo: https://github.com/wachawo/checkcrontab
-    rev: v1.0.0  # 使用最新版本
+    rev: 0.0.8  # 使用最新版本
     hooks:
       - id: checkcrontab
 ```

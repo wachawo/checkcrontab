@@ -54,6 +54,18 @@ checkcrontab /etc/crontab
 
 # Controlla crontab utente
 checkcrontab username
+# Modalità rigorosa (tratta gli avvisi come errori)
+checkcrontab --strict examples/user_valid.txt
+
+# Esci sempre con codice di successo
+checkcrontab --exit-zero examples/user_valid.txt
+
+# Modalità rigorosa (tratta gli avvisi come errori)
+checkcrontab --strict examples/user_valid.txt
+
+# Esci sempre con codice di successo
+checkcrontab --exit-zero examples/user_valid.txt
+
 
 # Controlla con flag di tipo espliciti
 checkcrontab -S system.cron -U user.cron -u username1 -u username2
@@ -63,6 +75,18 @@ checkcrontab --help
 
 # Mostra versione
 checkcrontab --version
+# Modalità rigorosa (tratta gli avvisi come errori)
+checkcrontab --strict examples/user_valid.txt
+
+# Esci sempre con codice di successo
+checkcrontab --exit-zero examples/user_valid.txt
+
+# Modalità rigorosa (tratta gli avvisi come errori)
+checkcrontab --strict examples/user_valid.txt
+
+# Esci sempre con codice di successo
+checkcrontab --exit-zero examples/user_valid.txt
+
 ```
 
 ### Output JSON
@@ -113,7 +137,9 @@ Esempio output JSON:
 - `-v, --version` - Mostra versione
 - `-d, --debug` - Output debug
 - `-n, --no-colors` - Disabilita output colorato
-- `-j, --json` - Output risultati in formato JSON
+- `--format {text,json,sarif}` - Formato di output (predefinito: text)
+- `--strict` - Tratta gli avvisi come errori
+- `--exit-zero` - Esci sempre con codice 0
 
 ### Funzionalità
 
@@ -148,7 +174,7 @@ Puoi usare checkcrontab come hook pre-commit nei tuoi progetti:
 ```yaml
 repos:
   - repo: https://github.com/wachawo/checkcrontab
-    rev: v1.0.0  # Usa l'ultima versione
+    rev: 0.0.8  # Usa l'ultima versione
     hooks:
       - id: checkcrontab
 ```

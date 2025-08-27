@@ -65,12 +65,34 @@ checkcrontab --help
 checkcrontab --version
 ```
 
-### Saída JSON
+### Formatos de Saída
 
-Para saída legível por máquina, use a flag `--json`:
+#### Saída de Texto (Padrão)
+Saída de registro padrão para stderr (comportamento padrão):
 
 ```bash
-checkcrontab --json examples/user_valid.txt
+checkcrontab examples/user_valid.txt
+```
+
+#### Saída JSON
+Para saída legível por máquina, use a flag `--format json`:
+
+```bash
+checkcrontab --format json examples/user_valid.txt
+```
+
+#### Saída SARIF
+Para saída SARIF (Static Analysis Results Interchange Format), use a flag `--format sarif`:
+
+```bash
+checkcrontab --format sarif examples/user_valid.txt
+```
+
+#### Saída de Texto para stdout
+Para enviar o registro para stdout em vez de stderr, use `--format text`:
+
+```bash
+checkcrontab --format text examples/user_valid.txt
 ```
 
 Exemplo de saída JSON:
@@ -105,6 +127,26 @@ Exemplo de saída JSON:
 }
 ```
 
+
+
+### Códigos de Saída
+
+| Código | Significado |
+|--------|-------------|
+| 0      | Sem erros (avisos permitidos). Com `--exit-zero` sempre 0. |
+| 1      | Problemas encontrados: qualquer erro ou qualquer aviso quando `--strict` está configurado. |
+| 2      | Erro de execução/uso (falha inesperada, argumentos CLI incorretos, etc.). |
+
+
+
+### Códigos de Saída
+
+| Código | Significado |
+|--------|-------------|
+| 0      | Sem erros (avisos permitidos). Com `--exit-zero` sempre 0. |
+| 1      | Problemas encontrados: qualquer erro ou qualquer aviso quando `--strict` está configurado. |
+| 2      | Erro de execução/uso (falha inesperada, argumentos CLI incorretos, etc.). |
+
 ### Opções de linha de comando
 
 - `-S, --system` - Arquivos crontab do sistema
@@ -113,7 +155,25 @@ Exemplo de saída JSON:
 - `-v, --version` - Mostrar versão
 - `-d, --debug` - Saída de debug
 - `-n, --no-colors` - Desabilitar saída colorida
-- `-j, --json` - Saída de resultados em formato JSON
+- `--format {text,json,sarif}` - Formato de saída (padrão: text)
+- `--strict` - Tratar avisos como erros
+- `--exit-zero` - Sempre sair com código 0
+
+### Exemplos de uso
+
+```bash
+# Verificar arquivo crontab
+checkcrontab examples/user_valid.txt
+
+# Verificar com saída JSON
+checkcrontab --format json examples/user_valid.txt
+
+# Modo estrito (tratar avisos como erros)
+checkcrontab --strict examples/user_valid.txt
+
+# Sempre sair com código de sucesso
+checkcrontab --exit-zero examples/user_valid.txt
+```
 
 ### Funcionalidades
 
@@ -148,7 +208,7 @@ Você pode usar checkcrontab como um hook pre-commit em seus projetos:
 ```yaml
 repos:
   - repo: https://github.com/wachawo/checkcrontab
-    rev: v1.0.0  # Use a versão mais recente
+    rev: 0.0.8  # Use a versão mais recente
     hooks:
       - id: checkcrontab
 ```

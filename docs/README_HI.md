@@ -54,6 +54,18 @@ checkcrontab /etc/crontab
 
 # उपयोगकर्ता crontab की जांच करें
 checkcrontab username
+# सख्त मोड (चेतावनियों को त्रुटियों के रूप में मानें)
+checkcrontab --strict examples/user_valid.txt
+
+# हमेशा सफलता कोड के साथ बाहर निकलें
+checkcrontab --exit-zero examples/user_valid.txt
+
+# सख्त मोड (चेतावनियों को त्रुटियों के रूप में मानें)
+checkcrontab --strict examples/user_valid.txt
+
+# हमेशा सफलता कोड के साथ बाहर निकलें
+checkcrontab --exit-zero examples/user_valid.txt
+
 
 # स्पष्ट प्रकार फ़्लैग के साथ जांच करें
 checkcrontab -S system.cron -U user.cron -u username1 -u username2
@@ -63,6 +75,18 @@ checkcrontab --help
 
 # संस्करण दिखाएं
 checkcrontab --version
+# सख्त मोड (चेतावनियों को त्रुटियों के रूप में मानें)
+checkcrontab --strict examples/user_valid.txt
+
+# हमेशा सफलता कोड के साथ बाहर निकलें
+checkcrontab --exit-zero examples/user_valid.txt
+
+# सख्त मोड (चेतावनियों को त्रुटियों के रूप में मानें)
+checkcrontab --strict examples/user_valid.txt
+
+# हमेशा सफलता कोड के साथ बाहर निकलें
+checkcrontab --exit-zero examples/user_valid.txt
+
 ```
 
 ### JSON आउटपुट
@@ -113,7 +137,9 @@ JSON आउटपुट उदाहरण:
 - `-v, --version` - संस्करण दिखाएं
 - `-d, --debug` - डीबग आउटपुट
 - `-n, --no-colors` - रंगीन आउटपुट अक्षम करें
-- `-j, --json` - परिणाम JSON प्रारूप में आउटपुट करें
+- `--format {text,json,sarif}` - आउटपुट प्रारूप (डिफ़ॉल्ट: text)
+- `--strict` - चेतावनियों को त्रुटियों के रूप में मानें
+- `--exit-zero` - हमेशा कोड 0 के साथ बाहर निकलें
 
 ### सुविधाएं
 
@@ -148,7 +174,7 @@ pre-commit autoupdate
 ```yaml
 repos:
   - repo: https://github.com/wachawo/checkcrontab
-    rev: v1.0.0  # नवीनतम संस्करण का उपयोग करें
+    rev: 0.0.8  # नवीनतम संस्करण का उपयोग करें
     hooks:
       - id: checkcrontab
 ```

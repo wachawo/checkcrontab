@@ -54,6 +54,18 @@ checkcrontab /etc/crontab
 
 # ユーザーcrontabをチェック
 checkcrontab username
+# 厳格モード（警告をエラーとして扱う）
+checkcrontab --strict examples/user_valid.txt
+
+# 常に成功コードで終了
+checkcrontab --exit-zero examples/user_valid.txt
+
+# 厳格モード（警告をエラーとして扱う）
+checkcrontab --strict examples/user_valid.txt
+
+# 常に成功コードで終了
+checkcrontab --exit-zero examples/user_valid.txt
+
 
 # 明示的なタイプフラグでチェック
 checkcrontab -S system.cron -U user.cron -u username1 -u username2
@@ -63,6 +75,18 @@ checkcrontab --help
 
 # バージョンを表示
 checkcrontab --version
+# 厳格モード（警告をエラーとして扱う）
+checkcrontab --strict examples/user_valid.txt
+
+# 常に成功コードで終了
+checkcrontab --exit-zero examples/user_valid.txt
+
+# 厳格モード（警告をエラーとして扱う）
+checkcrontab --strict examples/user_valid.txt
+
+# 常に成功コードで終了
+checkcrontab --exit-zero examples/user_valid.txt
+
 ```
 
 ### JSON出力
@@ -113,7 +137,9 @@ JSON出力例：
 - `-v, --version` - バージョンを表示
 - `-d, --debug` - デバッグ出力
 - `-n, --no-colors` - カラー出力を無効化
-- `-j, --json` - 結果をJSON形式で出力
+- `--format {text,json,sarif}` - 出力形式（デフォルト：text）
+- `--strict` - 警告をエラーとして扱う
+- `--exit-zero` - 常にコード 0 で終了
 
 ### 機能
 
@@ -148,7 +174,7 @@ pre-commit autoupdate
 ```yaml
 repos:
   - repo: https://github.com/wachawo/checkcrontab
-    rev: v1.0.0  # 最新バージョンを使用
+    rev: 0.0.8  # 最新バージョンを使用
     hooks:
       - id: checkcrontab
 ```

@@ -58,6 +58,12 @@ checkcrontab username
 # Проверить с явными флагами типа
 checkcrontab -S system.cron -U user.cron -u username1 -u username2
 
+# Строгий режим (обрабатывать предупреждения как ошибки)
+checkcrontab --strict examples/user_valid.txt
+
+# Всегда возвращать код успеха
+checkcrontab --exit-zero examples/user_valid.txt
+
 # Показать справку
 checkcrontab --help
 
@@ -65,12 +71,34 @@ checkcrontab --help
 checkcrontab --version
 ```
 
-### JSON вывод
+### Форматы вывода
 
-Для машиночитаемого вывода используйте флаг `--json`:
+#### Текстовый вывод (по умолчанию)
+Стандартный вывод логирования в stderr (поведение по умолчанию):
 
 ```bash
-checkcrontab --json examples/user_valid.txt
+checkcrontab examples/user_valid.txt
+```
+
+#### JSON вывод
+Для машиночитаемого вывода используйте флаг `--format json`:
+
+```bash
+checkcrontab --format json examples/user_valid.txt
+```
+
+#### SARIF вывод
+Для SARIF (Static Analysis Results Interchange Format) вывода используйте флаг `--format sarif`:
+
+```bash
+checkcrontab --format sarif examples/user_valid.txt
+```
+
+#### Текстовый вывод в stdout
+Для вывода логирования в stdout вместо stderr используйте `--format text`:
+
+```bash
+checkcrontab --format text examples/user_valid.txt
 ```
 
 Пример JSON вывода:
@@ -105,6 +133,14 @@ checkcrontab --json examples/user_valid.txt
 }
 ```
 
+### Коды возврата
+
+| Код | Значение |
+|-----|----------|
+| 0   | Нет ошибок (предупреждения разрешены). С `--exit-zero` всегда 0. |
+| 1   | Найдены проблемы: любая ошибка или любое предупреждение при установке `--strict`. |
+| 2   | Ошибка выполнения/использования (неожиданный сбой, плохие аргументы CLI и т.д.). |
+
 ### Параметры командной строки
 
 - `-S, --system` - Системные crontab файлы
@@ -113,7 +149,9 @@ checkcrontab --json examples/user_valid.txt
 - `-v, --version` - Показать версию
 - `-d, --debug` - Отладочный вывод
 - `-n, --no-colors` - Отключить цветной вывод
-- `-j, --json` - Вывод результатов в формате JSON
+- `--format {text,json,sarif}` - Формат вывода (по умолчанию: text)
+- `--strict` - Обрабатывать предупреждения как ошибки
+- `--exit-zero` - Всегда возвращать код 0
 
 ### Возможности
 
@@ -148,7 +186,7 @@ pre-commit autoupdate
 ```yaml
 repos:
   - repo: https://github.com/wachawo/checkcrontab
-    rev: v1.0.0  # Используйте последнюю версию
+    rev: 0.0.8  # Используйте последнюю версию
     hooks:
       - id: checkcrontab
 ```

@@ -261,16 +261,17 @@ def check_permissions() -> None:
         logger.debug("System crontab file does not exist")
 
 
-def check_line(line: str, line_number: int, file_name: str, file_path: Optional[str] = None, is_system_crontab: bool = False) -> List[str]:
+def check_line(line: str, line_number: int, file_name: str, file_path: Optional[str] = None, is_system_crontab: bool = False) -> Tuple[List[str], List[str]]:
     """
     Check a single crontab line (user or system)
-    Returns: list of error messages
+    Returns: tuple of (errors, warnings)
     """
     errors: List[str] = []
+    warnings: List[str] = []
 
     # Skip environment variables
     if "=" in line and not any(char.isdigit() or char in "*@" for char in line.split("=")[0]):
-        return errors
+        return errors, warnings
 
     # Check for special keywords
     if line.startswith("@"):
@@ -279,11 +280,14 @@ def check_line(line: str, line_number: int, file_name: str, file_path: Optional[
             errors.append(f"insufficient fields for special keyword (minimum {SPECIAL_KEYWORD_MIN_FIELDS} required)")
             # Return errors with line number and content
             formatted_errors = []
+            formatted_warnings = []
             line_content = get_line_content(file_path, line_number) if file_path else line
             line_content = clean_line_for_output(line_content)
             for error in errors:
                 formatted_errors.append(f"{file_name} (Line {line_number}): {line_content} # {error}")
-            return formatted_errors
+            for warning in warnings:
+                formatted_warnings.append(f"{file_name} (Line {line_number}): {line_content} # {warning}")
+            return formatted_errors, formatted_warnings
 
         keyword = parts[0]
         special_errors = check_special(keyword, parts, is_system_crontab)
@@ -291,11 +295,14 @@ def check_line(line: str, line_number: int, file_name: str, file_path: Optional[
 
         # Return errors with line number and content
         formatted_errors = []
+        formatted_warnings = []
         line_content = get_line_content(file_path, line_number) if file_path else line
         line_content = clean_line_for_output(line_content)
         for error in errors:
             formatted_errors.append(f"{file_name} (Line {line_number}): {line_content} # {error}")
-        return formatted_errors
+        for warning in warnings:
+            formatted_warnings.append(f"{file_name} (Line {line_number}): {line_content} # {warning}")
+        return formatted_errors, formatted_warnings
 
     # Parse regular crontab line
     parts = line.split()
@@ -305,11 +312,14 @@ def check_line(line: str, line_number: int, file_name: str, file_path: Optional[
         errors.append(f"insufficient fields (minimum {min_fields} required for {'system' if is_system_crontab else 'user'} crontab, found {len(parts)})")
         # Return errors with line number and content
         formatted_errors = []
+        formatted_warnings = []
         line_content = get_line_content(file_path, line_number) if file_path else line
         line_content = clean_line_for_output(line_content)
         for error in errors:
             formatted_errors.append(f"{file_name} (Line {line_number}): {line_content} # {error}")
-        return formatted_errors
+        for warning in warnings:
+            formatted_warnings.append(f"{file_name} (Line {line_number}): {line_content} # {warning}")
+        return formatted_errors, formatted_warnings
 
     # Extract time fields and command
     minute, hour, day, month, weekday = parts[:5]
@@ -320,11 +330,14 @@ def check_line(line: str, line_number: int, file_name: str, file_path: Optional[
             errors.append(f"insufficient fields (minimum {SYSTEM_CRONTAB_MIN_FIELDS} required for system crontab, found {len(parts)})")
             # Return errors with line number and content
             formatted_errors = []
+            formatted_warnings = []
             line_content = get_line_content(file_path, line_number) if file_path else line
             line_content = clean_line_for_output(line_content)
             for error in errors:
                 formatted_errors.append(f"{file_name} (Line {line_number}): {line_content} # {error}")
-            return formatted_errors
+            for warning in warnings:
+                formatted_warnings.append(f"{file_name} (Line {line_number}): {line_content} # {warning}")
+            return formatted_errors, formatted_warnings
 
         user = parts[5]
         command = " ".join(parts[6:])
@@ -334,11 +347,14 @@ def check_line(line: str, line_number: int, file_name: str, file_path: Optional[
             errors.append(f"too many fields (maximum {SYSTEM_CRONTAB_MAX_FIELDS} required for system crontab, found {len(parts)})")
             # Return errors with line number and content
             formatted_errors = []
+            formatted_warnings = []
             line_content = get_line_content(file_path, line_number) if file_path else line
             line_content = clean_line_for_output(line_content)
             for error in errors:
                 formatted_errors.append(f"{file_name} (Line {line_number}): {line_content} # {error}")
-            return formatted_errors
+            for warning in warnings:
+                formatted_warnings.append(f"{file_name} (Line {line_number}): {line_content} # {warning}")
+            return formatted_errors, formatted_warnings
 
         # Check for extra fields in command (like "extra" in "root extra /usr/bin/backup.sh")
         if len(parts) > SYSTEM_CRONTAB_MAX_FIELDS:
@@ -347,17 +363,19 @@ def check_line(line: str, line_number: int, file_name: str, file_path: Optional[
                 errors.append(f"extra field '{extra_field}' in command")
                 # Return errors with line number and content
                 formatted_errors = []
+                formatted_warnings = []
                 line_content = get_line_content(file_path, line_number) if file_path else line
                 line_content = clean_line_for_output(line_content)
                 for error in errors:
                     formatted_errors.append(f"{file_name} (Line {line_number}): {line_content} # {error}")
-                return formatted_errors
+                for warning in warnings:
+                    formatted_warnings.append(f"{file_name} (Line {line_number}): {line_content} # {warning}")
+                return formatted_errors, formatted_warnings
 
         # Validate user field
         user_errors, user_warnings = check_user(user)
         errors.extend(user_errors)
-        for warning in user_warnings:
-            logger.warning(f"{file_name} (Line {line_number}): {line} # {warning}")
+        warnings.extend(user_warnings)
     else:
         # User crontab format: minute hour day month weekday command
         command = " ".join(parts[5:])
@@ -384,30 +402,36 @@ def check_line(line: str, line_number: int, file_name: str, file_path: Optional[
 
     # Return errors with line number and content
     formatted_errors = []
+    formatted_warnings = []
     line_content = get_line_content(file_path, line_number) if file_path else line
     line_content = clean_line_for_output(line_content)
     for error in errors:
         formatted_errors.append(f"{file_name} (Line {line_number}): {line_content} # {error}")
+    for warning in warnings:
+        formatted_warnings.append(f"{file_name} (Line {line_number}): {line_content} # {warning}")
 
-    return formatted_errors
+    return formatted_errors, formatted_warnings
 
 
 # Legacy functions for backward compatibility
 def check_line_user(line: str, line_number: int, file_name: str, file_path: Optional[str] = None) -> List[str]:
     """Legacy function for user crontab line checking"""
-    return check_line(line, line_number, file_name, file_path, is_system_crontab=False)
+    errors, warnings = check_line(line, line_number, file_name, file_path, is_system_crontab=False)
+    return errors
 
 
 def check_line_system(line: str, line_number: int, file_name: str, file_path: Optional[str] = None) -> List[str]:
     """Legacy function for system crontab line checking"""
-    return check_line(line, line_number, file_name, file_path, is_system_crontab=True)
+    errors, warnings = check_line(line, line_number, file_name, file_path, is_system_crontab=True)
+    return errors
 
 
 def check_line_special(line: str, line_number: int, file_name: str, file_path: Optional[str] = None) -> List[str]:
     """Legacy function for special keyword line checking"""
     # Determine if this is system crontab based on file path
     is_system_crontab = bool(file_path and (file_path == "/etc/crontab" or file_path.startswith("/etc/cron.d/") or "system" in file_name.lower()))
-    return check_line(line, line_number, file_name, file_path, is_system_crontab=is_system_crontab)
+    errors, warnings = check_line(line, line_number, file_name, file_path, is_system_crontab=is_system_crontab)
+    return errors
 
 
 # Legacy function names for backward compatibility
