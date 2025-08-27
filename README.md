@@ -105,6 +105,14 @@ Example JSON output:
 }
 ```
 
+### Exit codes
+
+| Code | Meaning |
+|------|---------|
+| 0    | No errors (warnings allowed). With `--exit-zero` always 0. |
+| 1    | Findings present: any error, or any warning when `--strict` is set. |
+| 2    | Runtime/usage error (unexpected failure, bad CLI args, etc.). |
+
 ### Command Line Options
 
 - `-S, --system` - System crontab files
@@ -113,7 +121,9 @@ Example JSON output:
 - `-v, --version` - Show version
 - `-d, --debug` - Debug output
 - `-n, --no-colors` - Disable colored output
-- `-j, --json` - Output results in JSON format
+- `--format {text,json,sarif}` - Output results in JSON format
+- `--strict` - Treat warnings as errors
+- `--exit-zero` - Always return exit code 0
 
 ### Features
 
@@ -149,6 +159,9 @@ repos:
     rev: 0.0.8  # Use the latest version
     hooks:
       - id: checkcrontab
+        files: \.(cron|crontab|tab|conf)$
+        exclude: (\.git|node_modules|__pycache__)/
+        args: [--format, json, --strict]
 ```
 
 2. Install pre-commit:

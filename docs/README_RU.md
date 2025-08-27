@@ -58,12 +58,6 @@ checkcrontab username
 # Проверить с явными флагами типа
 checkcrontab -S system.cron -U user.cron -u username1 -u username2
 
-# Строгий режим (обрабатывать предупреждения как ошибки)
-checkcrontab --strict examples/user_valid.txt
-
-# Всегда возвращать код успеха
-checkcrontab --exit-zero examples/user_valid.txt
-
 # Показать справку
 checkcrontab --help
 
@@ -71,16 +65,8 @@ checkcrontab --help
 checkcrontab --version
 ```
 
-### Форматы вывода
-
-#### Текстовый вывод (по умолчанию)
-Стандартный вывод логирования в stderr (поведение по умолчанию):
-
-```bash
-checkcrontab examples/user_valid.txt
-```
-
 #### JSON вывод
+
 Для машиночитаемого вывода используйте флаг `--format json`:
 
 ```bash
@@ -164,8 +150,6 @@ checkcrontab --format text examples/user_valid.txt
 - **Поддержка специальных ключевых слов** (@reboot, @daily, и т.д.)
 - **Поддержка многострочных команд**
 
-### Документация
-
 - **[Features Documentation](https://github.com/wachawo/checkcrontab/blob/main/docs/FEATURES.md)** - Подробная документация функций и возможностей
 
 ### Инструменты разработки
@@ -189,6 +173,9 @@ repos:
     rev: 0.0.8  # Используйте последнюю версию
     hooks:
       - id: checkcrontab
+        files: \.(cron|crontab|tab|conf)$
+        exclude: (\.git|node_modules|__pycache__)/
+        args: [--format, json, --strict]
 ```
 
 2. Установите pre-commit:
