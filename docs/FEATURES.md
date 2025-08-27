@@ -29,7 +29,7 @@ checkcrontab --format json examples/user_valid.txt
 
 ### JSON Output Format
 
-When using `---format json` flag, the output is structured as follows:
+When using `--format json` flag, the output is structured as follows:
 
 ```json
 {
