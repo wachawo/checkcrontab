@@ -91,10 +91,10 @@ checkcrontab --exit-zero examples/user_valid.txt
 
 ### Sortie JSON
 
-Pour une sortie lisible par machine, utilisez le drapeau `--json`:
+Pour une sortie lisible par machine, utilisez le drapeau `--format json`:
 
 ```bash
-checkcrontab --json examples/user_valid.txt
+checkcrontab --format json examples/user_valid.txt
 ```
 
 Exemple de sortie JSON:

@@ -91,10 +91,10 @@ checkcrontab --exit-zero examples/user_valid.txt
 
 ### JSON出力
 
-機械可読な出力には`--json`フラグを使用：
+機械可読な出力には`--format json`フラグを使用：
 
 ```bash
-checkcrontab --json examples/user_valid.txt
+checkcrontab --format json examples/user_valid.txt
 ```
 
 JSON出力例：

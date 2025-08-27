@@ -12,24 +12,38 @@ A Python script for checking syntax of crontab files. Cross-platform support for
 ### Requirements
 
 - **Python 3.7 or higher**
-- **Linux/macOS**: Linux/Unix system with systemctl (for daemon checks), read access to `/etc/crontab`
+- **Linux**: Linux system with systemctl (for daemon checks), read access to `/etc/crontab`
+- **macOS**: Unix system with read access to `/etc/crontab` (systemctl not available)
 - **Windows**: No additional requirements (file-based validation only)
 
 ### Platform Support
 
-**Linux/macOS (Full Support):**
-- System crontab validation (`/etc/crontab`)
-- User crontab validation (via `crontab -l -u username`)
-- User existence validation
-- Daemon/service checks via systemctl
-- All crontab syntax features
+**Linux (Full Support):**
+- ✅ System crontab validation (`/etc/crontab`)
+- ✅ User crontab validation (via `crontab -l -u username`)
+- ✅ User existence validation
+- ✅ Daemon/service checks via systemctl
+- ✅ All crontab syntax features
+- ✅ File permissions validation
+- ✅ Cron daemon status checks
+
+**macOS (Partial Support):**
+- ✅ System crontab validation (`/etc/crontab`)
+- ✅ User crontab validation (via `crontab -l -u username`)
+- ✅ User existence validation
+- ❌ Daemon/service checks (systemctl not available)
+- ✅ All crontab syntax features
+- ✅ File permissions validation
+- ❌ Cron daemon status checks
 
 **Windows (Limited Support):**
-- File-based crontab syntax validation
-- No user existence checks
-- No system crontab access
-- No daemon/service checks
-- All crontab syntax features supported
+- ✅ File-based crontab syntax validation
+- ❌ User existence checks (no user management integration)
+- ❌ System crontab access (no `/etc/crontab`)
+- ❌ Daemon/service checks (no systemctl)
+- ✅ All crontab syntax features supported
+- ❌ File permissions validation (no Unix permissions)
+- ❌ Cron daemon status checks (no cron daemon)
 
 ### Installation
 
@@ -46,13 +60,13 @@ pip3 install git+https://github.com/wachawo/checkcrontab.git
 ### Usage
 
 ```bash
-# Check system crontab (Linux only)
+# Check system crontab (Linux/macOS only)
 checkcrontab
 
 # Check crontab file
 checkcrontab /etc/crontab
 
-# Check user crontab
+# Check user crontab (Linux/macOS only)
 checkcrontab username
 
 # Check with explicit type flags
@@ -65,12 +79,23 @@ checkcrontab --help
 checkcrontab --version
 ```
 
-### JSON Output
+**Platform-specific behavior:**
+- **Linux**: Full functionality including daemon checks and user validation
+- **macOS**: Full functionality except daemon checks (systemctl not available)
+- **Windows**: File-based validation only, no system integration
 
-For machine-readable output, use the `--json` flag:
+### JSON Output
+For machine-readable output, use the `--format json` flag:
 
 ```bash
-checkcrontab --json examples/user_valid.txt
+checkcrontab --format json examples/user_valid.txt
+```
+
+#### SARIF Output
+For SARIF output, use the `--format sarif` flag:
+
+```bash
+checkcrontab --format sarif examples/user_valid.txt
 ```
 
 Example JSON output:

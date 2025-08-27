@@ -91,10 +91,10 @@ checkcrontab --exit-zero examples/user_valid.txt
 
 ### JSON 输出
 
-对于机器可读的输出，使用 `--json` 标志：
+对于机器可读的输出，使用 `--format json` 标志：
 
 ```bash
-checkcrontab --json examples/user_valid.txt
+checkcrontab --format json examples/user_valid.txt
 ```
 
 JSON 输出示例：
