@@ -91,10 +91,10 @@ checkcrontab --exit-zero examples/user_valid.txt
 
 ### Output JSON
 
-Per output leggibile da macchina, usa il flag `--json`:
+Per output leggibile da macchina, usa il flag `--format json`:
 
 ```bash
-checkcrontab --json examples/user_valid.txt
+checkcrontab --format json examples/user_valid.txt
 ```
 
 Esempio output JSON:

@@ -24,12 +24,12 @@ checkcrontab nonexistent_file.txt
 echo $?  # Returns 2
 
 # JSON output
-checkcrontab --json examples/user_valid.txt
+checkcrontab --format json examples/user_valid.txt
 ```
 
 ### JSON Output Format
 
-When using `--json` flag, the output is structured as follows:
+When using `---format json` flag, the output is structured as follows:
 
 ```json
 {
@@ -54,26 +54,41 @@ When using `--json` flag, the output is structured as follows:
 
 ## Platform Support
 
-### Linux/macOS (Full Support)
-- System crontab validation (`/etc/crontab`)
-- User crontab validation (via `crontab -l -u username`)
-- User existence validation
-- Daemon/service checks via systemctl
-- All crontab syntax features
+### Linux (Full Support)
+- ✅ System crontab validation (`/etc/crontab`)
+- ✅ User crontab validation (via `crontab -l -u username`)
+- ✅ User existence validation
+- ✅ Daemon/service checks via systemctl
+- ✅ All crontab syntax features
+- ✅ File permissions validation
+- ✅ Cron daemon status checks
+
+### macOS (Partial Support)
+- ✅ System crontab validation (`/etc/crontab`)
+- ✅ User crontab validation (via `crontab -l -u username`)
+- ✅ User existence validation
+- ❌ Daemon/service checks (systemctl not available)
+- ✅ All crontab syntax features
+- ✅ File permissions validation
+- ❌ Cron daemon status checks
 
 ### Windows (Limited Support)
-- File-based crontab syntax validation
-- No user existence checks
-- No system crontab access
-- No daemon/service checks
-- All crontab syntax features supported
+- ✅ File-based crontab syntax validation
+- ❌ User existence checks (no user management integration)
+- ❌ System crontab access (no `/etc/crontab`)
+- ❌ Daemon/service checks (no systemctl)
+- ✅ All crontab syntax features supported
+- ❌ File permissions validation (no Unix permissions)
+- ❌ Cron daemon status checks (no cron daemon)
 
 ### Cross-Platform Features
-- Syntax validation for all time fields
-- Special keyword validation
-- Dangerous command detection
-- Environment variable validation
-- Multi-line command support
+- ✅ Syntax validation for all time fields
+- ✅ Special keyword validation
+- ✅ Dangerous command detection
+- ✅ Environment variable validation
+- ✅ Multi-line command support
+- ✅ File format validation (newline at end)
+- ✅ RFC compliance checks
 
 ## Supported Crontab Syntax
 
@@ -281,3 +296,74 @@ SHELL=/bin/sh
 # Invalid user (system crontab)
 0 2 * * * invalid_user /usr/bin/script.sh
 ```
+
+## Platform-Specific Behavior
+
+### Linux (Full Support)
+**System Integration:**
+- ✅ Automatic system crontab detection (`/etc/crontab`)
+- ✅ User crontab retrieval via `crontab -l -u username`
+- ✅ User existence validation using `id` command
+- ✅ Cron daemon status checks via `systemctl is-active cron`
+- ✅ File permissions validation for system crontab
+
+**Validation Features:**
+- ✅ All syntax validation features
+- ✅ User existence checks for system crontab entries
+- ✅ Daemon status warnings if cron service is not running
+- ✅ File permission warnings for insecure system crontab
+
+### macOS (Partial Support)
+**System Integration:**
+- ✅ Automatic system crontab detection (`/etc/crontab`)
+- ✅ User crontab retrieval via `crontab -l -u username`
+- ✅ User existence validation using `id` command
+- ❌ Cron daemon status checks (systemctl not available)
+- ✅ File permissions validation for system crontab
+
+**Validation Features:**
+- ✅ All syntax validation features
+- ✅ User existence checks for system crontab entries
+- ❌ Daemon status checks (macOS uses launchd, not systemctl)
+- ✅ File permission warnings for insecure system crontab
+
+### Windows (Limited Support)
+**System Integration:**
+- ❌ No automatic system crontab detection (no `/etc/crontab`)
+- ❌ No user crontab retrieval (no `crontab` command)
+- ❌ No user existence validation (no Unix user management)
+- ❌ No daemon status checks (no cron daemon)
+- ❌ No file permissions validation (no Unix permissions)
+
+**Validation Features:**
+- ✅ All syntax validation features
+- ❌ User existence checks (skipped on Windows)
+- ❌ Daemon status checks (not applicable)
+- ❌ File permission checks (not applicable)
+
+**Windows Usage:**
+```bash
+# Only file-based validation is available
+checkcrontab myfile.cron
+checkcrontab -S system.cron -U user.cron
+
+# User validation is skipped
+checkcrontab -u username  # Will show warning about unsupported feature
+```
+
+### Cross-Platform Compatibility
+**Always Supported:**
+- ✅ Crontab syntax validation
+- ✅ Time field validation (minutes, hours, days, months, weekdays)
+- ✅ Special keyword validation (@reboot, @daily, etc.)
+- ✅ Dangerous command detection
+- ✅ Environment variable validation
+- ✅ Multi-line command support
+- ✅ File format validation (newline at end)
+- ✅ RFC compliance checks
+
+**Platform-Dependent:**
+- User existence validation (Linux/macOS only)
+- System crontab access (Linux/macOS only)
+- Daemon status checks (Linux only)
+- File permissions validation (Linux/macOS only)

@@ -5,6 +5,6 @@
   language: python
   types: [text]
   files: \.(cron|crontab|tab)$
-  args: [--json]
+  args: [--format, json]
   pass_filenames: true
   require_serial: true
