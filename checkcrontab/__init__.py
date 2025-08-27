@@ -3,7 +3,7 @@
 Checkcrontab package
 """
 
-__version__ = "0.0.8"
+__version__ = "0.0.9"
 __description__ = "A Python script for checking syntax of crontab files"
 __author__ = "Aleksandr Pimenov"
 __email__ = "wachawo@gmail.com"
