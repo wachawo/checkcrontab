@@ -146,7 +146,7 @@ You can use checkcrontab as a pre-commit hook in your projects:
 ```yaml
 repos:
   - repo: https://github.com/wachawo/checkcrontab
-    rev: v1.0.0  # Use the latest version
+    rev: 0.0.8  # Use the latest version
     hooks:
       - id: checkcrontab
 ```

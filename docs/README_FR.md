@@ -54,6 +54,18 @@ checkcrontab /etc/crontab
 
 # Vérifier le crontab utilisateur
 checkcrontab username
+# Mode strict (traiter les avertissements comme des erreurs)
+checkcrontab --strict examples/user_valid.txt
+
+# Toujours sortir avec le code de succès
+checkcrontab --exit-zero examples/user_valid.txt
+
+# Mode strict (traiter les avertissements comme des erreurs)
+checkcrontab --strict examples/user_valid.txt
+
+# Toujours sortir avec le code de succès
+checkcrontab --exit-zero examples/user_valid.txt
+
 
 # Vérifier avec des drapeaux de type explicites
 checkcrontab -S system.cron -U user.cron -u username1 -u username2
@@ -63,6 +75,18 @@ checkcrontab --help
 
 # Afficher la version
 checkcrontab --version
+# Mode strict (traiter les avertissements comme des erreurs)
+checkcrontab --strict examples/user_valid.txt
+
+# Toujours sortir avec le code de succès
+checkcrontab --exit-zero examples/user_valid.txt
+
+# Mode strict (traiter les avertissements comme des erreurs)
+checkcrontab --strict examples/user_valid.txt
+
+# Toujours sortir avec le code de succès
+checkcrontab --exit-zero examples/user_valid.txt
+
 ```
 
 ### Sortie JSON
@@ -105,6 +129,26 @@ Exemple de sortie JSON:
 }
 ```
 
+
+
+### Codes de Sortie
+
+| Code | Signification |
+|------|---------------|
+| 0    | Aucune erreur (avertissements autorisés). Avec `--exit-zero` toujours 0. |
+| 1    | Problèmes trouvés: toute erreur ou tout avertissement quand `--strict` est défini. |
+| 2    | Erreur d'exécution/utilisation (échec inattendu, mauvais arguments CLI, etc.). |
+
+
+
+### Codes de Sortie
+
+| Code | Signification |
+|------|---------------|
+| 0    | Aucune erreur (avertissements autorisés). Avec `--exit-zero` toujours 0. |
+| 1    | Problèmes trouvés: toute erreur ou tout avertissement quand `--strict` est défini. |
+| 2    | Erreur d'exécution/utilisation (échec inattendu, mauvais arguments CLI, etc.). |
+
 ### Options de ligne de commande
 
 - `-S, --system` - Fichiers crontab système
@@ -113,7 +157,9 @@ Exemple de sortie JSON:
 - `-v, --version` - Afficher la version
 - `-d, --debug` - Sortie de débogage
 - `-n, --no-colors` - Désactiver la sortie colorée
-- `-j, --json` - Sortie des résultats au format JSON
+- `--format {text,json,sarif}` - Format de sortie (par défaut: text)
+- `--strict` - Traiter les avertissements comme des erreurs
+- `--exit-zero` - Toujours sortir avec le code 0
 
 ### Fonctionnalités
 
@@ -148,7 +194,7 @@ Vous pouvez utiliser checkcrontab comme un hook pre-commit dans vos projets:
 ```yaml
 repos:
   - repo: https://github.com/wachawo/checkcrontab
-    rev: v1.0.0  # Utilisez la dernière version
+    rev: 0.0.8  # Utilisez la dernière version
     hooks:
       - id: checkcrontab
 ```

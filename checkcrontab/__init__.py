@@ -7,6 +7,7 @@ __version__ = "0.0.8"
 __description__ = "A Python script for checking syntax of crontab files"
 __author__ = "Aleksandr Pimenov"
 __email__ = "wachawo@gmail.com"
+__url__ = "https://github.com/wachawo/checkcrontab"
 
 # Import main functions
 from . import checker, logging_config, main

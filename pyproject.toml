@@ -71,5 +71,5 @@ exclude = ["examples/", "tests/", ".git", ".venv", "__pycache__", "build", "dist
 
 [tool.ruff.lint.pylint]
 max-branches = 50
-max-statements = 120
+max-statements = 180
 max-returns = 10

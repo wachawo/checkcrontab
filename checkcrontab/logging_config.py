@@ -66,13 +66,16 @@ class ColoredFormatter(logging.Formatter):
         return super().format(colored_record)
 
 
-def setup_logging(debug: bool = False, no_colors: bool = False) -> None:
+def setup_logging(debug: bool = False, no_colors: bool = False, use_stderr: bool = True) -> None:
     """Setup logging configuration with colored formatter"""
     # Set logging level
     level = logging.DEBUG if debug else logging.INFO
 
+    # Choose output stream
+    stream = sys.stderr if use_stderr else sys.stdout
+
     # Configure logging
-    logging.basicConfig(handlers=[logging.StreamHandler(sys.stderr)], level=level, format="%(asctime)s.%(msecs)03d [%(levelname)s]: %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+    logging.basicConfig(handlers=[logging.StreamHandler(stream)], level=level, format="%(asctime)s.%(msecs)03d [%(levelname)s]: %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
 
     # Apply colored formatter
     colored_formatter = ColoredFormatter(fmt="%(asctime)s.%(msecs)03d [%(levelname)s]: %(message)s", datefmt="%Y-%m-%d %H:%M:%S", use_colors=not no_colors)

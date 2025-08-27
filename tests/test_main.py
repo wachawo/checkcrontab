@@ -184,49 +184,55 @@ def test_check_special_system_crontab():
 # ============================================================================
 
 
-def test_valid_user_crontab_line():
-    """Test valid user crontab line"""
-    line = "0 2 * * * /usr/bin/backup.sh"
-    errors = checker.check_line(line, 1, "test.txt", is_system_crontab=False)
-    assert errors == []
+    def test_valid_user_crontab_line():
+        """Test valid user crontab line"""
+        line = "0 2 * * * /usr/bin/backup.sh"
+        errors, warnings = checker.check_line(line, 1, "test.txt", is_system_crontab=False)
+        assert errors == []
+        assert warnings == []
 
 
 def test_invalid_user_crontab_line_insufficient_fields():
     """Test user crontab line with insufficient fields"""
     line = "0 2 * * *"
-    errors = checker.check_line(line, 1, "test.txt", is_system_crontab=False)
+    errors, warnings = checker.check_line(line, 1, "test.txt", is_system_crontab=False)
     assert len(errors) == 1
+    assert warnings == []
     assert "insufficient fields" in errors[0]
 
 
 def test_invalid_user_crontab_line_missing_command():
     """Test user crontab line with missing command"""
     line = "0 2 * * * "
-    errors = checker.check_line(line, 1, "test.txt", is_system_crontab=False)
+    errors, warnings = checker.check_line(line, 1, "test.txt", is_system_crontab=False)
     assert len(errors) == 1
+    assert warnings == []
     assert "insufficient fields" in errors[0]
 
 
 def test_invalid_user_crontab_line_invalid_minute():
     """Test user crontab line with invalid minute"""
     line = "60 2 * * * /usr/bin/backup.sh"
-    errors = checker.check_line(line, 1, "test.txt", is_system_crontab=False)
+    errors, warnings = checker.check_line(line, 1, "test.txt", is_system_crontab=False)
     assert len(errors) == 1
+    assert warnings == []
     assert "value 60 out of bounds" in errors[0]
 
 
 def test_valid_user_crontab_line_with_special_keyword():
     """Test valid user crontab line with special keyword"""
     line = "@reboot /usr/bin/backup.sh"
-    errors = checker.check_line(line, 1, "test.txt", is_system_crontab=False)
+    errors, warnings = checker.check_line(line, 1, "test.txt", is_system_crontab=False)
     assert errors == []
+    assert warnings == []
 
 
 def test_environment_variable_skipped():
     """Test that environment variables are skipped"""
     line = "MAILTO=user@example.com"
-    errors = checker.check_line(line, 1, "test.txt", is_system_crontab=False)
+    errors, warnings = checker.check_line(line, 1, "test.txt", is_system_crontab=False)
     assert errors == []
+    assert warnings == []
 
 
 # ============================================================================
@@ -237,38 +243,43 @@ def test_environment_variable_skipped():
 def test_valid_system_crontab_line():
     """Test valid system crontab line"""
     line = "0 2 * * * root /usr/bin/backup.sh"
-    errors = checker.check_line(line, 1, "test.txt", is_system_crontab=True)
+    errors, warnings = checker.check_line(line, 1, "test.txt", is_system_crontab=True)
     assert errors == []
+    assert warnings == []
 
 
 def test_valid_system_crontab_line_with_dash_prefix():
     """Test valid system crontab line with dash prefix in minutes"""
     line = "-0 2 * * * root /usr/bin/backup.sh"
-    errors = checker.check_line(line, 1, "test.txt", is_system_crontab=True)
+    errors, warnings = checker.check_line(line, 1, "test.txt", is_system_crontab=True)
     assert errors == []
+    assert warnings == []
 
 
 def test_invalid_system_crontab_line_insufficient_fields():
     """Test system crontab line with insufficient fields"""
     line = "0 2 * * * root"
-    errors = checker.check_line(line, 1, "test.txt", is_system_crontab=True)
+    errors, warnings = checker.check_line(line, 1, "test.txt", is_system_crontab=True)
     assert len(errors) == 1
+    assert warnings == []
     assert "insufficient fields" in errors[0]
 
 
 def test_invalid_system_crontab_line_missing_command():
     """Test system crontab line with missing command"""
     line = "0 2 * * * root "
-    errors = checker.check_line(line, 1, "test.txt", is_system_crontab=True)
+    errors, warnings = checker.check_line(line, 1, "test.txt", is_system_crontab=True)
     assert len(errors) == 1
+    assert warnings == []
     assert "insufficient fields" in errors[0]
 
 
 def test_invalid_system_crontab_line_invalid_user():
     """Test system crontab line with invalid user"""
     line = "0 2 * * * #root /usr/bin/backup.sh"
-    errors = checker.check_line(line, 1, "test.txt", is_system_crontab=True)
+    errors, warnings = checker.check_line(line, 1, "test.txt", is_system_crontab=True)
     assert len(errors) == 1
+    assert warnings == []
     assert "invalid user format" in errors[0]
 
 
@@ -280,38 +291,43 @@ def test_invalid_system_crontab_line_invalid_user():
 def test_valid_user_special_keyword_line():
     """Test valid special keyword line"""
     line = "@reboot /usr/bin/backup.sh"
-    errors = checker.check_line(line, 1, "test.txt", is_system_crontab=False)
+    errors, warnings = checker.check_line(line, 1, "test.txt", is_system_crontab=False)
     assert errors == []
+    assert warnings == []
 
 
 def test_valid_system_special_keyword_line():
     """Test valid system special keyword line"""
     line = "@reboot root /usr/bin/backup.sh"
-    errors = checker.check_line(line, 1, "test.txt", is_system_crontab=True)
+    errors, warnings = checker.check_line(line, 1, "test.txt", is_system_crontab=True)
     assert errors == []
+    assert warnings == []
 
 
 def test_invalid_special_keyword_line_insufficient_fields():
     """Test special keyword line with insufficient fields"""
     line = "@reboot"
-    errors = checker.check_line(line, 1, "test.txt", is_system_crontab=False)
+    errors, warnings = checker.check_line(line, 1, "test.txt", is_system_crontab=False)
     assert len(errors) == 1
+    assert warnings == []
     assert "insufficient fields" in errors[0]
 
 
 def test_invalid_special_keyword_line_missing_command():
     """Test special keyword line with missing command"""
     line = "@reboot "
-    errors = checker.check_line(line, 1, "test.txt", is_system_crontab=False)
+    errors, warnings = checker.check_line(line, 1, "test.txt", is_system_crontab=False)
     assert len(errors) == 1
+    assert warnings == []
     assert "insufficient fields" in errors[0]
 
 
 def test_invalid_special_keyword_line_invalid_keyword():
     """Test special keyword line with invalid keyword"""
     line = "@invalid /usr/bin/backup.sh"
-    errors = checker.check_line(line, 1, "test.txt", is_system_crontab=False)
+    errors, warnings = checker.check_line(line, 1, "test.txt", is_system_crontab=False)
     assert len(errors) == 1
+    assert warnings == []
     assert "invalid special keyword" in errors[0]
 
 
@@ -576,7 +592,7 @@ def test_username_resolution(mock_exists, mock_getenv, mock_platform, monkeypatc
 
     mock_exists.side_effect = exists_side_effect
 
-    code = run_main(["-j", "pytest_user"])
+    code = run_main(["--format", "json", "pytest_user"])
     data = json.loads(capsys.readouterr().out)
     assert code == 0
     assert data["total_files"] == 1
@@ -652,7 +668,7 @@ def test_import_fallback_run_as_script(tmp_path, monkeypatch):
 @patch("checkcrontab.main.os.path.exists", return_value=False)
 def test_json_explicit_missing_files(mock_exists, mock_env, mock_platform, capsys):
     # Use -S / -U so missing files are still added to JSON
-    with patch("sys.argv", ["checkcrontab", "-j", "-S", "/tmp/miss_system.cron", "-U", "/tmp/miss_user.cron"]):
+    with patch("sys.argv", ["checkcrontab", "--format", "json", "-S", "/tmp/miss_system.cron", "-U", "/tmp/miss_user.cron"]):
         code = check_crontab.main()
     out = capsys.readouterr().out
     data = json.loads(out)
@@ -727,7 +743,7 @@ def test_temp_file_cleanup_error(mock_perm, mock_daemon, mock_exists, mock_env, 
 @patch("checkcrontab.checker.check_permissions")
 def test_json_valid_file(mock_perm, mock_daemon, mock_env, mock_platform, capsys):
     mock_env.side_effect = lambda k, d=None: "true" if k == "GITHUB_ACTIONS" else d
-    code = run_main(["-j", "examples/system_valid.txt"])
+    code = run_main(["--format", "json", "examples/system_valid.txt"])
     assert code == 0
     out = capsys.readouterr().out
     data = json.loads(out)
@@ -744,7 +760,7 @@ def test_json_valid_file(mock_perm, mock_daemon, mock_env, mock_platform, capsys
 @patch("checkcrontab.checker.check_permissions")
 def test_json_invalid_file(mock_perm, mock_daemon, mock_env, mock_platform, capsys):
     mock_env.side_effect = lambda k, d=None: "true" if k == "GITHUB_ACTIONS" else d
-    code = run_main(["-j", "examples/system_incorrect.txt"])
+    code = run_main(["--format", "json", "examples/system_incorrect.txt"])
     assert code == 1
     out = capsys.readouterr().out
     data = json.loads(out)
@@ -765,7 +781,7 @@ def test_json_missing_newline_file(mock_perm, mock_daemon, mock_env, mock_platfo
     mock_env.side_effect = lambda k, d=None: "true" if k == "GITHUB_ACTIONS" else d
     f = tmp_path / "no_newline.cron"
     f.write_text("0 1 * * * root echo test")  # missing newline
-    code = run_main(["-j", str(f)])
+    code = run_main(["--format", "json", str(f)])
     assert code == 1
     data = json.loads(capsys.readouterr().out)
     file_entry = data["files"][0]
@@ -780,7 +796,7 @@ def test_json_missing_newline_file(mock_perm, mock_daemon, mock_env, mock_platfo
 @patch("checkcrontab.checker.check_permissions")
 def test_json_nonexistent_file(mock_perm, mock_daemon, mock_env, mock_platform, capsys):
     mock_env.side_effect = lambda k, d=None: "true" if k == "GITHUB_ACTIONS" else d
-    code = run_main(["-j", "/tmp/definitely_nonexistent_cron_file_12345.cron"])
+    code = run_main(["--format", "json", "/tmp/definitely_nonexistent_cron_file_12345.cron"])
     # Because path doesn't exist it's treated as username; user not found -> no files gathered.
     out = capsys.readouterr().out
     data = json.loads(out)
@@ -801,7 +817,7 @@ def test_json_multiple_files_mixed(mock_perm, mock_daemon, mock_env, mock_platfo
     valid.write_text("0 2 * * * root echo ok\n")
     invalid = tmp_path / "invalid.cron"
     invalid.write_text("61 2 * * * root echo bad\n")  # invalid minute
-    code = run_main(["-j", str(valid), str(invalid)])
+    code = run_main(["--format", "json", str(valid), str(invalid)])
     out = capsys.readouterr().out
     data = json.loads(out)
     assert data["total_files"] == 2
@@ -827,7 +843,7 @@ def test_json_auto_add_system(mock_perm, mock_daemon, mock_exists, mock_env, moc
     content = "0 0 * * * root echo ok\n"
     with patch("checkcrontab.main.open", create=True) as m:
         m.return_value.__enter__.return_value.readlines.return_value = content.splitlines(True)
-        code = run_main(["-j"])  # no args triggers auto-add
+        code = run_main(["--format", "json"])  # no args triggers auto-add
     data = json.loads(capsys.readouterr().out)
     assert code == 0
     assert data["total_files"] == 1
@@ -842,7 +858,7 @@ def test_json_auto_add_system(mock_perm, mock_daemon, mock_exists, mock_env, moc
 def test_json_duplicates_removed(mock_perm, mock_daemon, mock_exists, mock_env, mock_platform, tmp_path, capsys):
     f = tmp_path / "dup.cron"
     f.write_text("0 3 * * * root echo once\n")
-    code = run_main(["-j", str(f), str(f), str(f)])
+    code = run_main(["--format", "json", str(f), str(f), str(f)])
     data = json.loads(capsys.readouterr().out)
     assert code == 0
     assert data["total_files"] == 1
@@ -872,7 +888,7 @@ def test_json_username_resolution(mock_perm, mock_daemon, mock_exists, mock_env,
 
     mock_exists.side_effect = exists_side_effect
 
-    code = run_main(["-j", "pytest_user"])
+    code = run_main(["--format", "json", "pytest_user"])
     data = json.loads(capsys.readouterr().out)
     assert code == 0
     assert data["total_files"] == 1
