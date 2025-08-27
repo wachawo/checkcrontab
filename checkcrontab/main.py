@@ -254,15 +254,17 @@ Usage examples:
             # Determine type based on path or content
             is_system_crontab = arg == "/etc/crontab" or arg.startswith("/etc/cron.d") or "system" in os.path.basename(arg)
             file_list.append((arg, is_system_crontab))
-        else:
+        elif re.compile(r"^[a-zA-Z][a-zA-Z0-9_-]{0,31}$").match(arg):
             # If not a file, treat as username
             crontab_path = find_user_crontab(arg)
             if crontab_path:
                 temp_files.append(crontab_path)
                 file_list.append((crontab_path, False))  # User crontab
-                logger.info(f"Found user crontab for {arg}: {crontab_path}")
+                logger.info(f"{arg} user found: {crontab_path}")
             else:
-                logger.warning(f"User crontab not found for: {arg}")
+                logger.warning(f"{arg} user not found or has no crontab")
+        else:
+            logger.warning(f"{arg} File not found and is not a valid username")
 
     # Add system crontab on Linux if not already included
     if platform.system().lower() == "linux":
