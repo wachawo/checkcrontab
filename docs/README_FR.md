@@ -129,8 +129,6 @@ Exemple de sortie JSON:
 }
 ```
 
-
-
 ### Codes de Sortie
 
 | Code | Signification |
