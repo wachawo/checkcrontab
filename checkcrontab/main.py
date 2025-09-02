@@ -299,9 +299,7 @@ Usage examples:
     # all_warnings: List[str] = []
 
     # Prepare output structure if needed
-    output_data = None
-    if args.format in ["json", "sarif"]:
-        output_data = {"success": True, "total_files": len(file_list), "total_rows": 0, "total_rows_errors": 0, "total_errors": 0, "files": []}
+    output_data: Dict[str, Any] = {"success": True, "total_files": len(file_list), "total_rows": 0, "total_rows_errors": 0, "total_errors": 0, "files": []}
 
     for file_path, is_system_crontab in file_list:
         if os.path.exists(file_path):
@@ -319,24 +317,23 @@ Usage examples:
                     unique_error_lines.add(int(match.group(1)))
             rows_errors = len(unique_error_lines)
             total_rows_errors += rows_errors
-            if output_data:
-                # Add file info to output structure
-                file_info = {
-                    "file": file_path,
-                    "is_system_crontab": is_system_crontab,
-                    "rows": rows_checked,
-                    "rows_errors": rows_errors,
-                    "errors_count": len(file_errors),
-                    "errors": file_errors,
-                    "success": len(file_errors) == 0,
-                }
-                output_data["files"].append(file_info)  # type: ignore
+            # Add file info to output structure
+            file_info = {
+                "file": file_path,
+                "is_system_crontab": is_system_crontab,
+                "rows": rows_checked,
+                "rows_errors": rows_errors,
+                "errors_count": len(file_errors),
+                "errors": file_errors,
+                "success": len(file_errors) == 0,
+            }
+            output_data["files"].append(file_info)
             # Standard output
-            elif file_errors:
+            if args.format == "text" and len(file_errors) > 0:
                 logger.error(f"{file_path}: {rows_errors}/{rows_checked} lines with errors. Total {len(file_errors)} errors.")
-            else:
+            elif args.format == "text":
                 logger.info(f"{file_path}: 0/{rows_checked} lines without errors. No errors.")
-        elif output_data:
+        else:
             file_info = {
                 "file": file_path,
                 "is_system_crontab": is_system_crontab,
@@ -346,33 +343,32 @@ Usage examples:
                 "errors": [f"File {file_path} does not exist"],
                 "success": False,
             }
-            output_data["files"].append(file_info)  # type: ignore
-        else:
-            logger.warning(f"File {file_path} does not exist")
+            output_data["files"].append(file_info)
+            if args.format == "text":
+                logger.warning(f"File {file_path} does not exist")
 
     # Update output structure and generate final output
-    if output_data:
-        output_data["total_rows"] = total_rows  # type: ignore
-        output_data["total_rows_errors"] = total_rows_errors  # type: ignore
-        output_data["total_errors"] = total_errors  # type: ignore
-        output_data["success"] = total_errors == 0  # type: ignore
+    output_data["total_rows"] = total_rows
+    output_data["total_rows_errors"] = total_rows_errors
+    output_data["total_errors"] = total_errors
+    output_data["success"] = total_errors == 0
 
-        # Calculate unique error lines
-        unique_error_lines = set()
-        for error in all_errors:
-            if "File should end with newline" in error:
-                continue
-            match = re.search(r"Line (\d+)", error)
-            if match:
-                unique_error_lines.add(int(match.group(1)))
-        output_data["rows_errors"] = len(unique_error_lines)  # type: ignore
+    # Calculate unique error lines
+    unique_error_lines = set()
+    for error in all_errors:
+        if "File should end with newline" in error:
+            continue
+        match = re.search(r"Line (\d+)", error)
+        if match:
+            unique_error_lines.add(int(match.group(1)))
+    output_data["rows_errors"] = len(unique_error_lines)
 
-        # Generate output based on format
-        if args.format == "json":
-            print(json.dumps(output_data, indent=2))
-        elif args.format == "sarif":
-            sarif_output = generate_sarif_output(output_data["files"], total_errors)  # type: ignore
-            print(json.dumps(sarif_output, indent=2))
+    # Generate output based on format
+    if args.format == "json":
+        print(json.dumps(output_data, indent=2))
+    elif args.format == "sarif":
+        sarif_output = generate_sarif_output(output_data["files"], total_errors)
+        print(json.dumps(sarif_output, indent=2))
     # Standard output
     elif total_errors == 0:
         logger.info("All checks passed successfully!")
