@@ -103,7 +103,7 @@ For machine-readable output, use the `--format json` flag:
 
 ```bash
 checkcrontab --format json examples/user_valid.txt
-````
+```
 
 Example JSON output:
 
