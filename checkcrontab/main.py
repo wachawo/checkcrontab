@@ -201,12 +201,13 @@ def main() -> int:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Usage examples:
-    %(prog)s                                # Check system crontab
-    %(prog)s filename                       # Check system and file crontab
-    %(prog)s username                       # Check system and user crontab
-    %(prog)s file1 file2 username           # Check multiple files and user crontab
-    %(prog)s -S file1 -U file2 -u username  # Check crontab with type flags
-    %(prog)s -u username1 -u username2      # Check specific usernames
+    %(prog)s                                  # Check system crontab
+    %(prog)s filename                         # Check system and file crontab
+    %(prog)s username                         # Check system and user crontab
+    %(prog)s file1 file2 username             # Check multiple files and user crontab
+    %(prog)s -S file1 -U file2 -u username    # Check crontab with type flags
+    %(prog)s -u username1 -u username2        # Check specific usernames
+    %(prog)s filename -j | jq '.total_errors' # Check crontab and return JSON
         """,
     )
 
@@ -225,7 +226,7 @@ Usage examples:
     args = parser.parse_args()
 
     # Setup logging
-    log.setup_logging(args.debug, args.no_colors, args.format == "text")
+    log.setup_logging(args.debug, args.no_colors, args.format in ["json", "sarif"])
 
     # Prepare list of files to check with their types
     file_list: List[Tuple[str, bool]] = []  # (file_path, is_system_crontab)
