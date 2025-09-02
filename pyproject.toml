@@ -55,7 +55,7 @@ include-package-data = true
 checkcrontab = ["**/*.py"]
 
 [tool.pytest.ini_options]
-testpaths = ["test_main.py"]
+testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
