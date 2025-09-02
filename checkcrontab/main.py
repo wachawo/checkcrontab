@@ -199,7 +199,7 @@ def main() -> int:
         epilog="""
 Usage examples:
     %(prog)s                           # Check only system crontab (Linux) or no files
-    %(prog)s /etc/crontab              # Check system and file crontab
+    %(prog)s /etc/cron.d/custom        # Check system and file crontab
     %(prog)s username                  # Check system and user crontab
     %(prog)s file1 file2 username      # Check multiple files and user crontab
     %(prog)s -S system.cron -U user.cron  # Check with explicit type flags
@@ -208,9 +208,9 @@ Usage examples:
     )
 
     parser.add_argument("arguments", nargs="*", help="Paths to crontab files or usernames")
-    parser.add_argument("-S", "--system", action="append", help="System crontab files")
-    parser.add_argument("-U", "--user", action="append", help="User crontab files")
-    parser.add_argument("-u", "--username", action="append", help="Usernames to check")
+    parser.add_argument("-S", "--system", action="append", metavar="FILENAME", help="System crontab files")
+    parser.add_argument("-U", "--user", action="append", metavar="FILENAME", help="User crontab files")
+    parser.add_argument("-u", "--username", action="append", metavar="USERNAME", help="Usernames to check")
     parser.add_argument("-v", "--version", action="version", version="%(prog)s " + VERSION)
     parser.add_argument("-d", "--debug", action="store_true", help="Debug output")
     parser.add_argument("-n", "--no-colors", action="store_true", help="Disable colored output")
