@@ -249,16 +249,16 @@ def check_permissions() -> None:
         mode = stat_info.st_mode & 0o777
 
         if mode != SYSTEM_CRONTAB_PERMISSIONS:
-            logger.warning(f"System crontab has incorrect permissions: {oct(mode)} (should be 644)")
+            logger.warning(f"{crontab_file}: system crontab has incorrect permissions: {oct(mode)} (should be 644)")
         else:
-            logger.debug(f"System crontab permissions check: {oct(mode)} (correct)")
+            logger.debug(f"{crontab_file}: system crontab permissions check: {oct(mode)} (correct)")
 
         if stat_info.st_uid != 0:
-            logger.warning("System crontab is not owned by root")
+            logger.warning(f"{crontab_file}: system crontab is not owned by root")
         else:
-            logger.debug("System crontab ownership check: root (correct)")
+            logger.debug(f"{crontab_file}: system crontab ownership check: root (correct)")
     else:
-        logger.debug("System crontab file does not exist")
+        logger.debug(f"{crontab_file}: system crontab file does not exist")
 
 
 def check_line(line: str, line_number: int, file_name: str, file_path: Optional[str] = None, is_system_crontab: bool = False) -> Tuple[List[str], List[str]]:

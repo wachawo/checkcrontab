@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 
 from checkcrontab import checker
 from checkcrontab import main as check_crontab
-from checkcrontab.logging_config import setup_logging
+from checkcrontab.logger import setup_logging
 
 # ============================================================================
 # Logging tests

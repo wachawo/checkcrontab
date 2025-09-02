@@ -20,7 +20,8 @@ try:
     from . import __description__ as DESCRIPTION  # type: ignore
     from . import __url__ as REPO_URL  # type: ignore
     from . import __version__ as VERSION  # type: ignore
-    from . import checker, logging_config  # type: ignore
+    from . import checker  # type: ignore
+    from . import logger as log
 except ImportError:
     # Use as python3 checkcrontab/main.py
     try:
@@ -29,7 +30,9 @@ except ImportError:
         from checkcrontab import __version__ as VERSION
         from checkcrontab import (
             checker,  # type: ignore[import-not-found,no-redef]
-            logging_config,  # type: ignore[import-not-found,no-redef]
+        )
+        from checkcrontab import (
+            logger as log,  # type: ignore[import-not-found,no-redef]
         )
     except Exception as e:
         logging.warning(f"{type(e).__name__} {str(e)}\n{traceback.format_exc()}")
@@ -198,30 +201,32 @@ def main() -> int:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Usage examples:
-    %(prog)s                           # Check only system crontab (Linux) or no files
-    %(prog)s /etc/crontab              # Check system and file crontab
-    %(prog)s username                  # Check system and user crontab
-    %(prog)s file1 file2 username      # Check multiple files and user crontab
-    %(prog)s -S system.cron -U user.cron  # Check with explicit type flags
-    %(prog)s -u username1 -u username2  # Check specific usernames
+    %(prog)s                                  # Check system crontab
+    %(prog)s filename                         # Check system and file crontab
+    %(prog)s username                         # Check system and user crontab
+    %(prog)s file1 file2 username             # Check multiple files and user crontab
+    %(prog)s -S file1 -U file2 -u username    # Check crontab with type flags
+    %(prog)s -u username1 -u username2        # Check specific usernames
+    %(prog)s filename -j | jq '.total_errors' # Check crontab and return JSON
         """,
     )
 
     parser.add_argument("arguments", nargs="*", help="Paths to crontab files or usernames")
-    parser.add_argument("-S", "--system", action="append", help="System crontab files")
-    parser.add_argument("-U", "--user", action="append", help="User crontab files")
-    parser.add_argument("-u", "--username", action="append", help="Usernames to check")
+    parser.add_argument("-S", "--system", action="append", metavar="FILENAME", help="System crontab files")
+    parser.add_argument("-U", "--user", action="append", metavar="FILENAME", help="User crontab files")
+    parser.add_argument("-u", "--username", action="append", metavar="USERNAME", help="Usernames to check")
     parser.add_argument("-v", "--version", action="version", version="%(prog)s " + VERSION)
     parser.add_argument("-d", "--debug", action="store_true", help="Debug output")
     parser.add_argument("-n", "--no-colors", action="store_true", help="Disable colored output")
     parser.add_argument("--format", choices=["text", "json", "sarif"], default="text", help="Output format (default: text)")
+    parser.add_argument("-j", dest="format", action="store_const", const="json", help="Shortcut for JSON output (same as --format json)")
     parser.add_argument("--strict", action="store_true", help="Treat warnings as errors")
     parser.add_argument("--exit-zero", action="store_true", help="Always exit with code 0")
 
     args = parser.parse_args()
 
     # Setup logging
-    logging_config.setup_logging(args.debug, args.no_colors, args.format == "text")
+    log.setup_logging(args.debug, args.no_colors, args.format in ["json", "sarif"])
 
     # Prepare list of files to check with their types
     file_list: List[Tuple[str, bool]] = []  # (file_path, is_system_crontab)
@@ -296,9 +301,7 @@ Usage examples:
     # all_warnings: List[str] = []
 
     # Prepare output structure if needed
-    output_data = None
-    if args.format in ["json", "sarif"]:
-        output_data = {"success": True, "total_files": len(file_list), "total_rows": 0, "total_rows_errors": 0, "total_errors": 0, "files": []}
+    output_data: Dict[str, Any] = {"success": True, "total_files": len(file_list), "total_rows": 0, "total_rows_errors": 0, "total_errors": 0, "files": []}
 
     for file_path, is_system_crontab in file_list:
         if os.path.exists(file_path):
@@ -316,24 +319,23 @@ Usage examples:
                     unique_error_lines.add(int(match.group(1)))
             rows_errors = len(unique_error_lines)
             total_rows_errors += rows_errors
-            if output_data:
-                # Add file info to output structure
-                file_info = {
-                    "file": file_path,
-                    "is_system_crontab": is_system_crontab,
-                    "rows": rows_checked,
-                    "rows_errors": rows_errors,
-                    "errors_count": len(file_errors),
-                    "errors": file_errors,
-                    "success": len(file_errors) == 0,
-                }
-                output_data["files"].append(file_info)  # type: ignore
+            # Add file info to output structure
+            file_info = {
+                "file": file_path,
+                "is_system_crontab": is_system_crontab,
+                "rows": rows_checked,
+                "rows_errors": rows_errors,
+                "errors_count": len(file_errors),
+                "errors": file_errors,
+                "success": len(file_errors) == 0,
+            }
+            output_data["files"].append(file_info)
             # Standard output
-            elif file_errors:
+            if args.format == "text" and len(file_errors) > 0:
                 logger.error(f"{file_path}: {rows_errors}/{rows_checked} lines with errors. Total {len(file_errors)} errors.")
-            else:
+            elif args.format == "text":
                 logger.info(f"{file_path}: 0/{rows_checked} lines without errors. No errors.")
-        elif output_data:
+        else:
             file_info = {
                 "file": file_path,
                 "is_system_crontab": is_system_crontab,
@@ -343,33 +345,32 @@ Usage examples:
                 "errors": [f"File {file_path} does not exist"],
                 "success": False,
             }
-            output_data["files"].append(file_info)  # type: ignore
-        else:
-            logger.warning(f"File {file_path} does not exist")
+            output_data["files"].append(file_info)
+            if args.format == "text":
+                logger.warning(f"File {file_path} does not exist")
 
     # Update output structure and generate final output
-    if output_data:
-        output_data["total_rows"] = total_rows  # type: ignore
-        output_data["total_rows_errors"] = total_rows_errors  # type: ignore
-        output_data["total_errors"] = total_errors  # type: ignore
-        output_data["success"] = total_errors == 0  # type: ignore
+    output_data["total_rows"] = total_rows
+    output_data["total_rows_errors"] = total_rows_errors
+    output_data["total_errors"] = total_errors
+    output_data["success"] = total_errors == 0
 
-        # Calculate unique error lines
-        unique_error_lines = set()
-        for error in all_errors:
-            if "File should end with newline" in error:
-                continue
-            match = re.search(r"Line (\d+)", error)
-            if match:
-                unique_error_lines.add(int(match.group(1)))
-        output_data["rows_errors"] = len(unique_error_lines)  # type: ignore
+    # Calculate unique error lines
+    unique_error_lines = set()
+    for error in all_errors:
+        if "File should end with newline" in error:
+            continue
+        match = re.search(r"Line (\d+)", error)
+        if match:
+            unique_error_lines.add(int(match.group(1)))
+    output_data["rows_errors"] = len(unique_error_lines)
 
-        # Generate output based on format
-        if args.format == "json":
-            print(json.dumps(output_data, indent=2))
-        elif args.format == "sarif":
-            sarif_output = generate_sarif_output(output_data["files"], total_errors)  # type: ignore
-            print(json.dumps(sarif_output, indent=2))
+    # Generate output based on format
+    if args.format == "json":
+        print(json.dumps(output_data, indent=2))
+    elif args.format == "sarif":
+        sarif_output = generate_sarif_output(output_data["files"], total_errors)
+        print(json.dumps(sarif_output, indent=2))
     # Standard output
     elif total_errors == 0:
         logger.info("All checks passed successfully!")
