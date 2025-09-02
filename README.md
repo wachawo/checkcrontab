@@ -84,11 +84,11 @@ checkcrontab --version
 - **macOS**: Full functionality except daemon checks (systemctl not available)
 - **Windows**: File-based validation only, no system integration
 
-### JSON Output
-For machine-readable output, use the `--format json` flag:
+### TEXT Output
+Чтобы перенаправить вывод из STDERR в STDOUT (например, для CI), используйте `--format text`:
 
 ```bash
-checkcrontab --format json examples/user_valid.txt
+checkcrontab --format text examples/user_valid.txt
 ```
 
 #### SARIF Output
@@ -96,6 +96,13 @@ For SARIF output, use the `--format sarif` flag:
 
 ```bash
 checkcrontab --format sarif examples/user_valid.txt
+```
+
+### JSON Output
+For machine-readable output, use the `--format json` flag:
+
+```bash
+checkcrontab --format json examples/user_valid.txt
 ```
 
 Example JSON output:
@@ -146,7 +153,7 @@ Example JSON output:
 - `-v, --version` - Show version
 - `-d, --debug` - Debug output
 - `-n, --no-colors` - Disable colored output
-- `--format {text,json,sarif}` - Output results in JSON format
+- `--format {text,json,sarif}` - Output format
 - `--strict` - Treat warnings as errors
 - `--exit-zero` - Always return exit code 0
 

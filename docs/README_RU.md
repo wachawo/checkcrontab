@@ -84,12 +84,6 @@ checkcrontab --version
 - **macOS**: Полная функциональность кроме проверок демонов (systemctl недоступен)
 - **Windows**: Только файловая валидация, без системной интеграции
 
-#### JSON вывод
-Для машиночитаемого вывода используйте флаг `--format json`:
-
-```bash
-checkcrontab --format json examples/user_valid.txt
-```
 
 #### SARIF вывод
 Для SARIF (Static Analysis Results Interchange Format) вывода используйте флаг `--format sarif`:
@@ -98,6 +92,12 @@ checkcrontab --format json examples/user_valid.txt
 checkcrontab --format sarif examples/user_valid.txt
 ```
 
+#### JSON вывод
+Для машиночитаемого вывода используйте флаг `--format json`:
+
+```bash
+checkcrontab --format json examples/user_valid.txt
+```
 
 Пример JSON вывода:
 

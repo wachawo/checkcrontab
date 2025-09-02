@@ -97,12 +97,11 @@ Salida de registro estándar a stderr (comportamiento predeterminado):
 ```bash
 checkcrontab examples/user_valid.txt
 ```
-
-#### Salida JSON
-Para salida legible por máquina, use la bandera `--format json`:
+#### Salida de Texto a stdout
+Para enviar el registro a stdout en lugar de stderr, use `--format text`:
 
 ```bash
-checkcrontab --format json examples/user_valid.txt
+checkcrontab --format text examples/user_valid.txt
 ```
 
 #### Salida SARIF
@@ -112,11 +111,11 @@ Para salida SARIF (Static Analysis Results Interchange Format), use la bandera `
 checkcrontab --format sarif examples/user_valid.txt
 ```
 
-#### Salida de Texto a stdout
-Para enviar el registro a stdout en lugar de stderr, use `--format text`:
+#### Salida JSON
+Para salida legible por máquina, use la bandera `--format json`:
 
 ```bash
-checkcrontab --format text examples/user_valid.txt
+checkcrontab --format json examples/user_valid.txt
 ```
 
 Ejemplo de salida JSON:
