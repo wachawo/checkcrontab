@@ -218,6 +218,7 @@ Usage examples:
     parser.add_argument("-d", "--debug", action="store_true", help="Debug output")
     parser.add_argument("-n", "--no-colors", action="store_true", help="Disable colored output")
     parser.add_argument("--format", choices=["text", "json", "sarif"], default="text", help="Output format (default: text)")
+    parser.add_argument("-j", dest="format", action="store_const", const="json", help="Shortcut for JSON output (same as --format json)")
     parser.add_argument("--strict", action="store_true", help="Treat warnings as errors")
     parser.add_argument("--exit-zero", action="store_true", help="Always exit with code 0")
 
