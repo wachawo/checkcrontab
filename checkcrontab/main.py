@@ -198,11 +198,11 @@ def main() -> int:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Usage examples:
-    %(prog)s                                # Check only system crontab (Linux) or no files
-    %(prog)s /etc/cron.d/custom             # Check system and file crontab
+    %(prog)s                                # Check system crontab
+    %(prog)s filename                       # Check system and file crontab
     %(prog)s username                       # Check system and user crontab
     %(prog)s file1 file2 username           # Check multiple files and user crontab
-    %(prog)s -S file1 -U file2 -u username  # Check with explicit type flags
+    %(prog)s -S file1 -U file2 -u username  # Check crontab with type flags
     %(prog)s -u username1 -u username2      # Check specific usernames
         """,
     )
