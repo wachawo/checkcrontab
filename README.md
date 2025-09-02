@@ -96,7 +96,7 @@ For SARIF output, use the `--format sarif` flag:
 
 ```bash
 checkcrontab --format sarif examples/user_valid.txt
-``
+```
 
 ### JSON Output
 For machine-readable output, use the `--format json` flag:
