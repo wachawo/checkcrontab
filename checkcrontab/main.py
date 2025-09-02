@@ -20,7 +20,8 @@ try:
     from . import __description__ as DESCRIPTION  # type: ignore
     from . import __url__ as REPO_URL  # type: ignore
     from . import __version__ as VERSION  # type: ignore
-    from . import checker, logging_config  # type: ignore
+    from . import checker  # type: ignore
+    from . import logger as log
 except ImportError:
     # Use as python3 checkcrontab/main.py
     try:
@@ -29,7 +30,9 @@ except ImportError:
         from checkcrontab import __version__ as VERSION
         from checkcrontab import (
             checker,  # type: ignore[import-not-found,no-redef]
-            logging_config,  # type: ignore[import-not-found,no-redef]
+        )
+        from checkcrontab import (
+            logger as log,  # type: ignore[import-not-found,no-redef]
         )
     except Exception as e:
         logging.warning(f"{type(e).__name__} {str(e)}\n{traceback.format_exc()}")
@@ -221,7 +224,7 @@ Usage examples:
     args = parser.parse_args()
 
     # Setup logging
-    logging_config.setup_logging(args.debug, args.no_colors, args.format == "text")
+    log.setup_logging(args.debug, args.no_colors, args.format == "text")
 
     # Prepare list of files to check with their types
     file_list: List[Tuple[str, bool]] = []  # (file_path, is_system_crontab)

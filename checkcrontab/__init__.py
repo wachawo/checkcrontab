@@ -10,12 +10,12 @@ __email__ = "wachawo@gmail.com"
 __url__ = "https://github.com/wachawo/checkcrontab"
 
 # Import main functions
-from . import checker, logging_config, main
+from . import checker, logger, main
 
 __all__ = [
     "main",
     "checker",
-    "logging_config",
+    "logger",
     "__version__",
     "__description__",
     "__author__",
