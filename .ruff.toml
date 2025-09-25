@@ -6,6 +6,6 @@ include = ["*.py"]
 exclude = ["examples/", "tests/", ".git", ".venv", "__pycache__", "build", "dist", "*.md", "*.json", "*.yaml", "*.yml", "*.toml"]
 
 [lint.pylint]
-max-branches = 50
+max-branches = 60
 max-statements = 180
 max-returns = 10

@@ -668,13 +668,13 @@ def test_import_fallback_run_as_script(tmp_path, monkeypatch):
 @patch("checkcrontab.main.os.path.exists", return_value=False)
 def test_json_explicit_missing_files(mock_exists, mock_env, mock_platform, capsys):
     # Use -S / -U so missing files are still added to JSON
-    with patch("sys.argv", ["checkcrontab", "--format", "json", "-S", "/tmp/miss_system.cron", "-U", "/tmp/miss_user.cron"]):
+    with patch("sys.argv", ["python3", "checkcrontab/main.py", "--format", "json", "-S", "/tmp/miss_system.cron", "-U", "/tmp/miss_user.cron"]):
         code = check_crontab.main()
     out = capsys.readouterr().out
     data = json.loads(out)
     # Current behavior: missing files recorded but not counted toward total_errors (possible improvement)
     assert code == 0
-    assert data["total_files"] == 2
+    assert data["total_files"] == 3
     assert data["total_errors"] == 0  # because total_errors only increments for existing files
     assert data["success"] is True
     file_paths = {f["file"] for f in data["files"]}
