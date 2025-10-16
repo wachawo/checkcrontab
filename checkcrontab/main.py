@@ -291,11 +291,13 @@ Usage examples:
         if not is_github:
             checker.check_daemon()
             checker.check_permissions()
-        # Add system crontab if not in GitHub Actions and not already included
-        if not is_github and not any(file_path == "/etc/crontab" for file_path, _ in files_list):
-            files_list.insert(0, ("/etc/crontab", True))
+        # if not any(file_path == "/etc/crontab" for file_path, _ in files_list):
+        #    files_list.insert(0, ("/etc/crontab", True))
     else:
         logger.info("Skipping system checks on non-Linux system")
+
+    if len(files_list) == 0:
+        logger.warning("No files to check.")
 
     # Remove duplicates while preserving order
     seen = set()
