@@ -4,16 +4,27 @@
 Tests for checkcrontab package
 """
 
+import importlib
+import importlib.util
 import json
 import logging
-import runpy
 import os
+import runpy
+import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from checkcrontab import checker
-from checkcrontab import main as check_crontab
-from checkcrontab.logger import setup_logging
+PACKAGE_ROOT = Path(__file__).resolve().parents[1] / "checkcrontab"
+package_spec = importlib.util.spec_from_file_location(
+    "checkcrontab", PACKAGE_ROOT / "__init__.py", submodule_search_locations=[str(PACKAGE_ROOT)]
+)
+checkcrontab_pkg = importlib.util.module_from_spec(package_spec)
+sys.modules["checkcrontab"] = checkcrontab_pkg
+package_spec.loader.exec_module(checkcrontab_pkg)
+
+check_crontab = importlib.import_module("checkcrontab.main")
+checker = importlib.import_module("checkcrontab.checker")
+setup_logging = importlib.import_module("checkcrontab.logger").setup_logging
 
 # ============================================================================
 # Logging tests
