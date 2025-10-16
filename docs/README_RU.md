@@ -74,6 +74,9 @@ checkcrontab username
 # Проверить с явными флагами типа
 checkcrontab -S system.cron -U user.cron -u username1 -u username2
 
+# Проверить все crontab файлы в каталоге
+checkcrontab /etc/cron.d
+
 # Показать справку
 checkcrontab --help
 

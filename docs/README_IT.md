@@ -48,47 +48,26 @@ pip3 install git+https://github.com/wachawo/checkcrontab.git
 ### Utilizzo
 
 ```bash
-# Controlla crontab di sistema (solo Linux)
+# Controlla il crontab di sistema (solo Linux/macOS)
 checkcrontab
 
-# Controlla file crontab
+# Controlla un file crontab
 checkcrontab /etc/crontab
 
-# Controlla crontab utente
+# Controlla il crontab di un utente (solo Linux/macOS)
 checkcrontab username
-# Modalità rigorosa (tratta gli avvisi come errori)
-checkcrontab --strict examples/user_valid.txt
-
-# Esci sempre con codice di successo
-checkcrontab --exit-zero examples/user_valid.txt
-
-# Modalità rigorosa (tratta gli avvisi come errori)
-checkcrontab --strict examples/user_valid.txt
-
-# Esci sempre con codice di successo
-checkcrontab --exit-zero examples/user_valid.txt
-
 
 # Controlla con flag di tipo espliciti
 checkcrontab -S system.cron -U user.cron -u username1 -u username2
 
-# Mostra aiuto
+# Controlla tutti i crontab di una directory
+checkcrontab /etc/cron.d
+
+# Mostra l'aiuto
 checkcrontab --help
 
-# Mostra versione
+# Mostra la versione
 checkcrontab --version
-# Modalità rigorosa (tratta gli avvisi come errori)
-checkcrontab --strict examples/user_valid.txt
-
-# Esci sempre con codice di successo
-checkcrontab --exit-zero examples/user_valid.txt
-
-# Modalità rigorosa (tratta gli avvisi come errori)
-checkcrontab --strict examples/user_valid.txt
-
-# Esci sempre con codice di successo
-checkcrontab --exit-zero examples/user_valid.txt
-
 ```
 
 ### Output JSON

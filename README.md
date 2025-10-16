@@ -74,6 +74,9 @@ checkcrontab username
 # Check with explicit type flags
 checkcrontab -S system.cron -U user.cron -u username1 -u username2
 
+# Check crontab directory
+checkcrontab /etc/cron.d
+
 # Show help
 checkcrontab --help
 

@@ -48,17 +48,20 @@ pip3 install git+https://github.com/wachawo/checkcrontab.git
 ### Uso
 
 ```bash
-# Verificar crontab do sistema (apenas Linux)
+# Verificar o crontab do sistema (apenas Linux/macOS)
 checkcrontab
 
-# Verificar arquivo crontab
+# Verificar um arquivo crontab
 checkcrontab /etc/crontab
 
-# Verificar crontab do usuário
+# Verificar o crontab de um usuário (apenas Linux/macOS)
 checkcrontab username
 
 # Verificar com flags de tipo explícitas
 checkcrontab -S system.cron -U user.cron -u username1 -u username2
+
+# Verificar todos os crontabs de um diretório
+checkcrontab /etc/cron.d
 
 # Mostrar ajuda
 checkcrontab --help
@@ -128,18 +131,6 @@ Exemplo de saída JSON:
   ]
 }
 ```
-
-
-
-### Códigos de Saída
-
-| Código | Significado |
-|--------|-------------|
-| 0      | Sem erros (avisos permitidos). Com `--exit-zero` sempre 0. |
-| 1      | Problemas encontrados: qualquer erro ou qualquer aviso quando `--strict` está configurado. |
-| 2      | Erro de execução/uso (falha inesperada, argumentos CLI incorretos, etc.). |
-
-
 
 ### Códigos de Saída
 
