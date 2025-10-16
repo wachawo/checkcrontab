@@ -1,9 +1,11 @@
 ## Checkcrontab - crontab फ़ाइलों में सिंटैक्स की जांच करें
 
 [![CI](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml/badge.svg)](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/wachawo/checkcrontab/branch/0.0.11/graph/badge.svg)](https://codecov.io/gh/wachawo/checkcrontab?branch=main)
 [![PyPI](https://img.shields.io/pypi/v/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
-[![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
+[![Downloads](https://img.shields.io/pypi/dm/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/wachawo/checkcrontab/blob/main/LICENSE)
+[![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 
 crontab फ़ाइलों के सिंटैक्स की जांच के लिए Python स्क्रिप्ट। Linux, macOS और Windows के लिए क्रॉस-प्लेटफ़ॉर्म समर्थन।
 
