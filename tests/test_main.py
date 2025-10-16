@@ -686,6 +686,8 @@ def test_json_explicit_missing_files(mock_exists, mock_env, mock_platform, capsy
     data = json.loads(out)
     # Current behavior: missing files recorded but not counted toward total_errors (possible improvement)
     assert code == 0
+    if data["total_files"] != 2:
+        print(data)
     assert data["total_files"] == 2
     assert data["total_errors"] == 0  # because total_errors only increments for existing files
     assert data["success"] is True
