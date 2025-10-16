@@ -1,9 +1,11 @@
 ## Checkcrontab - vérifier la syntaxe des fichiers crontab
 
 [![CI](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml/badge.svg)](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/wachawo/checkcrontab/branch/main/graph/badge.svg)](https://codecov.io/gh/wachawo/checkcrontab?branch=main)
 [![PyPI](https://img.shields.io/pypi/v/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
-[![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
+[![Downloads](https://img.shields.io/pypi/dm/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/wachawo/checkcrontab/blob/main/LICENSE)
+[![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 
 Un script Python pour vérifier la syntaxe des fichiers crontab. Support multiplateforme pour Linux, macOS et Windows.
 
@@ -46,47 +48,26 @@ pip3 install git+https://github.com/wachawo/checkcrontab.git
 ### Utilisation
 
 ```bash
-# Vérifier le crontab système (Linux uniquement)
+# Vérifier le crontab système (Linux/macOS uniquement)
 checkcrontab
 
 # Vérifier un fichier crontab
 checkcrontab /etc/crontab
 
-# Vérifier le crontab utilisateur
+# Vérifier le crontab d'un utilisateur (Linux/macOS uniquement)
 checkcrontab username
-# Mode strict (traiter les avertissements comme des erreurs)
-checkcrontab --strict examples/user_valid.txt
 
-# Toujours sortir avec le code de succès
-checkcrontab --exit-zero examples/user_valid.txt
-
-# Mode strict (traiter les avertissements comme des erreurs)
-checkcrontab --strict examples/user_valid.txt
-
-# Toujours sortir avec le code de succès
-checkcrontab --exit-zero examples/user_valid.txt
-
-
-# Vérifier avec des drapeaux de type explicites
+# Vérifier avec des indicateurs de type explicites
 checkcrontab -S system.cron -U user.cron -u username1 -u username2
+
+# Vérifier tous les crontab d'un répertoire
+checkcrontab /etc/cron.d
 
 # Afficher l'aide
 checkcrontab --help
 
 # Afficher la version
 checkcrontab --version
-# Mode strict (traiter les avertissements comme des erreurs)
-checkcrontab --strict examples/user_valid.txt
-
-# Toujours sortir avec le code de succès
-checkcrontab --exit-zero examples/user_valid.txt
-
-# Mode strict (traiter les avertissements comme des erreurs)
-checkcrontab --strict examples/user_valid.txt
-
-# Toujours sortir avec le code de succès
-checkcrontab --exit-zero examples/user_valid.txt
-
 ```
 
 ### Sortie JSON
@@ -128,16 +109,6 @@ Exemple de sortie JSON:
   ]
 }
 ```
-
-### Codes de Sortie
-
-| Code | Signification |
-|------|---------------|
-| 0    | Aucune erreur (avertissements autorisés). Avec `--exit-zero` toujours 0. |
-| 1    | Problèmes trouvés: toute erreur ou tout avertissement quand `--strict` est défini. |
-| 2    | Erreur d'exécution/utilisation (échec inattendu, mauvais arguments CLI, etc.). |
-
-
 
 ### Codes de Sortie
 

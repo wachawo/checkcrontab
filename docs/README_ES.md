@@ -1,9 +1,11 @@
 ## Checkcrontab - verificar sintaxis en archivos crontab
 
 [![CI](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml/badge.svg)](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/wachawo/checkcrontab/branch/main/graph/badge.svg)](https://codecov.io/gh/wachawo/checkcrontab?branch=main)
 [![PyPI](https://img.shields.io/pypi/v/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
-[![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
+[![Downloads](https://img.shields.io/pypi/dm/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/wachawo/checkcrontab/blob/main/LICENSE)
+[![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 
 Un script de Python para verificar la sintaxis de archivos crontab. Soporte multiplataforma para Linux, macOS y Windows.
 
@@ -46,47 +48,26 @@ pip3 install git+https://github.com/wachawo/checkcrontab.git
 ### Uso
 
 ```bash
-# Verificar crontab del sistema (solo Linux)
+# Verificar el crontab del sistema (solo Linux/macOS)
 checkcrontab
 
-# Verificar archivo crontab
+# Verificar un archivo crontab
 checkcrontab /etc/crontab
 
-# Verificar crontab de usuario
+# Verificar el crontab de un usuario (solo Linux/macOS)
 checkcrontab username
-# Modo estricto (tratar advertencias como errores)
-checkcrontab --strict examples/user_valid.txt
-
-# Siempre salir con código de éxito
-checkcrontab --exit-zero examples/user_valid.txt
-
-# Modo estricto (tratar advertencias como errores)
-checkcrontab --strict examples/user_valid.txt
-
-# Siempre salir con código de éxito
-checkcrontab --exit-zero examples/user_valid.txt
-
 
 # Verificar con banderas de tipo explícitas
 checkcrontab -S system.cron -U user.cron -u username1 -u username2
+
+# Verificar todos los crontab de un directorio
+checkcrontab /etc/cron.d
 
 # Mostrar ayuda
 checkcrontab --help
 
 # Mostrar versión
 checkcrontab --version
-# Modo estricto (tratar advertencias como errores)
-checkcrontab --strict examples/user_valid.txt
-
-# Siempre salir con código de éxito
-checkcrontab --exit-zero examples/user_valid.txt
-
-# Modo estricto (tratar advertencias como errores)
-checkcrontab --strict examples/user_valid.txt
-
-# Siempre salir con código de éxito
-checkcrontab --exit-zero examples/user_valid.txt
-
 ```
 
 ### Formatos de Salida

@@ -4,6 +4,7 @@ Main entry point for checkcrontab
 """
 
 import argparse
+import glob
 import json
 import logging
 import os
@@ -229,42 +230,54 @@ Usage examples:
     log.setup_logging(args.debug, args.no_colors, args.format in ["json", "sarif"])
 
     # Prepare list of files to check with their types
-    file_list: List[Tuple[str, bool]] = []  # (file_path, is_system_crontab)
-    temp_files: List[str] = []  # Track temporary files for cleanup
+    files_list: List[Tuple[str, bool]] = []  # (file_path, is_system_crontab)
+    files_temp: List[str] = []  # Track temporary files for cleanup
 
     # Add files with explicit flags
     if args.system:
-        for file_path in args.system:
-            file_list.append((file_path, True))
+        for path in args.system:
+            if os.path.isdir(path):
+                for file_path in glob.glob(os.path.join(path, "*")):
+                    if os.path.isfile(file_path):
+                        files_list.append((file_path, True))
+            else:
+                files_list.append((path, True))
 
     if args.user:
-        for file_path in args.user:
-            file_list.append((file_path, False))
+        for path in args.user:
+            files_list.append((path, False))
 
     # Add usernames with explicit flag
     if args.username:
         for username in args.username:
             crontab_path = find_user_crontab(username)
             if crontab_path:
-                temp_files.append(crontab_path)
-                file_list.append((crontab_path, False))  # User crontab
+                files_temp.append(crontab_path)
+                files_list.append((crontab_path, False))  # User crontab
                 logger.info(f"Found user crontab for {username}: {crontab_path}")
             else:
                 logger.warning(f"User crontab not found for: {username}")
 
     # Add arguments with smart detection
     for arg in args.arguments:
-        # First check if it's an existing file
-        if os.path.exists(arg):
-            # Determine type based on path or content
-            is_system_crontab = arg == "/etc/crontab" or arg.startswith("/etc/cron.d") or "system" in os.path.basename(arg)
-            file_list.append((arg, is_system_crontab))
+        if os.path.isfile(arg):
+            # First check if it's an existing file
+            full_path = os.path.abspath(arg)
+            is_system_crontab = full_path == "/etc/crontab" or full_path.startswith("/etc/cron.d") or "system" in os.path.basename(full_path)
+            files_list.append((full_path, is_system_crontab))
+        elif os.path.isdir(arg):
+            # If directory, add all files inside as system crontabs
+            for file_path in glob.glob(os.path.join(arg, "*")):
+                full_path = os.path.abspath(file_path)
+                is_system_crontab = full_path == "/etc/crontab" or full_path.startswith("/etc/cron.d") or "system" in os.path.basename(full_path)
+                if os.path.isfile(full_path):
+                    files_list.append((full_path, is_system_crontab))
         elif re.compile(r"^[a-zA-Z][a-zA-Z0-9_-]{0,31}$").match(arg):
             # If not a file, treat as username
             crontab_path = find_user_crontab(arg)
             if crontab_path:
-                temp_files.append(crontab_path)
-                file_list.append((crontab_path, False))  # User crontab
+                files_temp.append(crontab_path)
+                files_list.append((crontab_path, False))  # User crontab
                 logger.info(f"{arg} user found: {crontab_path}")
             else:
                 logger.warning(f"{arg} user not found or has no crontab")
@@ -278,34 +291,36 @@ Usage examples:
         if not is_github:
             checker.check_daemon()
             checker.check_permissions()
-        # Add system crontab if not in GitHub Actions and not already included
-        if not is_github and not any(file_path == "/etc/crontab" for file_path, _ in file_list):
-            file_list.insert(0, ("/etc/crontab", True))
+        # if not any(file_path == "/etc/crontab" for file_path, _ in files_list):
+        #    files_list.insert(0, ("/etc/crontab", True))
     else:
         logger.info("Skipping system checks on non-Linux system")
+
+    if len(files_list) == 0:
+        logger.warning("No files to check.")
 
     # Remove duplicates while preserving order
     seen = set()
     unique_file_list: List[Tuple[str, bool]] = []
-    for file_path, is_system in file_list:
-        if file_path not in seen:
-            seen.add(file_path)
-            unique_file_list.append((file_path, is_system))
-    file_list = unique_file_list
+    for path, is_system in files_list:
+        if path not in seen:
+            seen.add(path)
+            unique_file_list.append((path, is_system))
+    files_list = unique_file_list
 
     total_rows = 0
     total_rows_errors = 0
     total_errors = 0
-    # total_warnings = 0
+    total_warnings = 0
     all_errors: List[str] = []
     # all_warnings: List[str] = []
 
     # Prepare output structure if needed
-    output_data: Dict[str, Any] = {"success": True, "total_files": len(file_list), "total_rows": 0, "total_rows_errors": 0, "total_errors": 0, "files": []}
+    output_data: Dict[str, Any] = {"success": True, "total_files": len(files_list), "total_rows": 0, "total_rows_errors": 0, "total_errors": 0, "total_warnings": 0, "files": []}
 
-    for file_path, is_system_crontab in file_list:
-        if os.path.exists(file_path):
-            rows_checked, file_errors = check_file(file_path, is_system_crontab=is_system_crontab)
+    for path, is_system_crontab in files_list:
+        if os.path.exists(path):
+            rows_checked, file_errors = check_file(path, is_system_crontab=is_system_crontab)
             total_rows += rows_checked
             total_errors += len(file_errors)
             all_errors.extend(file_errors)
@@ -321,9 +336,11 @@ Usage examples:
             total_rows_errors += rows_errors
             # Add file info to output structure
             file_info = {
-                "file": file_path,
+                "file": path,
                 "is_system_crontab": is_system_crontab,
                 "rows": rows_checked,
+                "rows_warnings": 0,
+                "warnings_count": 0,
                 "rows_errors": rows_errors,
                 "errors_count": len(file_errors),
                 "errors": file_errors,
@@ -332,27 +349,30 @@ Usage examples:
             output_data["files"].append(file_info)
             # Standard output
             if args.format == "text" and len(file_errors) > 0:
-                logger.error(f"{file_path}: {rows_errors}/{rows_checked} lines with errors. Total {len(file_errors)} errors.")
+                logger.error(f"{path}: {rows_errors}/{rows_checked} lines with errors. Total {len(file_errors)} errors.")
             elif args.format == "text":
-                logger.info(f"{file_path}: 0/{rows_checked} lines without errors. No errors.")
+                logger.info(f"{path}: 0/{rows_checked} lines without errors. No errors.")
         else:
             file_info = {
-                "file": file_path,
+                "file": path,
                 "is_system_crontab": is_system_crontab,
                 "rows": 0,
+                "rows_warnings": 0,
+                "warnings_count": 0,
                 "rows_errors": 0,
                 "errors_count": 1,
-                "errors": [f"File {file_path} does not exist"],
+                "errors": [f"File {path} does not exist"],
                 "success": False,
             }
             output_data["files"].append(file_info)
             if args.format == "text":
-                logger.warning(f"File {file_path} does not exist")
+                logger.warning(f"File {path} does not exist")
 
     # Update output structure and generate final output
     output_data["total_rows"] = total_rows
     output_data["total_rows_errors"] = total_rows_errors
     output_data["total_errors"] = total_errors
+    output_data["total_warnings"] = total_warnings
     output_data["success"] = total_errors == 0
 
     # Calculate unique error lines
@@ -386,7 +406,7 @@ Usage examples:
         logger.error(f"Total: {rows_errors} lines with errors found in {total_rows} checked lines")
 
     # Clean up temporary files
-    for temp_file in temp_files:
+    for temp_file in files_temp:
         try:
             os.unlink(temp_file)
         except Exception as e:
@@ -399,11 +419,7 @@ Usage examples:
     # Count warnings if in strict mode
     total_issues = total_errors
     if args.strict:
-        # In strict mode, warnings are treated as errors
-        # We need to count warnings from the checker
-        # For now, we'll just use errors, but this could be enhanced
-        # TODO: Implement proper warning counting
-        pass
+        total_issues += total_warnings
 
     if total_issues == 0:
         return 0

@@ -9,11 +9,10 @@ on:
     types: [ published ]
 
 jobs:
-  test:
-    runs-on: ${{ matrix.os }}
+  test-linux:
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
 
     steps:
@@ -28,38 +27,122 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements*.txt') }}
+        key: linux-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements*.txt') }}
         restore-keys: |
-          ${{ runner.os }}-pip-${{ matrix.python-version }}-
+          linux-pip-${{ matrix.python-version }}-
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -e .
-        pip install pytest flake8 mypy ruff
-
-    #- name: Lint (flake8)
-    #  run: |
-    #    flake8 checkcrontab/ --count --select=E9,F63,F7,F82 --show-source --statistics
-    #    flake8 checkcrontab/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        pip install -r requirements-dev.txt
 
     - name: Lint (ruff)
+      if: matrix.python-version == '3.11'
       run: ruff check . --output-format=github
 
     - name: Type-check (mypy)
+      if: matrix.python-version == '3.11'
       run: mypy .
+
+    - name: Run tests with coverage
+      if: matrix.python-version == '3.11'
+      run: pytest --cov=checkcrontab --cov-report=xml --cov-report=term-missing
+
+    - name: Generate coverage HTML report
+      if: matrix.python-version == '3.11'
+      run: coverage html
+
+    - name: Upload coverage to Codecov
+      if: matrix.python-version == '3.11'
+      uses: codecov/codecov-action@v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: coverage.xml
+        flags: linux
+        fail_ci_if_error: true
+
+    - name: Upload coverage artifacts
+      if: matrix.python-version == '3.11'
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-linux-${{ matrix.python-version }}
+        path: |
+          coverage.xml
+          htmlcov
+
+    - name: Run test suite
+      if: matrix.python-version != '3.11'
+      run: pytest
+
+    - name: CLI smoke tests
+      if: matrix.python-version == '3.11'
+      run: |
+        python -m checkcrontab examples/system_valid.txt
+        python -m checkcrontab examples/user_valid.txt
+
+  test-macos:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12']
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .
+        pip install -r requirements-dev.txt
 
     - name: Run tests
       run: pytest
 
-    - name: Test CLI functionality
-      run: python -m checkcrontab examples/system_valid.txt
+    - name: CLI smoke tests
+      if: matrix.python-version == '3.11'
+      run: |
+        python -m checkcrontab examples/system_valid.txt
+        python -m checkcrontab examples/user_valid.txt
 
-    - name: Test CLI functionality
-      run: python -m checkcrontab examples/user_valid.txt
+  test-windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        python-version: ['3.11']
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .
+        pip install -r requirements-dev.txt
+
+    - name: Run tests
+      run: pytest
+
+    - name: CLI smoke tests
+      run: |
+        python -m checkcrontab examples/system_valid.txt
+        python -m checkcrontab examples/user_valid.txt
 
   build:
-    needs: test
+    needs:
+      - test-linux
+      - test-macos
+      - test-windows
     runs-on: ubuntu-latest
     if: github.event_name == 'release'
     permissions:

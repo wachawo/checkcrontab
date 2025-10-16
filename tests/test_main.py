@@ -4,15 +4,27 @@
 Tests for checkcrontab package
 """
 
+import importlib
+import importlib.util
 import json
 import logging
+import os
 import runpy
+import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from checkcrontab import checker
-from checkcrontab import main as check_crontab
-from checkcrontab.logger import setup_logging
+PACKAGE_ROOT = Path(__file__).resolve().parents[1] / "checkcrontab"
+package_spec = importlib.util.spec_from_file_location(
+    "checkcrontab", PACKAGE_ROOT / "__init__.py", submodule_search_locations=[str(PACKAGE_ROOT)]
+)
+checkcrontab_pkg = importlib.util.module_from_spec(package_spec)
+sys.modules["checkcrontab"] = checkcrontab_pkg
+package_spec.loader.exec_module(checkcrontab_pkg)
+
+check_crontab = importlib.import_module("checkcrontab.main")
+checker = importlib.import_module("checkcrontab.checker")
+setup_logging = importlib.import_module("checkcrontab.logger").setup_logging
 
 # ============================================================================
 # Logging tests
@@ -674,6 +686,8 @@ def test_json_explicit_missing_files(mock_exists, mock_env, mock_platform, capsy
     data = json.loads(out)
     # Current behavior: missing files recorded but not counted toward total_errors (possible improvement)
     assert code == 0
+    if data["total_files"] != 2:
+        print(data)
     assert data["total_files"] == 2
     assert data["total_errors"] == 0  # because total_errors only increments for existing files
     assert data["success"] is True
@@ -708,7 +722,7 @@ def test_auto_added_missing_system_file_warning(mock_perm, mock_daemon, mock_exi
     code = run_main([])
     # Exit 0 because missing system file just a warning (no errors counted since not JSON path)
     assert code == 0
-    assert any("/etc/crontab" in r.getMessage() and "does not exist" in r.getMessage() for r in caplog.records)
+    assert any("No files to check." in r.getMessage() for r in caplog.records if r.levelname == "WARNING")
 
 
 @patch("checkcrontab.main.platform.system", return_value="Linux")
@@ -846,8 +860,9 @@ def test_json_auto_add_system(mock_perm, mock_daemon, mock_exists, mock_env, moc
         code = run_main(["--format", "json"])  # no args triggers auto-add
     data = json.loads(capsys.readouterr().out)
     assert code == 0
-    assert data["total_files"] == 1
-    assert data["files"][0]["is_system_crontab"] is True
+    # DISABLE AUTO-ADD FOR LINUX
+    assert data["total_files"] == 0
+    # assert data["files"][0]["is_system_crontab"] is True
 
 
 @patch("checkcrontab.main.platform.system", return_value="Linux")
@@ -890,6 +905,8 @@ def test_json_username_resolution(mock_perm, mock_daemon, mock_exists, mock_env,
 
     code = run_main(["--format", "json", "pytest_user"])
     data = json.loads(capsys.readouterr().out)
+    print(data)
+    print(os.getenv("GITHUB_ACTIONS"))
     assert code == 0
     assert data["total_files"] == 1
     assert data["files"][0]["success"] is True
