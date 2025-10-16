@@ -22,14 +22,18 @@ repos:
     rev: v1.17.1
     hooks:
     - id: mypy
-      additional_dependencies: []
+      additional_dependencies:
+        - hypothesis>=6.97.0
 
   - repo: local
     hooks:
       - id: pytest-check
         name: pytest-check
         entry: pytest
-        language: system
+        language: python
+        additional_dependencies:
+          - pytest
+          - hypothesis>=6.97.0
         pass_filenames: false
         always_run: true
 

@@ -1,6 +1,7 @@
 ## Checkcrontab - check syntax in crontab files
 
 [![CI](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml/badge.svg)](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/wachawo/checkcrontab/branch/0.0.11/graph/badge.svg)](https://codecov.io/gh/wachawo/checkcrontab?branch=0.0.11)
 [![PyPI](https://img.shields.io/pypi/v/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 [![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 [![Downloads](https://img.shields.io/pypi/dm/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
@@ -178,6 +179,15 @@ pip3 install pre-commit flake8 pytest mypy ruff
 pre-commit install
 pre-commit run --all-files
 pre-commit autoupdate
+```
+
+### Testing
+
+```bash
+pytest --cov=checkcrontab --cov-report=term-missing
+coverage html  # optional local HTML report in htmlcov/index.html
+# CI automatically uploads coverage.xml to Codecov
+# python -m coverage_badge -o docs/coverage.svg
 ```
 
 ### Usage with pre-commit
