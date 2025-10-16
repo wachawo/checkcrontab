@@ -32,6 +32,7 @@ repos:
         entry: pytest
         language: python
         additional_dependencies:
+          - .
           - pytest
           - hypothesis>=6.97.0
         pass_filenames: false
