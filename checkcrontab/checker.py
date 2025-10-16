@@ -542,7 +542,10 @@ def get_crontab(username: str) -> Optional[str]:
             logger.info(f"No crontab found for user: {username}")
             return None
         else:
-            logger.warning(f"Error getting crontab for {username}: {result.stderr}")
+            error_message = result.stderr
+            # remove blank lines from error message
+            error_message = "\n".join([line for line in error_message.splitlines() if line.strip()])
+            logger.warning(f"Error getting crontab for {username}: {error_message}")
             return None
 
     except subprocess.TimeoutExpired:
