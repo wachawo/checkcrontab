@@ -1,9 +1,11 @@
 ## Checkcrontab - verificar sintaxe em arquivos crontab
 
 [![CI](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml/badge.svg)](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/wachawo/checkcrontab/branch/main/graph/badge.svg)](https://codecov.io/gh/wachawo/checkcrontab?branch=main)
 [![PyPI](https://img.shields.io/pypi/v/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
-[![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
+[![Downloads](https://img.shields.io/pypi/dm/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/wachawo/checkcrontab/blob/main/LICENSE)
+[![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 
 Um script Python para verificar a sintaxe de arquivos crontab. Suporte multiplataforma para Linux, macOS e Windows.
 
@@ -46,17 +48,20 @@ pip3 install git+https://github.com/wachawo/checkcrontab.git
 ### Uso
 
 ```bash
-# Verificar crontab do sistema (apenas Linux)
+# Verificar o crontab do sistema (apenas Linux/macOS)
 checkcrontab
 
-# Verificar arquivo crontab
+# Verificar um arquivo crontab
 checkcrontab /etc/crontab
 
-# Verificar crontab do usuário
+# Verificar o crontab de um usuário (apenas Linux/macOS)
 checkcrontab username
 
 # Verificar com flags de tipo explícitas
 checkcrontab -S system.cron -U user.cron -u username1 -u username2
+
+# Verificar todos os crontabs de um diretório
+checkcrontab /etc/cron.d
 
 # Mostrar ajuda
 checkcrontab --help
@@ -126,18 +131,6 @@ Exemplo de saída JSON:
   ]
 }
 ```
-
-
-
-### Códigos de Saída
-
-| Código | Significado |
-|--------|-------------|
-| 0      | Sem erros (avisos permitidos). Com `--exit-zero` sempre 0. |
-| 1      | Problemas encontrados: qualquer erro ou qualquer aviso quando `--strict` está configurado. |
-| 2      | Erro de execução/uso (falha inesperada, argumentos CLI incorretos, etc.). |
-
-
 
 ### Códigos de Saída
 

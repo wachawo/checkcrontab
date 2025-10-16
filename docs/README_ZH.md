@@ -1,9 +1,11 @@
 ## Checkcrontab - 检查 crontab 文件语法
 
 [![CI](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml/badge.svg)](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/wachawo/checkcrontab/branch/main/graph/badge.svg)](https://codecov.io/gh/wachawo/checkcrontab?branch=main)
 [![PyPI](https://img.shields.io/pypi/v/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
-[![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
+[![Downloads](https://img.shields.io/pypi/dm/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/wachawo/checkcrontab/blob/main/LICENSE)
+[![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 
 用于检查 crontab 文件语法的 Python 脚本。支持 Linux、macOS 和 Windows 的跨平台。
 
@@ -46,47 +48,26 @@ pip3 install git+https://github.com/wachawo/checkcrontab.git
 ### 使用方法
 
 ```bash
-# 检查系统 crontab（仅 Linux）
+# 检查系统 crontab（仅限 Linux/macOS）
 checkcrontab
 
 # 检查 crontab 文件
 checkcrontab /etc/crontab
 
-# 检查用户 crontab
+# 检查用户 crontab（仅限 Linux/macOS）
 checkcrontab username
-# 严格模式（将警告视为错误）
-checkcrontab --strict examples/user_valid.txt
-
-# 始终以成功代码退出
-checkcrontab --exit-zero examples/user_valid.txt
-
-# 严格模式（将警告视为错误）
-checkcrontab --strict examples/user_valid.txt
-
-# 始终以成功代码退出
-checkcrontab --exit-zero examples/user_valid.txt
-
 
 # 使用显式类型标志检查
 checkcrontab -S system.cron -U user.cron -u username1 -u username2
+
+# 检查目录中的所有 crontab 文件
+checkcrontab /etc/cron.d
 
 # 显示帮助
 checkcrontab --help
 
 # 显示版本
 checkcrontab --version
-# 严格模式（将警告视为错误）
-checkcrontab --strict examples/user_valid.txt
-
-# 始终以成功代码退出
-checkcrontab --exit-zero examples/user_valid.txt
-
-# 严格模式（将警告视为错误）
-checkcrontab --strict examples/user_valid.txt
-
-# 始终以成功代码退出
-checkcrontab --exit-zero examples/user_valid.txt
-
 ```
 
 ### JSON 输出

@@ -1,9 +1,11 @@
 ## Checkcrontab - crontabファイルの構文をチェック
 
 [![CI](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml/badge.svg)](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/wachawo/checkcrontab/branch/main/graph/badge.svg)](https://codecov.io/gh/wachawo/checkcrontab?branch=main)
 [![PyPI](https://img.shields.io/pypi/v/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
-[![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
+[![Downloads](https://img.shields.io/pypi/dm/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/wachawo/checkcrontab/blob/main/LICENSE)
+[![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 
 crontabファイルの構文をチェックするPythonスクリプト。Linux、macOS、Windowsのクロスプラットフォームサポート。
 
@@ -46,47 +48,26 @@ pip3 install git+https://github.com/wachawo/checkcrontab.git
 ### 使用方法
 
 ```bash
-# システムcrontabをチェック（Linuxのみ）
+# システム crontab をチェック（Linux/macOS のみ）
 checkcrontab
 
-# crontabファイルをチェック
+# crontab ファイルをチェック
 checkcrontab /etc/crontab
 
-# ユーザーcrontabをチェック
+# ユーザー crontab をチェック（Linux/macOS のみ）
 checkcrontab username
-# 厳格モード（警告をエラーとして扱う）
-checkcrontab --strict examples/user_valid.txt
-
-# 常に成功コードで終了
-checkcrontab --exit-zero examples/user_valid.txt
-
-# 厳格モード（警告をエラーとして扱う）
-checkcrontab --strict examples/user_valid.txt
-
-# 常に成功コードで終了
-checkcrontab --exit-zero examples/user_valid.txt
-
 
 # 明示的なタイプフラグでチェック
 checkcrontab -S system.cron -U user.cron -u username1 -u username2
+
+# ディレクトリ内のすべての crontab をチェック
+checkcrontab /etc/cron.d
 
 # ヘルプを表示
 checkcrontab --help
 
 # バージョンを表示
 checkcrontab --version
-# 厳格モード（警告をエラーとして扱う）
-checkcrontab --strict examples/user_valid.txt
-
-# 常に成功コードで終了
-checkcrontab --exit-zero examples/user_valid.txt
-
-# 厳格モード（警告をエラーとして扱う）
-checkcrontab --strict examples/user_valid.txt
-
-# 常に成功コードで終了
-checkcrontab --exit-zero examples/user_valid.txt
-
 ```
 
 ### JSON出力

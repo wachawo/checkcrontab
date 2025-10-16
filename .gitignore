@@ -13,6 +13,9 @@ dist/
 .env
 .coverage
 .coverage.*
+.hypothesis/
+htmlcov/
+coverage.xml
 MANIFEST
 .DS_Store
 Thumbs.db

@@ -1,9 +1,11 @@
 ## Checkcrontab - проверка синтаксиса в crontab файлах
 
 [![CI](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml/badge.svg)](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/wachawo/checkcrontab/branch/main/graph/badge.svg)](https://codecov.io/gh/wachawo/checkcrontab?branch=main)
 [![PyPI](https://img.shields.io/pypi/v/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
-[![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
+[![Downloads](https://img.shields.io/pypi/dm/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/wachawo/checkcrontab/blob/main/LICENSE)
+[![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 
 Python скрипт для проверки синтаксиса crontab файлов. Кроссплатформенная поддержка для Linux, macOS и Windows.
 
@@ -71,6 +73,9 @@ checkcrontab username
 
 # Проверить с явными флагами типа
 checkcrontab -S system.cron -U user.cron -u username1 -u username2
+
+# Проверить все crontab файлы в каталоге
+checkcrontab /etc/cron.d
 
 # Показать справку
 checkcrontab --help

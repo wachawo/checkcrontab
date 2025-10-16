@@ -1,9 +1,11 @@
 ## Checkcrontab - crontab फ़ाइलों में सिंटैक्स की जांच करें
 
 [![CI](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml/badge.svg)](https://github.com/wachawo/checkcrontab/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/wachawo/checkcrontab/branch/main/graph/badge.svg)](https://codecov.io/gh/wachawo/checkcrontab?branch=main)
 [![PyPI](https://img.shields.io/pypi/v/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
-[![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
+[![Downloads](https://img.shields.io/pypi/dm/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/wachawo/checkcrontab/blob/main/LICENSE)
+[![Python](https://img.shields.io/pypi/pyversions/checkcrontab.svg)](https://pypi.org/project/checkcrontab/)
 
 crontab फ़ाइलों के सिंटैक्स की जांच के लिए Python स्क्रिप्ट। Linux, macOS और Windows के लिए क्रॉस-प्लेटफ़ॉर्म समर्थन।
 
@@ -46,47 +48,26 @@ pip3 install git+https://github.com/wachawo/checkcrontab.git
 ### उपयोग
 
 ```bash
-# सिस्टम crontab की जांच करें (केवल Linux)
+# सिस्टम crontab की जांच करें (केवल Linux/macOS)
 checkcrontab
 
 # crontab फ़ाइल की जांच करें
 checkcrontab /etc/crontab
 
-# उपयोगकर्ता crontab की जांच करें
+# उपयोगकर्ता crontab की जांच करें (केवल Linux/macOS)
 checkcrontab username
-# सख्त मोड (चेतावनियों को त्रुटियों के रूप में मानें)
-checkcrontab --strict examples/user_valid.txt
-
-# हमेशा सफलता कोड के साथ बाहर निकलें
-checkcrontab --exit-zero examples/user_valid.txt
-
-# सख्त मोड (चेतावनियों को त्रुटियों के रूप में मानें)
-checkcrontab --strict examples/user_valid.txt
-
-# हमेशा सफलता कोड के साथ बाहर निकलें
-checkcrontab --exit-zero examples/user_valid.txt
-
 
 # स्पष्ट प्रकार फ़्लैग के साथ जांच करें
 checkcrontab -S system.cron -U user.cron -u username1 -u username2
+
+# किसी निर्देशिका के सभी crontab की जांच करें
+checkcrontab /etc/cron.d
 
 # सहायता दिखाएं
 checkcrontab --help
 
 # संस्करण दिखाएं
 checkcrontab --version
-# सख्त मोड (चेतावनियों को त्रुटियों के रूप में मानें)
-checkcrontab --strict examples/user_valid.txt
-
-# हमेशा सफलता कोड के साथ बाहर निकलें
-checkcrontab --exit-zero examples/user_valid.txt
-
-# सख्त मोड (चेतावनियों को त्रुटियों के रूप में मानें)
-checkcrontab --strict examples/user_valid.txt
-
-# हमेशा सफलता कोड के साथ बाहर निकलें
-checkcrontab --exit-zero examples/user_valid.txt
-
 ```
 
 ### JSON आउटपुट
