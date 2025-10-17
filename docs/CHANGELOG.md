@@ -1,5 +1,10 @@
 # CHANGELOG
 
+0.0.12 (2025-10-17)
+========
+- Add check owner and file permissions
+- Add check format file name
+
 0.0.11 (2025-10-16)
 ========
 - Added support for specifying a directory with files
@@ -22,5 +27,3 @@
 - Refactor keyword validation in `checker.py`
 - Add output format to SERIF, JSON or TEXT `main.py --format ["text", "json", "sarif"]`
 - Update `README.md`
-
-
