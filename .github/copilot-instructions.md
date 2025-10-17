@@ -28,7 +28,7 @@ pre-commit install
 # Run linting - takes 0.01 seconds, NEVER CANCEL
 ruff check . --output-format=github
 
-# Run type checking - takes 0.1-1.5 seconds, NEVER CANCEL  
+# Run type checking - takes 0.1-1.5 seconds, NEVER CANCEL
 mypy .
 
 # Check code formatting - takes 0.01 seconds, NEVER CANCEL
@@ -46,7 +46,7 @@ checkcrontab --version
 
 ### Network Limitations
 ⚠️ **IMPORTANT**: Some operations fail due to network timeouts to PyPI:
-- `pip install -e .` - may fail with "Read timed out" error after 16 seconds  
+- `pip install -e .` - may fail with "Read timed out" error after 16 seconds
 - `pre-commit run --all-files` - fails due to PyPI timeout after 18 seconds
 - `python -m build` - fails due to PyPI timeout after 16 seconds
 - **Workaround**: If previously installed, packages remain usable despite install failures
@@ -140,7 +140,7 @@ checkcrontab                        # Check system crontab (Linux only)
 checkcrontab /path/to/crontab      # Check specific file
 checkcrontab username              # Check user's crontab
 
-# Advanced usage  
+# Advanced usage
 checkcrontab -S system.cron -U user.cron  # Explicit file types
 checkcrontab -u user1 -u user2            # Multiple users
 checkcrontab --debug file.cron             # Debug output
@@ -158,12 +158,12 @@ python -m checkcrontab file.cron    # Run from source
 - **License**: MIT
 
 ### Features Validated
-✅ Cross-platform support (Linux, macOS, Windows)  
-✅ System and user crontab validation  
-✅ Time field validation (minutes, hours, days, months, weekdays)  
-✅ User existence validation (Linux/macOS)  
-✅ Dangerous command detection  
-✅ Special keyword support (@reboot, @daily, etc.)  
-✅ Multi-line command support  
-✅ Environment variable handling  
+✅ Cross-platform support (Linux, macOS, Windows)
+✅ System and user crontab validation
+✅ Time field validation (minutes, hours, days, months, weekdays)
+✅ User existence validation (Linux/macOS)
+✅ Dangerous command detection
+✅ Special keyword support (@reboot, @daily, etc.)
+✅ Multi-line command support
+✅ Environment variable handling
 ✅ Colored output with Windows ANSI support
