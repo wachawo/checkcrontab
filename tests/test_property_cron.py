@@ -82,7 +82,7 @@ def _safe_command() -> st.SearchStrategy[str]:
 )
 def test_user_crontab_accepts_valid_fields(minute: str, hour: str, day: str, month: str, weekday: str) -> None:
     line = f"{minute} {hour} {day} {month} {weekday} /usr/bin/true"
-    errors, warnings = check_line(line, 1, "property.cron", is_system_crontab=False)
+    errors, warnings = check_line(line, 1, "property_cron", is_system_crontab=False)
     assert errors == []
     assert warnings == []
 
@@ -97,7 +97,7 @@ def test_user_crontab_accepts_valid_fields(minute: str, hour: str, day: str, mon
 )
 def test_system_crontab_accepts_valid_fields(minute: str, hour: str, day: str, month: str, weekday: str) -> None:
     line = f"{minute} {hour} {day} {month} {weekday} root /usr/bin/true"
-    errors, warnings = check_line(line, 1, "property.cron", is_system_crontab=True)
+    errors, warnings = check_line(line, 1, "property_cron", is_system_crontab=True)
     assert errors == []
     assert warnings == []
 
@@ -112,7 +112,7 @@ def test_system_crontab_accepts_valid_fields(minute: str, hour: str, day: str, m
 )
 def test_invalid_range_is_reported(bad_minute: str, hour: str, day: str, month: str, weekday: str) -> None:
     line = f"{bad_minute} {hour} {day} {month} {weekday} /usr/bin/true"
-    errors, _ = check_line(line, 1, "invalid-range.cron", is_system_crontab=False)
+    errors, _ = check_line(line, 1, "invalid-range_cron", is_system_crontab=False)
     assert errors
     assert any("invalid range" in error for error in errors)
 
@@ -127,7 +127,7 @@ def test_invalid_range_is_reported(bad_minute: str, hour: str, day: str, month: 
 )
 def test_invalid_steps_are_rejected(bad_step: str, hour: str, day: str, month: str, weekday: str) -> None:
     line = f"{bad_step} {hour} {day} {month} {weekday} /usr/bin/true"
-    errors, _ = check_line(line, 1, "invalid-step.cron", is_system_crontab=False)
+    errors, _ = check_line(line, 1, "invalid-step_cron", is_system_crontab=False)
     assert errors
     assert any("step" in error for error in errors)
 
@@ -148,7 +148,7 @@ def test_duplicate_list_entries_are_detected(
     weekday: str,
 ) -> None:
     line = f"{duplicate_minute} {hour} {day} {month} {weekday} /usr/bin/true"
-    errors, _ = check_line(line, 1, "duplicate-list.cron", is_system_crontab=False)
+    errors, _ = check_line(line, 1, "duplicate-list_cron", is_system_crontab=False)
     assert errors
     assert any("duplicate value" in error for error in errors)
 
@@ -160,7 +160,7 @@ SPECIAL_KEYWORDS = st.sampled_from(["@reboot", "@yearly", "@annually", "@monthly
 @typed_given(keyword=SPECIAL_KEYWORDS, command=_safe_command())
 def test_special_user_keywords(keyword: str, command: str) -> None:
     line = f"{keyword} {command}"
-    errors, warnings = check_line(line, 1, "special-user.cron", is_system_crontab=False)
+    errors, warnings = check_line(line, 1, "special-user_cron", is_system_crontab=False)
     assert errors == []
     assert warnings == []
 
@@ -169,6 +169,6 @@ def test_special_user_keywords(keyword: str, command: str) -> None:
 @typed_given(keyword=SPECIAL_KEYWORDS, command=_safe_command())
 def test_special_system_keywords(keyword: str, command: str) -> None:
     line = f"{keyword} root {command}"
-    errors, warnings = check_line(line, 1, "special-system.cron", is_system_crontab=True)
+    errors, warnings = check_line(line, 1, "special-system_cron", is_system_crontab=True)
     assert errors == []
     assert warnings == []
