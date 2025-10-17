@@ -150,7 +150,7 @@ def find_user_crontab(username: str) -> Optional[str]:
     return None
 
 
-def gen_serif_output(files_data: List[Dict[str, Any]], total_errors: int, total_warnings: int = 0) -> Dict[str, Any]:
+def gen_sarif_output(files_data: List[Dict[str, Any]], total_errors: int, total_warnings: int = 0) -> Dict[str, Any]:
     """Generate SARIF format output"""
     results = []
 
