@@ -195,9 +195,10 @@ def gen_sarif_output(files_data: List[Dict[str, Any]], total_errors: int, total_
     return sarif_output
 
 
-def get_files(path: str) -> List[str]:
+def get_files(path: str) -> Tuple[List[str], List[str]]:
     """Get list of files from path (file or directory)"""
     files = []
+    errors = []
     if not os.path.exists(path):
         # Path does not exist; no files to add.
         pass
@@ -207,12 +208,10 @@ def get_files(path: str) -> List[str]:
         for file in glob.glob(os.path.join(path, "*")):
             if os.path.isfile(file):
                 base = os.path.basename(file)
-                name_errors = checker.check_filename(base)
-                if name_errors:
-                    logger.warning(f"Ignoring {file}: {'; '.join(name_errors)} (cron.d will ignore such files)")
-                    continue
+                for error in checker.check_filename(base):
+                    errors.append(error)
                 files.append(file)
-    return files
+    return files, errors
 
 
 def main() -> int:
@@ -257,8 +256,11 @@ Usage examples:
     if args.system:
         for path in args.system:
             if os.path.isdir(path):
-                for file_path in get_files(path):
-                    files_list.append((file_path, True))
+                files, warnings = get_files(path)
+                for warning in warnings:
+                    logger.warning(warning)
+                for file in files:
+                    files_list.append((file, True))
             else:
                 files_list.append((path, True))
 
@@ -286,7 +288,10 @@ Usage examples:
             files_list.append((full_path, is_system_crontab))
         elif os.path.isdir(arg):
             # If directory, add all files inside as system crontabs
-            for file_path in get_files(arg):
+            files, warnings = get_files(arg)
+            for warning in warnings:
+                logger.warning(warning)
+            for file_path in files:
                 full_path = os.path.abspath(file_path)
                 is_system_crontab = full_path == "/etc/crontab" or full_path.startswith("/etc/cron.d") or "system" in os.path.basename(full_path)
                 files_list.append((full_path, is_system_crontab))
