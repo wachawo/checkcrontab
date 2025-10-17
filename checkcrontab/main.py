@@ -209,10 +209,10 @@ def get_files(path: str) -> Tuple[List[str], List[str]]:
             if os.path.isfile(file):
                 base = os.path.basename(file)
                 errors = checker.check_filename(base)
+                if not errors:
+                    files.append(file)
                 for error in errors:
                     errors.append(error)
-                if errors:
-                    files.append(file)
     return files, errors
 
 
@@ -282,32 +282,32 @@ Usage examples:
                 logger.warning(f"User crontab not found for: {username}")
 
     # Add arguments with smart detection
-    for arg in args.arguments:
-        if os.path.isfile(arg):
+    for path in args.arguments:
+        if os.path.isfile(path):
             # First check if it's an existing file
-            full_path = os.path.abspath(arg)
-            is_system_crontab = full_path == "/etc/crontab" or full_path.startswith("/etc/cron.d") or "system" in os.path.basename(full_path)
+            full_path = os.path.abspath(path)
+            is_system_crontab = bool(full_path == "/etc/crontab" or full_path.startswith("/etc/cron.d") or "system" in os.path.basename(full_path))
             files_list.append((full_path, is_system_crontab))
-        elif os.path.isdir(arg):
+        elif os.path.isdir(path):
             # If directory, add all files inside as system crontabs
-            files, warnings = get_files(arg)
+            files, warnings = get_files(path)
             for warning in warnings:
                 logger.warning(warning)
-            for file_path in files:
-                full_path = os.path.abspath(file_path)
-                is_system_crontab = full_path == "/etc/crontab" or full_path.startswith("/etc/cron.d") or "system" in os.path.basename(full_path)
+            for file in files:
+                full_path = os.path.abspath(file)
+                is_system_crontab = bool(full_path == "/etc/crontab" or full_path.startswith("/etc/cron.d") or "system" in os.path.basename(full_path))
                 files_list.append((full_path, is_system_crontab))
-        elif re.compile(r"^[a-zA-Z][a-zA-Z0-9_-]{0,31}$").match(arg):
+        elif re.compile(r"^[a-zA-Z][a-zA-Z0-9_-]{0,31}$").match(path):
             # If not a file, treat as username
-            crontab_path = find_user_crontab(arg)
+            crontab_path = find_user_crontab(path)
             if crontab_path:
                 files_temp.append(crontab_path)
                 files_list.append((crontab_path, False))  # User crontab
-                logger.info(f"{arg} user found: {crontab_path}")
+                logger.info(f"{path} user found: {crontab_path}")
             else:
-                logger.warning(f"{arg} user not found or has no crontab")
+                logger.warning(f"{path} user not found or has no crontab")
         else:
-            logger.warning(f"{arg} File not found and is not a valid username")
+            logger.warning(f"{path} File not found and is not a valid username")
 
     # Add system crontab on Linux if not already included
     if platform.system().lower() == "linux":
