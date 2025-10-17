@@ -199,7 +199,7 @@ def get_files(path: str) -> List[str]:
     """Get list of files from path (file or directory)"""
     files = []
     if not os.path.exists(path):
-        pass
+        # Path does not exist; no files to add.
     elif os.path.isfile(path):
         files.append(path)
     elif os.path.isdir(path):
