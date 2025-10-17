@@ -208,10 +208,10 @@ def get_files(path: str) -> Tuple[List[str], List[str]]:
         for file in glob.glob(os.path.join(path, "*")):
             if os.path.isfile(file):
                 base = os.path.basename(file)
-                errors = checker.check_filename(base)
-                if not errors:
+                error = checker.check_filename(base)
+                if not error:
                     files.append(file)
-                for error in errors:
+                else:
                     errors.append(error)
     return files, errors
 
@@ -347,9 +347,9 @@ Usage examples:
         if os.path.exists(path):
             if path not in files_temp:
                 base = os.path.basename(path)
-                name_errors = checker.check_filename(base)
-                if name_errors:
-                    msg = f"{path}: invalid cron filename: {'; '.join(name_errors)}"
+                error = checker.check_filename(base)
+                if error:
+                    msg = error
                     file_info = {
                         "file": path,
                         "is_system_crontab": is_system_crontab,

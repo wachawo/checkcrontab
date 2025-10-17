@@ -35,7 +35,7 @@ WEEKDAY_PATTERN = r"^(\*|([0-7])(-([0-7]))?(/([0-7]))?(,([0-7])(-([0-7]))?)*|\*/
 INVALID_NAME_ALLOWED_RE = r"^[A-Za-z0-9_-]+$"
 
 
-def check_filename(file_path: str) -> List[str]:
+def check_filename(file_path: str) -> str:
     """
     Validate cron filename (use basename). Return a list of error strings.
     Rules per man 8 cron / man 5 crontab:
@@ -43,25 +43,23 @@ def check_filename(file_path: str) -> List[str]:
       - starting with '.' (hidden);
       - only [A-Za-z0-9_-] are allowed (everything else is invalid).
     """
-    errors: List[str] = []
-
     name = os.path.basename(file_path or "")
     if not name:
-        return ["invalid filename: empty name"]
+        return f"{file_path} empty name filename"
     if name.startswith("."):
-        errors.append(f"invalid filename '{name}': starts with '.'")
+        return f"{name} wrong filename: starts with '.'"
     if name.endswith("~"):
-        errors.append(f"invalid filename '{name}': ends with '~'")
+        return f"{name} wrong filename: ends with '~'"
     if "." in name:
-        errors.append(f"invalid filename '{name}': contains '.'")
+        return f"{name} wrong filename contains '.'"
     if "#" in name:
-        errors.append(f"invalid filename '{name}': contains '#'")
+        return f"{name} wrong filename contains '#'"
     if "," in name:
-        errors.append(f"invalid filename '{name}': contains ','")
+        return f"{name} wrong filename contains ','"
     regexp = re.compile(INVALID_NAME_ALLOWED_RE)
     if not regexp.match(name):
-        errors.append(f"invalid filename '{name}': contains characters outside [A-Za-z0-9_-]")
-    return errors
+        return f"invalid filename '{name}': contains characters outside [A-Za-z0-9_-]"
+    return ""
 
 
 def check_daemon() -> List[str]:
