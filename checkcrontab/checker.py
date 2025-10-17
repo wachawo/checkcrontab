@@ -132,7 +132,7 @@ def check_owner_and_permissions(file_path: str, owner_uid: int = CRONTAB_OWNER_U
             target_path = file_path
         file_kind = check_kind(target_path)
         if file_kind != "regular_file":
-            errors.append(f"{target_path}({file_kind}): not a regular file.")
+            errors.append(f"{target_path}({file_kind}): not a regular_file.")
         stat_info = os.stat(target_path)
         mode = stat_info.st_mode & 0o777
         if mode != CRONTAB_PERMISSIONS:
