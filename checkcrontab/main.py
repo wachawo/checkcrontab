@@ -200,6 +200,7 @@ def get_files(path: str) -> List[str]:
     files = []
     if not os.path.exists(path):
         # Path does not exist; no files to add.
+        pass
     elif os.path.isfile(path):
         files.append(path)
     elif os.path.isdir(path):
@@ -440,7 +441,7 @@ Usage examples:
     if args.format == "json":
         print(json.dumps(output_data, indent=2))
     elif args.format == "sarif":
-        sarif_output = gen_serif_output(output_data["files"], total_errors)
+        sarif_output = gen_sarif_output(output_data["files"], total_errors)
         print(json.dumps(sarif_output, indent=2))
     # Standard output
     elif total_errors == 0:
