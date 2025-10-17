@@ -208,9 +208,11 @@ def get_files(path: str) -> Tuple[List[str], List[str]]:
         for file in glob.glob(os.path.join(path, "*")):
             if os.path.isfile(file):
                 base = os.path.basename(file)
-                for error in checker.check_filename(base):
+                errors = checker.check_filename(base)
+                for error in errors:
                     errors.append(error)
-                files.append(file)
+                if errors:
+                    files.append(file)
     return files, errors
 
 
