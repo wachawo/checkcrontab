@@ -7,6 +7,7 @@ import logging
 import os
 import platform
 import re
+import stat
 import subprocess
 import traceback
 from typing import List, Optional, Tuple
@@ -82,23 +83,66 @@ def check_daemon() -> List[str]:
     return errors
 
 
+def check_kind(path: str, follow_symlink: bool = True) -> str:
+    """Determine the kind of file at the given path"""
+    # is_link = os.path.islink(path)
+    st = os.stat(path) if follow_symlink else os.lstat(path)
+    m = st.st_mode
+    # Check if regular file
+    if stat.S_ISREG(m):
+        return "regular_file"
+    if stat.S_ISDIR(m):
+        return "directory"
+    if stat.S_ISLNK(m):
+        return "symlink"
+    if stat.S_ISCHR(m):
+        return "char_device"
+    if stat.S_ISBLK(m):
+        return "block_device"
+    if stat.S_ISSOCK(m):
+        return "socket"
+    if stat.S_ISFIFO(m):
+        return "fifo"
+    return "unknown"
+
+
 def check_owner_and_permissions(file_path: str, owner_uid: int = CRONTAB_OWNER_UID) -> List[str]:
     """Check owner and file permissions"""
     errors: List[str] = []
-    if not os.path.exists(file_path):
+    if not os.path.lexists(file_path):
         errors.append(f"{file_path}: file does not exist")
         return errors
     try:
-        stat_info = os.stat(file_path)
+        if os.path.islink(file_path):
+            try:
+                link_stat = os.lstat(file_path)  # symlink inode (do not follow)
+                if link_stat.st_uid != owner_uid:
+                    errors.append(f"wrong symlink owner: sudo chown -h root:root {file_path}")
+                else:
+                    logger.debug("symlink correct owner")
+            except Exception as e:
+                errors.append(f"failed to stat symlink: {e}")
+                # If we can't lstat the link, further checks don't make sense
+                return errors
+            target_path = os.path.realpath(file_path)
+            if not os.path.exists(target_path):
+                errors.append(f"broken symlink ({target_path} does not exist)")
+                return errors
+        else:
+            target_path = file_path
+        file_kind = check_kind(target_path)
+        if file_kind != "regular_file":
+            errors.append(f"{target_path}({file_kind}): not a regular file.")
+        stat_info = os.stat(target_path)
         mode = stat_info.st_mode & 0o777
         if mode != CRONTAB_PERMISSIONS:
-            errors.append(f"wrong permissions {oct(mode)} (should be {oct(CRONTAB_PERMISSIONS)})")
+            errors.append(f"wrong permissions ({oct(mode)}): sudo chmod 644 {target_path}")
         else:
             logger.debug(f"correct permissions: {oct(mode)}")
         if stat_info.st_uid != owner_uid:
-            errors.append("crontab is not owned by root")
+            errors.append(f"crontab wrong owner: sudo chown root:root {target_path}")
         else:
-            logger.debug("crontab correct owner: root")
+            logger.debug("crontab correct owner:")
     except Exception as e:
         errors.append(f"{e}")
     return errors
