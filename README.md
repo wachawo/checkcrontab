@@ -90,7 +90,7 @@ checkcrontab --version
 - **Windows**: File-based validation only, no system integration
 
 ### TEXT Output
-Чтобы перенаправить вывод из STDERR в STDOUT (например, для CI), используйте `--format text`:
+To redirect output from STDERR to STDOUT (for example, in CI), use --format text:
 
 ```bash
 checkcrontab --format text examples/user_valid.txt
