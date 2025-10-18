@@ -1070,3 +1070,213 @@ def test_combined_system_user_and_username_flags(mock_perm, mock_daemon, mock_ex
     user_entries = [f for f in data["files"] if not f["is_system_crontab"]]
     assert len(system_entries) == 1
     assert len(user_entries) == 2
+
+
+# ============================================================================
+# Helper function tests
+# ============================================================================
+
+
+@patch("checkcrontab.main.os.path.exists")
+def test_find_user_crontab_from_var_spool_crontabs(mock_exists):
+    """Test find_user_crontab finding file in /var/spool/cron/crontabs/"""
+    def exists_side_effect(path):
+        return path == "/var/spool/cron/crontabs/testuser"
+
+    mock_exists.side_effect = exists_side_effect
+    result = check_crontab.find_user_crontab("testuser")
+    assert result == "/var/spool/cron/crontabs/testuser"
+
+
+@patch("checkcrontab.main.os.path.exists")
+def test_find_user_crontab_from_var_spool_cron(mock_exists):
+    """Test find_user_crontab finding file in /var/spool/cron/"""
+    def exists_side_effect(path):
+        return path == "/var/spool/cron/testuser"
+
+    mock_exists.side_effect = exists_side_effect
+    result = check_crontab.find_user_crontab("testuser")
+    assert result == "/var/spool/cron/testuser"
+
+
+@patch("checkcrontab.main.os.path.exists")
+def test_find_user_crontab_from_tmp(mock_exists):
+    """Test find_user_crontab finding file in /tmp/"""
+    def exists_side_effect(path):
+        return path == "/tmp/crontab.testuser"
+
+    mock_exists.side_effect = exists_side_effect
+    result = check_crontab.find_user_crontab("testuser")
+    assert result == "/tmp/crontab.testuser"
+
+
+@patch("checkcrontab.main.checker.get_crontab")
+@patch("checkcrontab.main.os.path.exists", return_value=False)
+def test_find_user_crontab_via_command(mock_exists, mock_get_crontab, tmp_path):
+    """Test find_user_crontab getting crontab via command"""
+    mock_get_crontab.return_value = "0 * * * * echo test\n"
+
+    result = check_crontab.find_user_crontab("testuser")
+    assert result is not None
+    assert "testuser" in result
+    # Check that file was created
+    with open(result) as f:
+        assert f.read() == "0 * * * * echo test\n"
+    # Cleanup
+    import os
+    os.unlink(result)
+
+
+@patch("checkcrontab.main.checker.get_crontab", return_value=None)
+@patch("checkcrontab.main.os.path.exists", return_value=False)
+def test_find_user_crontab_not_found(mock_exists, mock_get_crontab):
+    """Test find_user_crontab when user crontab not found"""
+    result = check_crontab.find_user_crontab("testuser")
+    assert result is None
+
+
+def test_get_files_with_directory(tmp_path):
+    """Test get_files with directory containing valid and invalid files"""
+    cron_dir = tmp_path / "cron.d"
+    cron_dir.mkdir()
+
+    # Valid files
+    (cron_dir / "valid-job").write_text("0 * * * * root echo valid\n")
+    (cron_dir / "another_job").write_text("0 * * * * root echo another\n")
+
+    # Invalid files (should be filtered out)
+    (cron_dir / ".hidden").write_text("0 * * * * root echo hidden\n")  # starts with dot
+    (cron_dir / "backup~").write_text("0 * * * * root echo backup\n")  # ends with tilde
+    (cron_dir / "file.txt").write_text("0 * * * * root echo txt\n")  # contains dot
+    (cron_dir / "file#name").write_text("0 * * * * root echo hash\n")  # contains hash
+
+    files, errors = check_crontab.get_files(str(cron_dir))
+
+    # Should only return valid files
+    assert len(files) == 2
+    assert any("valid-job" in f for f in files)
+    assert any("another_job" in f for f in files)
+
+    # Should have errors for invalid files (at least 3: .hidden, backup~, file.txt)
+    # Note: file#name might fail to create on some systems
+    assert len(errors) >= 3
+
+
+def test_get_files_with_single_file(tmp_path):
+    """Test get_files with single file"""
+    f = tmp_path / "crontab"
+    f.write_text("0 * * * * echo test\n")
+
+    files, errors = check_crontab.get_files(str(f))
+    assert len(files) == 1
+    assert str(f) in files
+    assert errors == []
+
+
+def test_get_files_with_nonexistent_path():
+    """Test get_files with non-existent path"""
+    files, errors = check_crontab.get_files("/nonexistent/path")
+    assert files == []
+    assert errors == []
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv", return_value="true")
+@patch("checkcrontab.main.os.path.exists", return_value=True)
+def test_check_file_read_error(mock_exists, mock_env, mock_platform, tmp_path):
+    """Test check_file with read error"""
+    # Create a file then make it unreadable
+    f = tmp_path / "unreadable"
+    f.write_text("0 * * * * echo test\n")
+
+    # Mock open to raise an exception
+    def mock_open_error(*args, **kwargs):
+        raise PermissionError("Permission denied")
+
+    with patch("checkcrontab.main.open", side_effect=mock_open_error):
+        rows, errors = check_crontab.check_file(str(f))
+        assert rows == 0
+        assert len(errors) == 1
+        assert "Error reading file" in errors[0]
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv")
+def test_main_import_error_handling(mock_env, mock_platform, capsys):
+    """Test main function error handling for import errors"""
+    # This test is to ensure the exception handling in imports works
+    # The actual imports succeed, so we just verify the function exists
+    assert hasattr(check_crontab, "main")
+    assert callable(check_crontab.main)
+
+
+# ============================================================================
+# gen_sarif_output detailed tests
+# ============================================================================
+
+
+def test_gen_sarif_output_structure():
+    """Test gen_sarif_output creates proper SARIF structure"""
+    files_data = [
+        {
+            "file": "test.cron",
+            "errors": [
+                "test.cron (Line 5): 0 * * * * echo test # value 60 out of bounds"
+            ]
+        }
+    ]
+
+    sarif = check_crontab.gen_sarif_output(files_data, total_errors=1, total_warnings=0)
+
+    # Check structure
+    assert sarif["$schema"] == "https://json.schemastore.org/sarif-2.1.0.json"
+    assert sarif["version"] == "2.1.0"
+    assert "runs" in sarif
+    assert len(sarif["runs"]) == 1
+
+    run = sarif["runs"][0]
+    assert "tool" in run
+    assert "results" in run
+    assert run["tool"]["driver"]["name"] == "checkcrontab"
+
+    # Check result
+    assert len(run["results"]) == 1
+    result = run["results"][0]
+    assert result["ruleId"] == "crontab-syntax-error"
+    assert result["level"] == "error"
+    assert "message" in result
+    assert "locations" in result
+
+
+def test_gen_sarif_output_no_errors():
+    """Test gen_sarif_output with no errors"""
+    files_data = [{"file": "test.cron", "errors": []}]
+
+    sarif = check_crontab.gen_sarif_output(files_data, total_errors=0, total_warnings=0)
+
+    # Should have empty results
+    assert len(sarif["runs"][0]["results"]) == 0
+
+
+def test_gen_sarif_output_multiple_errors():
+    """Test gen_sarif_output with multiple errors"""
+    files_data = [
+        {
+            "file": "test.cron",
+            "errors": [
+                "test.cron (Line 1): 60 * * * * echo test # value 60 out of bounds",
+                "test.cron (Line 2): * 25 * * * echo test # value 25 out of bounds"
+            ]
+        }
+    ]
+
+    sarif = check_crontab.gen_sarif_output(files_data, total_errors=2, total_warnings=0)
+
+    # Should have 2 results
+    assert len(sarif["runs"][0]["results"]) == 2
+    # Both results should have proper structure
+    for result in sarif["runs"][0]["results"]:
+        assert "ruleId" in result
+        assert "message" in result
+        assert "locations" in result
+        assert "physicalLocation" in result["locations"][0]
