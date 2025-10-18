@@ -196,12 +196,12 @@ def test_check_special_system_crontab():
 # ============================================================================
 
 
-    def test_valid_user_crontab_line():
-        """Test valid user crontab line"""
-        line = "0 2 * * * /usr/bin/backup.sh"
-        errors, warnings = checker.check_line(line, 1, "test.txt", is_system_crontab=False)
-        assert errors == []
-        assert warnings == []
+def test_valid_user_crontab_line():
+    """Test valid user crontab line"""
+    line = "0 2 * * * /usr/bin/backup.sh"
+    errors, warnings = checker.check_line(line, 1, "test.txt", is_system_crontab=False)
+    assert errors == []
+    assert warnings == []
 
 
 def test_invalid_user_crontab_line_insufficient_fields():
