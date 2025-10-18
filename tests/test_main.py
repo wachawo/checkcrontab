@@ -267,7 +267,8 @@ def test_system_valid_file_returns_zero(mock_permissions, mock_daemon, mock_exis
     mock_daemon.return_value = []
     mock_permissions.return_value = []
 
-    monkeypatch.setenv("CRONTAB_OWNER_UID", str(os.getuid()))
+    if hasattr(os, "getuid"):
+        monkeypatch.setenv("CRONTAB_OWNER_UID", str(os.getuid()))
 
     # Test with system_valid
     with patch("sys.argv", ["checkcrontab", "examples/system_valid"]):
@@ -298,7 +299,8 @@ def test_system_incorrect_file_returns_non_zero(mock_permissions, mock_daemon, m
     mock_daemon.return_value = []
     mock_permissions.return_value = []
 
-    monkeypatch.setenv("CRONTAB_OWNER_UID", str(os.getuid()))
+    if hasattr(os, "getuid"):
+        monkeypatch.setenv("CRONTAB_OWNER_UID", str(os.getuid()))
 
     # Test with system_incorrect
     with patch("sys.argv", ["checkcrontab", "examples/system_incorrect"]):
@@ -326,7 +328,7 @@ def test_user_incorrect_file_returns_non_zero(mock_permissions, mock_daemon, moc
     # Mock file existence
     mock_exists.return_value = True
     # Mock system checks to not raise exceptions
-    mock_daemon.return_value = None
+    mock_daemon.return_value = []
     mock_permissions.return_value = []
 
     # Test with user_incorrect
@@ -355,7 +357,7 @@ def test_user_valid_file_returns_zero(mock_permissions, mock_daemon, mock_exists
     # Mock file existence
     mock_exists.return_value = True
     # Mock system checks to not raise exceptions
-    mock_daemon.return_value = None
+    mock_daemon.return_value = []
     mock_permissions.return_value = []
 
     # Test with user_valid
