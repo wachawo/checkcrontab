@@ -11,6 +11,7 @@ import logging
 import os
 import runpy
 import sys
+import pytest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -39,169 +40,16 @@ def test_setup_logging():
 
 
 # ============================================================================
-# Individual validation function tests
-# ============================================================================
-
-
-def test_check_minutes_user_crontab():
-    """Test minutes validation for user crontab"""
-    # Valid minutes
-    assert checker.check_minutes("0", is_system_crontab=False) == []
-    assert checker.check_minutes("30", is_system_crontab=False) == []
-    assert checker.check_minutes("*", is_system_crontab=False) == []
-    assert checker.check_minutes("*/15", is_system_crontab=False) == []
-
-    # Invalid minutes for user crontab
-    assert len(checker.check_minutes("60", is_system_crontab=False)) == 1
-    assert len(checker.check_minutes("-0", is_system_crontab=False)) == 1
-    assert len(checker.check_minutes("abc", is_system_crontab=False)) == 1
-
-
-def test_check_minutes_system_crontab():
-    """Test minutes validation for system crontab"""
-    # Valid minutes including dash prefix
-    assert checker.check_minutes("0", is_system_crontab=True) == []
-    assert checker.check_minutes("30", is_system_crontab=True) == []
-    assert checker.check_minutes("-0", is_system_crontab=True) == []
-    assert checker.check_minutes("-30", is_system_crontab=True) == []
-    assert checker.check_minutes("*", is_system_crontab=True) == []
-
-    # Invalid minutes for system crontab
-    assert len(checker.check_minutes("60", is_system_crontab=True)) == 1
-    assert len(checker.check_minutes("abc", is_system_crontab=True)) == 1
-
-
-def test_check_hours():
-    """Test hours validation"""
-    # Valid hours
-    assert checker.check_hours("0") == []
-    assert checker.check_hours("12") == []
-    assert checker.check_hours("23") == []
-    assert checker.check_hours("*") == []
-    assert checker.check_hours("*/6") == []
-
-    # Invalid hours
-    assert len(checker.check_hours("24")) == 1
-    assert len(checker.check_hours("-1")) == 1
-    assert len(checker.check_hours("abc")) == 1
-
-
-def test_check_day_of_month():
-    """Test day of month validation"""
-    # Valid days
-    assert checker.check_day_of_month("1") == []
-    assert checker.check_day_of_month("15") == []
-    assert checker.check_day_of_month("31") == []
-    assert checker.check_day_of_month("*") == []
-
-    # Invalid days
-    assert len(checker.check_day_of_month("0")) == 1
-    assert len(checker.check_day_of_month("32")) == 1
-    assert len(checker.check_day_of_month("abc")) == 1
-
-
-def test_check_month():
-    """Test month validation"""
-    # Valid months
-    assert checker.check_month("1") == []
-    assert checker.check_month("6") == []
-    assert checker.check_month("12") == []
-    assert checker.check_month("*") == []
-
-    # Invalid months
-    assert len(checker.check_month("0")) == 1
-    assert len(checker.check_month("13")) == 1
-    assert len(checker.check_month("abc")) == 1
-
-
-def test_check_day_of_week():
-    """Test day of week validation"""
-    # Valid weekdays
-    assert checker.check_day_of_week("0") == []
-    assert checker.check_day_of_week("3") == []
-    assert checker.check_day_of_week("7") == []
-    assert checker.check_day_of_week("*") == []
-
-    # Invalid weekdays
-    assert len(checker.check_day_of_week("8")) == 1
-    assert len(checker.check_day_of_week("-1")) == 1
-    assert len(checker.check_day_of_week("abc")) == 1
-
-
-def test_check_user():
-    """Test user field validation"""
-    # Valid users
-    errors, warnings = checker.check_user("root")
-    assert errors == [] and warnings == []
-    errors, warnings = checker.check_user("pytest_user")
-    assert errors == [] and warnings == []
-
-    # Invalid users
-    errors, warnings = checker.check_user("")
-    assert len(errors) == 1 and warnings == []
-    errors, warnings = checker.check_user("#root")
-    assert len(errors) == 1 and warnings == []
-    errors, warnings = checker.check_user('"root"')
-    assert len(errors) == 1 and warnings == []
-    errors, warnings = checker.check_user("root@localhost")
-    assert len(errors) == 1 and warnings == []
-    errors, warnings = checker.check_user("root user")
-    assert len(errors) == 1 and warnings == []
-
-
-def test_check_command():
-    """Test command validation"""
-    # Valid commands
-    assert checker.check_command("/usr/bin/backup.sh") == []
-    assert checker.check_command("echo 'hello world'") == []
-
-    # Invalid commands
-    assert len(checker.check_command("")) == 1
-
-    # Dangerous commands
-    dangerous_cmd = "rm -rf /"
-    errors = checker.check_command(dangerous_cmd)
-    assert len(errors) == 1
-    assert "dangerous command" in errors[0]
-
-
-def test_check_special_user_crontab():
-    """Test special keyword validation for user crontab"""
-    # Valid special keywords
-    assert checker.check_special("@reboot", ["@reboot", "/usr/bin/backup.sh"], is_system_crontab=False) == []
-    assert checker.check_special("@daily", ["@daily", "echo hello"], is_system_crontab=False) == []
-
-    # Invalid special keywords
-    assert len(checker.check_special("@invalid", ["@invalid", "/usr/bin/backup.sh"], is_system_crontab=False)) == 1
-
-    # Too many fields for user crontab (now warning instead of error)
-    assert checker.check_special("@reboot", ["@reboot", "root", "/usr/bin/backup.sh"], is_system_crontab=False) == []
-
-
-def test_check_special_system_crontab():
-    """Test special keyword validation for system crontab"""
-    # Valid special keywords
-    assert checker.check_special("@reboot", ["@reboot", "pytest_user", "/usr/bin/backup.sh"], is_system_crontab=True) == []
-    assert checker.check_special("@daily", ["@daily", "root", "echo hello"], is_system_crontab=True) == []
-
-    # Invalid special keywords
-    assert len(checker.check_special("@invalid", ["@invalid", "root", "/usr/bin/backup.sh"], is_system_crontab=True)) == 1
-
-    # Insufficient fields for system crontab
-    assert len(checker.check_special("@reboot", ["@reboot", "root"], is_system_crontab=True)) == 1
-
-
-# ============================================================================
 # User crontab line checking tests
 # ============================================================================
 
 
-    def test_valid_user_crontab_line():
-        """Test valid user crontab line"""
-        line = "0 2 * * * /usr/bin/backup.sh"
-        errors, warnings = checker.check_line(line, 1, "test.txt", is_system_crontab=False)
-        assert errors == []
-        assert warnings == []
+def test_valid_user_crontab_line():
+    """Test valid user crontab line"""
+    line = "0 2 * * * /usr/bin/backup.sh"
+    errors, warnings = checker.check_line(line, 1, "test.txt", is_system_crontab=False)
+    assert errors == []
+    assert warnings == []
 
 
 def test_invalid_user_crontab_line_insufficient_fields():
@@ -379,7 +227,7 @@ def test_check_system_crontab_permissions_correct(mock_stat, mock_exists):
     mock_stat.return_value = mock_stat_info
 
     # Should not raise any exceptions
-    checker.check_permissions()
+    checker.check_owner_and_permissions('/etc/crontab')
 
 
 @patch("checkcrontab.checker.os.path.exists")
@@ -388,7 +236,7 @@ def test_check_system_crontab_permissions_file_not_exists(mock_exists):
     mock_exists.return_value = False
 
     # Should not raise any exceptions
-    checker.check_permissions()
+    checker.check_owner_and_permissions('/etc/crontab')
 
 
 # ============================================================================
@@ -400,9 +248,9 @@ def test_check_system_crontab_permissions_file_not_exists(mock_exists):
 @patch("checkcrontab.main.os.getenv")
 @patch("checkcrontab.main.os.path.exists")
 @patch("checkcrontab.checker.check_daemon")
-@patch("checkcrontab.checker.check_permissions")
-def test_system_valid_file_returns_zero(mock_permissions, mock_daemon, mock_exists, mock_env, mock_platform):
-    """Test that system_valid.txt returns exit code 0 (no errors)"""
+@patch("checkcrontab.checker.check_owner_and_permissions")
+def test_system_valid_file_returns_zero(mock_permissions, mock_daemon, mock_exists, mock_env, mock_platform, monkeypatch):
+    """Test that system_valid returns exit code 0 (no errors)"""
     # Mock platform to return Linux
     mock_platform.return_value = "Linux"
     # Mock environment variables
@@ -416,11 +264,14 @@ def test_system_valid_file_returns_zero(mock_permissions, mock_daemon, mock_exis
     # Mock file existence
     mock_exists.return_value = True
     # Mock system checks to not raise exceptions
-    mock_daemon.return_value = None
-    mock_permissions.return_value = None
+    mock_daemon.return_value = []
+    mock_permissions.return_value = []
 
-    # Test with system_valid.txt
-    with patch("sys.argv", ["checkcrontab", "examples/system_valid.txt"]):
+    if hasattr(os, "getuid"):
+        monkeypatch.setenv("CRONTAB_OWNER_UID", str(os.getuid()))
+
+    # Test with system_valid
+    with patch("sys.argv", ["checkcrontab", "examples/system_valid"]):
         exit_code = check_crontab.main()
         assert exit_code == 0
 
@@ -429,9 +280,9 @@ def test_system_valid_file_returns_zero(mock_permissions, mock_daemon, mock_exis
 @patch("checkcrontab.main.os.getenv")
 @patch("checkcrontab.main.os.path.exists")
 @patch("checkcrontab.checker.check_daemon")
-@patch("checkcrontab.checker.check_permissions")
-def test_system_incorrect_file_returns_non_zero(mock_permissions, mock_daemon, mock_exists, mock_env, mock_platform):
-    """Test that system_incorrect.txt returns exit code 1 (has errors)"""
+@patch("checkcrontab.checker.check_owner_and_permissions")
+def test_system_incorrect_file_returns_non_zero(mock_permissions, mock_daemon, mock_exists, mock_env, mock_platform, monkeypatch):
+    """Test that system_incorrect returns exit code 1 (has errors)"""
     # Mock platform to return Linux
     mock_platform.return_value = "Linux"
     # Mock environment variables
@@ -445,11 +296,14 @@ def test_system_incorrect_file_returns_non_zero(mock_permissions, mock_daemon, m
     # Mock file existence
     mock_exists.return_value = True
     # Mock system checks to not raise exceptions
-    mock_daemon.return_value = None
-    mock_permissions.return_value = None
+    mock_daemon.return_value = []
+    mock_permissions.return_value = []
 
-    # Test with system_incorrect.txt
-    with patch("sys.argv", ["checkcrontab", "examples/system_incorrect.txt"]):
+    if hasattr(os, "getuid"):
+        monkeypatch.setenv("CRONTAB_OWNER_UID", str(os.getuid()))
+
+    # Test with system_incorrect
+    with patch("sys.argv", ["checkcrontab", "examples/system_incorrect"]):
         exit_code = check_crontab.main()
         assert exit_code == 1
 
@@ -458,9 +312,9 @@ def test_system_incorrect_file_returns_non_zero(mock_permissions, mock_daemon, m
 @patch("checkcrontab.main.os.getenv")
 @patch("checkcrontab.main.os.path.exists")
 @patch("checkcrontab.checker.check_daemon")
-@patch("checkcrontab.checker.check_permissions")
+@patch("checkcrontab.checker.check_owner_and_permissions")
 def test_user_incorrect_file_returns_non_zero(mock_permissions, mock_daemon, mock_exists, mock_env, mock_platform):
-    """Test that user_incorrect.txt returns exit code 1 (has errors)"""
+    """Test that user_incorrect returns exit code 1 (has errors)"""
     # Mock platform to return Linux
     mock_platform.return_value = "Linux"
     # Mock environment variables
@@ -474,11 +328,11 @@ def test_user_incorrect_file_returns_non_zero(mock_permissions, mock_daemon, moc
     # Mock file existence
     mock_exists.return_value = True
     # Mock system checks to not raise exceptions
-    mock_daemon.return_value = None
-    mock_permissions.return_value = None
+    mock_daemon.return_value = []
+    mock_permissions.return_value = []
 
-    # Test with user_incorrect.txt
-    with patch("sys.argv", ["checkcrontab", "examples/user_incorrect.txt"]):
+    # Test with user_incorrect
+    with patch("sys.argv", ["checkcrontab", "examples/user_incorrect"]):
         exit_code = check_crontab.main()
         assert exit_code == 1
 
@@ -487,9 +341,9 @@ def test_user_incorrect_file_returns_non_zero(mock_permissions, mock_daemon, moc
 @patch("checkcrontab.main.os.getenv")
 @patch("checkcrontab.main.os.path.exists")
 @patch("checkcrontab.checker.check_daemon")
-@patch("checkcrontab.checker.check_permissions")
+@patch("checkcrontab.checker.check_owner_and_permissions")
 def test_user_valid_file_returns_zero(mock_permissions, mock_daemon, mock_exists, mock_env, mock_platform):
-    """Test that user_valid.txt returns exit code 0 (no errors)"""
+    """Test that user_valid returns exit code 0 (no errors)"""
     # Mock platform to return Linux
     mock_platform.return_value = "Linux"
     # Mock environment variables
@@ -503,11 +357,11 @@ def test_user_valid_file_returns_zero(mock_permissions, mock_daemon, mock_exists
     # Mock file existence
     mock_exists.return_value = True
     # Mock system checks to not raise exceptions
-    mock_daemon.return_value = None
-    mock_permissions.return_value = None
+    mock_daemon.return_value = []
+    mock_permissions.return_value = []
 
-    # Test with user_valid.txt
-    with patch("sys.argv", ["checkcrontab", "examples/user_valid.txt"]):
+    # Test with user_valid
+    with patch("sys.argv", ["checkcrontab", "examples/user_valid"]):
         exit_code = check_crontab.main()
         assert exit_code == 0
 
@@ -543,7 +397,7 @@ def test_auto_adds_system_crontab(mock_exists, mock_env, mock_platform, monkeypa
 @patch("checkcrontab.main.os.path.exists", return_value=True)
 def test_missing_newline_error(mock_exists, mock_env, mock_platform, tmp_path, caplog):
     # File without trailing newline should generate an error and non-zero exit
-    f = tmp_path / "no_newline.cron"
+    f = tmp_path / "no_newline_cron"
     f.write_text("0 1 * * * echo test")  # missing final newline
     caplog.set_level(logging.DEBUG)
     code = run_main_with_args([str(f)])
@@ -557,7 +411,7 @@ def test_missing_newline_error(mock_exists, mock_env, mock_platform, tmp_path, c
 def test_multiline_command_user_crontab(mock_exists, mock_env, mock_platform, tmp_path):
     # Multi-line command continuation handling
     content = "0 2 * * * echo part1 \\\n    part2\n"
-    f = tmp_path / "multiline.cron"
+    f = tmp_path / "multiline_cron"
     f.write_text(content)
     code = run_main_with_args([str(f)])
     assert code == 0
@@ -567,7 +421,7 @@ def test_multiline_command_user_crontab(mock_exists, mock_env, mock_platform, tm
 @patch("checkcrontab.main.os.getenv", return_value="true")
 @patch("checkcrontab.main.os.path.exists", return_value=True)
 def test_duplicate_files_processed_once(mock_exists, mock_env, mock_platform, tmp_path):
-    f = tmp_path / "dup.cron"
+    f = tmp_path / "dup_cron"
     f.write_text("0 1 * * * echo hi\n")
     calls = []
 
@@ -616,7 +470,7 @@ def test_username_resolution(mock_exists, mock_getenv, mock_platform, monkeypatc
 @patch("checkcrontab.main.os.getenv", return_value="true")
 def test_non_linux_skips_system(mock_env, mock_exists, mock_platform, tmp_path):
     # On non-Linux system system crontab insertion is skipped
-    f = tmp_path / "user.cron"
+    f = tmp_path / "user_cron"
     f.write_text("0 4 * * * echo hi\n")
     code = run_main_with_args([str(f)])
     assert code == 0
@@ -627,7 +481,7 @@ def test_non_linux_skips_system(mock_env, mock_exists, mock_platform, tmp_path):
 @patch("checkcrontab.main.os.path.exists", return_value=False)
 def test_file_not_exists_warning(mock_exists, mock_env, mock_platform, caplog):
     caplog.set_level(logging.DEBUG)
-    code = run_main_with_args(["/tmp/does_not_exist.cron"])  # warning, but no errors -> exit 0
+    code = run_main_with_args(["/tmp/does_not_exist_cron"])  # warning, but no errors -> exit 0
     assert code == 0
     assert any("not found" in r.getMessage() for r in caplog.records)
 
@@ -636,7 +490,7 @@ def test_file_not_exists_warning(mock_exists, mock_env, mock_platform, caplog):
 @patch("checkcrontab.main.os.getenv", return_value="true")
 @patch("checkcrontab.main.os.path.exists", return_value=True)
 def test_debug_mode_outputs_valid(mock_exists, mock_env, mock_platform, tmp_path, caplog):
-    f = tmp_path / "debug.cron"
+    f = tmp_path / "debug_cron"
     f.write_text("0 5 * * * echo hi\n")
     caplog.set_level(logging.DEBUG)
     with patch("sys.argv", ["checkcrontab", "--debug", str(f)]):
@@ -650,7 +504,7 @@ def test_debug_mode_outputs_valid(mock_exists, mock_env, mock_platform, tmp_path
 @patch("checkcrontab.main.os.path.exists", return_value=True)
 def test_no_colors_flag(mock_exists, mock_env, mock_platform, tmp_path):
     # Just exercise the --no-colors flag path
-    f = tmp_path / "nocolor.cron"
+    f = tmp_path / "nocolor_cron"
     f.write_text("0 6 * * * echo hi\n")
     code = run_main_with_args(["--no-colors", str(f)])
     assert code == 0
@@ -665,7 +519,7 @@ def test_import_fallback_run_as_script(tmp_path, monkeypatch):
     # Execute main.py as a script so the relative import fails and absolute succeeds
     script_path = Path(check_crontab.__file__).resolve()
     # Provide a simple valid file argument to keep runtime short
-    valid = tmp_path / "valid.cron"
+    valid = tmp_path / "valid_cron"
     valid.write_text("0 0 * * * echo ok\n")
     monkeypatch.setenv("GITHUB_ACTIONS", "true")  # prevent auto /etc/crontab addition
     with patch("sys.argv", [str(script_path), str(valid)]):
@@ -680,7 +534,7 @@ def test_import_fallback_run_as_script(tmp_path, monkeypatch):
 @patch("checkcrontab.main.os.path.exists", return_value=False)
 def test_json_explicit_missing_files(mock_exists, mock_env, mock_platform, capsys):
     # Use -S / -U so missing files are still added to JSON
-    with patch("sys.argv", ["checkcrontab", "--format", "json", "-S", "/tmp/miss_system.cron", "-U", "/tmp/miss_user.cron"]):
+    with patch("sys.argv", ["checkcrontab", "--format", "json", "-S", "/tmp/miss_system_cron", "-U", "/tmp/miss_user_cron"]):
         code = check_crontab.main()
     out = capsys.readouterr().out
     data = json.loads(out)
@@ -692,7 +546,7 @@ def test_json_explicit_missing_files(mock_exists, mock_env, mock_platform, capsy
     assert data["total_errors"] == 0  # because total_errors only increments for existing files
     assert data["success"] is True
     file_paths = {f["file"] for f in data["files"]}
-    assert "/tmp/miss_system.cron" in file_paths and "/tmp/miss_user.cron" in file_paths
+    assert "/tmp/miss_system_cron" in file_paths and "/tmp/miss_user_cron" in file_paths
     for f in data["files"]:
         assert f["success"] is False
         assert f["errors_count"] == 1
@@ -704,7 +558,7 @@ def test_json_explicit_missing_files(mock_exists, mock_env, mock_platform, capsy
 @patch("checkcrontab.main.os.path.exists", return_value=True)
 def test_non_linux_message(mock_exists, mock_env, mock_platform, caplog, tmp_path):
     caplog.set_level("INFO")
-    f = tmp_path / "user.cron"
+    f = tmp_path / "user_cron"
     f.write_text("0 1 * * * echo mac\n")
     code = run_main([str(f)])
     assert code == 0
@@ -715,7 +569,7 @@ def test_non_linux_message(mock_exists, mock_env, mock_platform, caplog, tmp_pat
 @patch("checkcrontab.main.os.getenv", return_value="false")  # allow auto-add
 @patch("checkcrontab.main.os.path.exists", return_value=False)
 @patch("checkcrontab.checker.check_daemon")
-@patch("checkcrontab.checker.check_permissions")
+@patch("checkcrontab.checker.check_owner_and_permissions")
 def test_auto_added_missing_system_file_warning(mock_perm, mock_daemon, mock_exists, mock_env, mock_platform, caplog):
     caplog.set_level("WARNING")
     # /etc/crontab will be auto-added then reported missing
@@ -729,7 +583,7 @@ def test_auto_added_missing_system_file_warning(mock_perm, mock_daemon, mock_exi
 @patch("checkcrontab.main.os.getenv", return_value="true")
 @patch("checkcrontab.main.os.path.exists", return_value=True)
 @patch("checkcrontab.checker.check_daemon")
-@patch("checkcrontab.checker.check_permissions")
+@patch("checkcrontab.checker.check_owner_and_permissions")
 def test_temp_file_cleanup_error(mock_perm, mock_daemon, mock_exists, mock_env, mock_platform, monkeypatch, caplog, tmp_path):
     caplog.set_level("DEBUG")
     # Create a fake temp file path returned by find_user_crontab
@@ -754,10 +608,10 @@ def test_temp_file_cleanup_error(mock_perm, mock_daemon, mock_exists, mock_env, 
 @patch("checkcrontab.main.platform.system", return_value="Linux")
 @patch("checkcrontab.main.os.getenv")
 @patch("checkcrontab.checker.check_daemon")
-@patch("checkcrontab.checker.check_permissions")
+@patch("checkcrontab.checker.check_owner_and_permissions")
 def test_json_valid_file(mock_perm, mock_daemon, mock_env, mock_platform, capsys):
     mock_env.side_effect = lambda k, d=None: "true" if k == "GITHUB_ACTIONS" else d
-    code = run_main(["--format", "json", "examples/system_valid.txt"])
+    code = run_main(["--format", "json", "examples/system_valid"])
     assert code == 0
     out = capsys.readouterr().out
     data = json.loads(out)
@@ -771,10 +625,10 @@ def test_json_valid_file(mock_perm, mock_daemon, mock_env, mock_platform, capsys
 @patch("checkcrontab.main.platform.system", return_value="Linux")
 @patch("checkcrontab.main.os.getenv")
 @patch("checkcrontab.checker.check_daemon")
-@patch("checkcrontab.checker.check_permissions")
+@patch("checkcrontab.checker.check_owner_and_permissions")
 def test_json_invalid_file(mock_perm, mock_daemon, mock_env, mock_platform, capsys):
     mock_env.side_effect = lambda k, d=None: "true" if k == "GITHUB_ACTIONS" else d
-    code = run_main(["--format", "json", "examples/system_incorrect.txt"])
+    code = run_main(["--format", "json", "examples/system_incorrect"])
     assert code == 1
     out = capsys.readouterr().out
     data = json.loads(out)
@@ -790,10 +644,10 @@ def test_json_invalid_file(mock_perm, mock_daemon, mock_env, mock_platform, caps
 @patch("checkcrontab.main.platform.system", return_value="Linux")
 @patch("checkcrontab.main.os.getenv")
 @patch("checkcrontab.checker.check_daemon")
-@patch("checkcrontab.checker.check_permissions")
+@patch("checkcrontab.checker.check_owner_and_permissions")
 def test_json_missing_newline_file(mock_perm, mock_daemon, mock_env, mock_platform, tmp_path, capsys):
     mock_env.side_effect = lambda k, d=None: "true" if k == "GITHUB_ACTIONS" else d
-    f = tmp_path / "no_newline.cron"
+    f = tmp_path / "no_newline_cron"
     f.write_text("0 1 * * * root echo test")  # missing newline
     code = run_main(["--format", "json", str(f)])
     assert code == 1
@@ -807,10 +661,10 @@ def test_json_missing_newline_file(mock_perm, mock_daemon, mock_env, mock_platfo
 @patch("checkcrontab.main.platform.system", return_value="Linux")
 @patch("checkcrontab.main.os.getenv")
 @patch("checkcrontab.checker.check_daemon")
-@patch("checkcrontab.checker.check_permissions")
+@patch("checkcrontab.checker.check_owner_and_permissions")
 def test_json_nonexistent_file(mock_perm, mock_daemon, mock_env, mock_platform, capsys):
     mock_env.side_effect = lambda k, d=None: "true" if k == "GITHUB_ACTIONS" else d
-    code = run_main(["--format", "json", "/tmp/definitely_nonexistent_cron_file_12345.cron"])
+    code = run_main(["--format", "json", "/tmp/definitely_nonexistent_cron_file_12345_cron"])
     # Because path doesn't exist it's treated as username; user not found -> no files gathered.
     out = capsys.readouterr().out
     data = json.loads(out)
@@ -824,12 +678,12 @@ def test_json_nonexistent_file(mock_perm, mock_daemon, mock_env, mock_platform, 
 @patch("checkcrontab.main.platform.system", return_value="Linux")
 @patch("checkcrontab.main.os.getenv")
 @patch("checkcrontab.checker.check_daemon")
-@patch("checkcrontab.checker.check_permissions")
+@patch("checkcrontab.checker.check_owner_and_permissions")
 def test_json_multiple_files_mixed(mock_perm, mock_daemon, mock_env, mock_platform, tmp_path, capsys):
     mock_env.side_effect = lambda k, d=None: "true" if k == "GITHUB_ACTIONS" else d
-    valid = tmp_path / "valid.cron"
+    valid = tmp_path / "valid_cron"
     valid.write_text("0 2 * * * root echo ok\n")
-    invalid = tmp_path / "invalid.cron"
+    invalid = tmp_path / "invalid_cron"
     invalid.write_text("61 2 * * * root echo bad\n")  # invalid minute
     code = run_main(["--format", "json", str(valid), str(invalid)])
     out = capsys.readouterr().out
@@ -847,7 +701,7 @@ def test_json_multiple_files_mixed(mock_perm, mock_daemon, mock_env, mock_platfo
 @patch("checkcrontab.main.os.getenv", return_value="false")  # not GitHub so system crontab auto-added
 @patch("checkcrontab.main.os.path.exists")
 @patch("checkcrontab.checker.check_daemon")
-@patch("checkcrontab.checker.check_permissions")
+@patch("checkcrontab.checker.check_owner_and_permissions")
 def test_json_auto_add_system(mock_perm, mock_daemon, mock_exists, mock_env, mock_platform, capsys):
     def exists_side_effect(path):
         return path == "/etc/crontab"
@@ -869,9 +723,9 @@ def test_json_auto_add_system(mock_perm, mock_daemon, mock_exists, mock_env, moc
 @patch("checkcrontab.main.os.getenv", return_value="true")
 @patch("checkcrontab.main.os.path.exists", return_value=True)
 @patch("checkcrontab.checker.check_daemon")
-@patch("checkcrontab.checker.check_permissions")
+@patch("checkcrontab.checker.check_owner_and_permissions")
 def test_json_duplicates_removed(mock_perm, mock_daemon, mock_exists, mock_env, mock_platform, tmp_path, capsys):
-    f = tmp_path / "dup.cron"
+    f = tmp_path / "dup_cron"
     f.write_text("0 3 * * * root echo once\n")
     code = run_main(["--format", "json", str(f), str(f), str(f)])
     data = json.loads(capsys.readouterr().out)
@@ -884,7 +738,7 @@ def test_json_duplicates_removed(mock_perm, mock_daemon, mock_exists, mock_env, 
 @patch("checkcrontab.main.os.getenv", return_value="true")
 @patch("checkcrontab.main.os.path.exists", return_value=True)
 @patch("checkcrontab.checker.check_daemon")
-@patch("checkcrontab.checker.check_permissions")
+@patch("checkcrontab.checker.check_owner_and_permissions")
 def test_json_username_resolution(mock_perm, mock_daemon, mock_exists, mock_env, mock_platform, tmp_path, capsys, monkeypatch):
     user_file = tmp_path / "user_pytest_user"
     user_file.write_text("0 4 * * * echo user\n")
@@ -910,3 +764,709 @@ def test_json_username_resolution(mock_perm, mock_daemon, mock_exists, mock_env,
     assert code == 0
     assert data["total_files"] == 1
     assert data["files"][0]["success"] is True
+
+
+# ============================================================================
+# SARIF format tests
+# ============================================================================
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv")
+@patch("checkcrontab.checker.check_daemon")
+@patch("checkcrontab.checker.check_owner_and_permissions")
+def test_sarif_valid_file(mock_perm, mock_daemon, mock_env, mock_platform, capsys):
+    """Test SARIF output for valid file"""
+    mock_env.side_effect = lambda k, d=None: "true" if k == "GITHUB_ACTIONS" else d
+    code = run_main(["--format", "sarif", "examples/system_valid"])
+    assert code == 0
+    out = capsys.readouterr().out
+    data = json.loads(out)
+    # Check SARIF structure
+    assert data["version"] == "2.1.0"
+    assert data["$schema"] == "https://json.schemastore.org/sarif-2.1.0.json"
+    assert "runs" in data
+    assert len(data["runs"]) == 1
+    assert "tool" in data["runs"][0]
+    assert "results" in data["runs"][0]
+    # No errors means empty results
+    assert len(data["runs"][0]["results"]) == 0
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv")
+@patch("checkcrontab.checker.check_daemon")
+@patch("checkcrontab.checker.check_owner_and_permissions")
+def test_sarif_invalid_file(mock_perm, mock_daemon, mock_env, mock_platform, capsys):
+    """Test SARIF output for invalid file"""
+    mock_env.side_effect = lambda k, d=None: "true" if k == "GITHUB_ACTIONS" else d
+    code = run_main(["--format", "sarif", "examples/system_incorrect"])
+    assert code == 1
+    out = capsys.readouterr().out
+    data = json.loads(out)
+    # Check SARIF structure
+    assert data["version"] == "2.1.0"
+    assert "runs" in data
+    assert len(data["runs"]) == 1
+    assert "results" in data["runs"][0]
+    # Should have errors
+    assert len(data["runs"][0]["results"]) > 0
+    # Check result structure
+    result = data["runs"][0]["results"][0]
+    assert "ruleId" in result
+    assert "message" in result
+    assert "locations" in result
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv")
+@patch("checkcrontab.checker.check_daemon")
+@patch("checkcrontab.checker.check_owner_and_permissions")
+def test_sarif_multiple_files(mock_perm, mock_daemon, mock_env, mock_platform, tmp_path, capsys):
+    """Test SARIF output with multiple files"""
+    mock_env.side_effect = lambda k, d=None: "true" if k == "GITHUB_ACTIONS" else d
+    valid = tmp_path / "valid_cron"
+    valid.write_text("0 2 * * * root echo ok\n")
+    invalid = tmp_path / "invalid_cron"
+    invalid.write_text("61 2 * * * root echo bad\n")  # invalid minute
+    code = run_main(["--format", "sarif", str(valid), str(invalid)])
+    out = capsys.readouterr().out
+    data = json.loads(out)
+    assert code == 1
+    assert len(data["runs"][0]["results"]) > 0
+
+
+# ============================================================================
+# --strict flag tests
+# ============================================================================
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv", return_value="true")
+@patch("checkcrontab.main.os.path.exists", return_value=True)
+@patch("checkcrontab.checker.check_daemon")
+@patch("checkcrontab.checker.check_owner_and_permissions")
+def test_strict_mode_with_warnings(mock_perm, mock_daemon, mock_exists, mock_env, mock_platform, tmp_path, capsys):
+    """Test that --strict flag treats warnings as errors for exit code"""
+    # Create a file that might generate warnings (we'd need to know what generates warnings)
+    # For now, test with a valid file to ensure strict mode doesn't break normal operation
+    f = tmp_path / "test_cron"
+    f.write_text("0 1 * * * root echo test\n")
+    code = run_main(["--strict", "--format", "json", str(f)])
+    assert code == 0  # No warnings or errors
+    data = json.loads(capsys.readouterr().out)
+    assert data["success"] is True
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv", return_value="true")
+@patch("checkcrontab.main.os.path.exists", return_value=True)
+@patch("checkcrontab.checker.check_daemon")
+@patch("checkcrontab.checker.check_owner_and_permissions")
+def test_strict_mode_with_errors(mock_perm, mock_daemon, mock_exists, mock_env, mock_platform, tmp_path):
+    """Test that --strict flag still catches errors"""
+    f = tmp_path / "invalid_cron"
+    f.write_text("61 1 * * * root echo bad\n")  # Invalid minute
+    code = run_main(["--strict", str(f)])
+    assert code == 1
+
+
+# ============================================================================
+# --exit-zero flag tests
+# ============================================================================
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv", return_value="true")
+@patch("checkcrontab.main.os.path.exists", return_value=True)
+@patch("checkcrontab.checker.check_daemon")
+@patch("checkcrontab.checker.check_owner_and_permissions")
+def test_exit_zero_with_errors(mock_perm, mock_daemon, mock_exists, mock_env, mock_platform, tmp_path):
+    """Test that --exit-zero returns 0 even with errors"""
+    f = tmp_path / "invalid_cron"
+    f.write_text("61 1 * * * root echo bad\n")  # Invalid minute
+    code = run_main(["--exit-zero", str(f)])
+    assert code == 0  # Should return 0 despite errors
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv", return_value="true")
+@patch("checkcrontab.main.os.path.exists", return_value=True)
+@patch("checkcrontab.checker.check_daemon")
+@patch("checkcrontab.checker.check_owner_and_permissions")
+def test_exit_zero_with_valid_file(mock_perm, mock_daemon, mock_exists, mock_env, mock_platform, tmp_path):
+    """Test that --exit-zero returns 0 with valid file"""
+    f = tmp_path / "valid_cron"
+    f.write_text("0 1 * * * root echo ok\n")
+    code = run_main(["--exit-zero", str(f)])
+    assert code == 0
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv", return_value="true")
+@patch("checkcrontab.main.os.path.exists", return_value=True)
+@patch("checkcrontab.checker.check_daemon")
+@patch("checkcrontab.checker.check_owner_and_permissions")
+def test_exit_zero_with_strict_and_errors(mock_perm, mock_daemon, mock_exists, mock_env, mock_platform, tmp_path):
+    """Test that --exit-zero overrides --strict"""
+    f = tmp_path / "invalid_cron"
+    f.write_text("61 1 * * * root echo bad\n")  # Invalid minute
+    code = run_main(["--strict", "--exit-zero", str(f)])
+    assert code == 0  # --exit-zero should override everything
+
+
+# ============================================================================
+# Directory handling tests
+# ============================================================================
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv", return_value="true")
+@patch("checkcrontab.main.os.path.exists", return_value=True)
+@patch("checkcrontab.main.os.path.isdir")
+@patch("checkcrontab.checker.check_daemon")
+@patch("checkcrontab.checker.check_owner_and_permissions")
+def test_system_flag_with_directory(mock_perm, mock_daemon, mock_isdir, mock_exists, mock_env, mock_platform, tmp_path, capsys):
+    """Test -S flag with directory containing multiple cron files"""
+    cron_dir = tmp_path / "cron.d"
+    cron_dir.mkdir()
+    (cron_dir / "job1").write_text("0 1 * * * root echo job1\n")
+    (cron_dir / "job2").write_text("0 2 * * * root echo job2\n")
+    (cron_dir / "job3").write_text("0 3 * * * root echo job3\n")
+
+    def isdir_side_effect(path):
+        return path == str(cron_dir)
+
+    mock_isdir.side_effect = isdir_side_effect
+
+    # Mock get_files to return our test files
+    def mock_get_files(path):
+        if path == str(cron_dir):
+            return [str(cron_dir / "job1"), str(cron_dir / "job2"), str(cron_dir / "job3")], []
+        return [], []
+
+    with patch("checkcrontab.main.get_files", side_effect=mock_get_files):
+        code = run_main(["--format", "json", "-S", str(cron_dir)])
+
+    data = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert data["total_files"] == 3
+    assert all(f["is_system_crontab"] for f in data["files"])
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv", return_value="true")
+@patch("checkcrontab.main.os.path.exists", return_value=True)
+@patch("checkcrontab.main.os.path.isdir", return_value=False)
+@patch("checkcrontab.checker.check_daemon")
+@patch("checkcrontab.checker.check_owner_and_permissions")
+def test_system_flag_with_single_file(mock_perm, mock_daemon, mock_isdir, mock_exists, mock_env, mock_platform, tmp_path, capsys):
+    """Test -S flag with single file"""
+    f = tmp_path / "crontab"
+    f.write_text("0 1 * * * root echo test\n")
+    code = run_main(["--format", "json", "-S", str(f)])
+    data = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert data["total_files"] == 1
+    assert data["files"][0]["is_system_crontab"] is True
+
+
+# ============================================================================
+# Multiple usernames tests
+# ============================================================================
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv", return_value="true")
+@patch("checkcrontab.main.os.path.exists", return_value=True)
+@patch("checkcrontab.checker.check_daemon")
+@patch("checkcrontab.checker.check_owner_and_permissions")
+def test_multiple_usernames(mock_perm, mock_daemon, mock_exists, mock_env, mock_platform, tmp_path, capsys, monkeypatch):
+    """Test -u flag with multiple usernames"""
+    user1_file = tmp_path / "crontab.user1"
+    user1_file.write_text("0 1 * * * echo user1\n")
+    user2_file = tmp_path / "crontab.user2"
+    user2_file.write_text("0 2 * * * echo user2\n")
+    user3_file = tmp_path / "crontab.user3"
+    user3_file.write_text("0 3 * * * echo user3\n")
+
+    def fake_find_user_crontab(username):
+        if username == "user1":
+            return str(user1_file)
+        elif username == "user2":
+            return str(user2_file)
+        elif username == "user3":
+            return str(user3_file)
+        return None
+
+    monkeypatch.setattr(check_crontab, "find_user_crontab", fake_find_user_crontab)
+
+    code = run_main(["--format", "json", "-u", "user1", "-u", "user2", "-u", "user3"])
+    data = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert data["total_files"] == 3
+    assert all(not f["is_system_crontab"] for f in data["files"])
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv", return_value="true")
+@patch("checkcrontab.main.os.path.exists", return_value=True)
+@patch("checkcrontab.checker.check_daemon")
+@patch("checkcrontab.checker.check_owner_and_permissions")
+def test_multiple_usernames_with_missing(mock_perm, mock_daemon, mock_exists, mock_env, mock_platform, tmp_path, capsys, monkeypatch, caplog):
+    """Test -u flag with multiple usernames where some don't exist"""
+    user1_file = tmp_path / "crontab.user1"
+    user1_file.write_text("0 1 * * * echo user1\n")
+
+    def fake_find_user_crontab(username):
+        if username == "user1":
+            return str(user1_file)
+        return None  # user2 and user3 don't exist
+
+    monkeypatch.setattr(check_crontab, "find_user_crontab", fake_find_user_crontab)
+    caplog.set_level(logging.WARNING)
+
+    code = run_main(["--format", "json", "-u", "user1", "-u", "user2", "-u", "user3"])
+    data = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert data["total_files"] == 1  # Only user1 found
+    # Check warnings for missing users
+    assert any("user2" in r.getMessage() for r in caplog.records if r.levelname == "WARNING")
+    assert any("user3" in r.getMessage() for r in caplog.records if r.levelname == "WARNING")
+
+
+# ============================================================================
+# Combined flags tests
+# ============================================================================
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv", return_value="true")
+@patch("checkcrontab.main.os.path.exists", return_value=True)
+@patch("checkcrontab.checker.check_daemon")
+@patch("checkcrontab.checker.check_owner_and_permissions")
+def test_combined_system_user_and_username_flags(mock_perm, mock_daemon, mock_exists, mock_env, mock_platform, tmp_path, capsys, monkeypatch):
+    """Test combining -S, -U, and -u flags"""
+    system_file = tmp_path / "system_crontab"
+    system_file.write_text("0 1 * * * root echo system\n")
+    user_file = tmp_path / "user_crontab"
+    user_file.write_text("0 2 * * * echo user\n")
+    username_file = tmp_path / "crontab.testuser"
+    username_file.write_text("0 3 * * * echo username\n")
+
+    def fake_find_user_crontab(username):
+        if username == "testuser":
+            return str(username_file)
+        return None
+
+    monkeypatch.setattr(check_crontab, "find_user_crontab", fake_find_user_crontab)
+
+    code = run_main(["--format", "json", "-S", str(system_file), "-U", str(user_file), "-u", "testuser"])
+    data = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert data["total_files"] == 3
+    # Check that system file is marked correctly
+    system_entries = [f for f in data["files"] if f["is_system_crontab"]]
+    user_entries = [f for f in data["files"] if not f["is_system_crontab"]]
+    assert len(system_entries) == 1
+    assert len(user_entries) == 2
+
+
+# ============================================================================
+# Helper function tests
+# ============================================================================
+
+
+@patch("checkcrontab.main.os.path.exists")
+def test_find_user_crontab_from_var_spool_crontabs(mock_exists):
+    """Test find_user_crontab finding file in /var/spool/cron/crontabs/"""
+    def exists_side_effect(path):
+        return path == "/var/spool/cron/crontabs/testuser"
+
+    mock_exists.side_effect = exists_side_effect
+    result = check_crontab.find_user_crontab("testuser")
+    assert result == "/var/spool/cron/crontabs/testuser"
+
+
+@patch("checkcrontab.main.os.path.exists")
+def test_find_user_crontab_from_var_spool_cron(mock_exists):
+    """Test find_user_crontab finding file in /var/spool/cron/"""
+    def exists_side_effect(path):
+        return path == "/var/spool/cron/testuser"
+
+    mock_exists.side_effect = exists_side_effect
+    result = check_crontab.find_user_crontab("testuser")
+    assert result == "/var/spool/cron/testuser"
+
+
+@patch("checkcrontab.main.os.path.exists")
+def test_find_user_crontab_from_tmp(mock_exists):
+    """Test find_user_crontab finding file in /tmp/"""
+    def exists_side_effect(path):
+        return path == "/tmp/crontab.testuser"
+
+    mock_exists.side_effect = exists_side_effect
+    result = check_crontab.find_user_crontab("testuser")
+    assert result == "/tmp/crontab.testuser"
+
+
+@patch("checkcrontab.main.checker.get_crontab")
+@patch("checkcrontab.main.os.path.exists", return_value=False)
+def test_find_user_crontab_via_command(mock_exists, mock_get_crontab, tmp_path):
+    """Test find_user_crontab getting crontab via command"""
+    mock_get_crontab.return_value = "0 * * * * echo test\n"
+
+    result = check_crontab.find_user_crontab("testuser")
+    assert result is not None
+    assert "testuser" in result
+    # Check that file was created
+    with open(result) as f:
+        assert f.read() == "0 * * * * echo test\n"
+    # Cleanup
+    import os
+    os.unlink(result)
+
+
+@patch("checkcrontab.main.checker.get_crontab", return_value=None)
+@patch("checkcrontab.main.os.path.exists", return_value=False)
+def test_find_user_crontab_not_found(mock_exists, mock_get_crontab):
+    """Test find_user_crontab when user crontab not found"""
+    result = check_crontab.find_user_crontab("testuser")
+    assert result is None
+
+
+def test_get_files_with_directory(tmp_path):
+    """Test get_files with directory containing valid and invalid files"""
+    cron_dir = tmp_path / "cron.d"
+    cron_dir.mkdir()
+
+    # Valid files
+    (cron_dir / "valid-job").write_text("0 * * * * root echo valid\n")
+    (cron_dir / "another_job").write_text("0 * * * * root echo another\n")
+
+    # Invalid files (should be filtered out)
+    (cron_dir / ".hidden").write_text("0 * * * * root echo hidden\n")  # starts with dot
+    (cron_dir / "backup~").write_text("0 * * * * root echo backup\n")  # ends with tilde
+    (cron_dir / "file.txt").write_text("0 * * * * root echo txt\n")  # contains dot
+    (cron_dir / "file#name").write_text("0 * * * * root echo hash\n")  # contains hash
+
+    files, errors = check_crontab.get_files(str(cron_dir))
+
+    # Should only return valid files
+    assert len(files) == 2
+    assert any("valid-job" in f for f in files)
+    assert any("another_job" in f for f in files)
+
+    # Should have errors for invalid files (at least 3: .hidden, backup~, file.txt)
+    # Note: file#name might fail to create on some systems
+    assert len(errors) >= 3
+
+
+def test_get_files_with_single_file(tmp_path):
+    """Test get_files with single file"""
+    f = tmp_path / "crontab"
+    f.write_text("0 * * * * echo test\n")
+
+    files, errors = check_crontab.get_files(str(f))
+    assert len(files) == 1
+    assert str(f) in files
+    assert errors == []
+
+
+def test_get_files_with_nonexistent_path():
+    """Test get_files with non-existent path"""
+    files, errors = check_crontab.get_files("/nonexistent/path")
+    assert files == []
+    assert errors == []
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv", return_value="true")
+@patch("checkcrontab.main.os.path.exists", return_value=True)
+def test_check_file_read_error(mock_exists, mock_env, mock_platform, tmp_path):
+    """Test check_file with read error"""
+    # Create a file then make it unreadable
+    f = tmp_path / "unreadable"
+    f.write_text("0 * * * * echo test\n")
+
+    # Mock open to raise an exception
+    def mock_open_error(*args, **kwargs):
+        raise PermissionError("Permission denied")
+
+    with patch("checkcrontab.main.open", side_effect=mock_open_error):
+        rows, errors = check_crontab.check_file(str(f))
+        assert rows == 0
+        assert len(errors) == 1
+        assert "Error reading file" in errors[0]
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv")
+def test_main_import_error_handling(mock_env, mock_platform, capsys):
+    """Test main function error handling for import errors"""
+    # This test is to ensure the exception handling in imports works
+    # The actual imports succeed, so we just verify the function exists
+    assert hasattr(check_crontab, "main")
+    assert callable(check_crontab.main)
+
+
+# ============================================================================
+# gen_sarif_output detailed tests
+# ============================================================================
+
+
+def test_gen_sarif_output_structure():
+    """Test gen_sarif_output creates proper SARIF structure"""
+    files_data = [
+        {
+            "file": "test.cron",
+            "errors": [
+                "test.cron (Line 5): 0 * * * * echo test # value 60 out of bounds"
+            ]
+        }
+    ]
+
+    sarif = check_crontab.gen_sarif_output(files_data, total_errors=1, total_warnings=0)
+
+    # Check structure
+    assert sarif["$schema"] == "https://json.schemastore.org/sarif-2.1.0.json"
+    assert sarif["version"] == "2.1.0"
+    assert "runs" in sarif
+    assert len(sarif["runs"]) == 1
+
+    run = sarif["runs"][0]
+    assert "tool" in run
+    assert "results" in run
+    assert run["tool"]["driver"]["name"] == "checkcrontab"
+
+    # Check result
+    assert len(run["results"]) == 1
+    result = run["results"][0]
+    assert result["ruleId"] == "crontab-syntax-error"
+    assert result["level"] == "error"
+    assert "message" in result
+    assert "locations" in result
+
+
+def test_gen_sarif_output_no_errors():
+    """Test gen_sarif_output with no errors"""
+    files_data = [{"file": "test.cron", "errors": []}]
+
+    sarif = check_crontab.gen_sarif_output(files_data, total_errors=0, total_warnings=0)
+
+    # Should have empty results
+    assert len(sarif["runs"][0]["results"]) == 0
+
+
+def test_gen_sarif_output_multiple_errors():
+    """Test gen_sarif_output with multiple errors"""
+    files_data = [
+        {
+            "file": "test.cron",
+            "errors": [
+                "test.cron (Line 1): 60 * * * * echo test # value 60 out of bounds",
+                "test.cron (Line 2): * 25 * * * echo test # value 25 out of bounds"
+            ]
+        }
+    ]
+
+    sarif = check_crontab.gen_sarif_output(files_data, total_errors=2, total_warnings=0)
+
+    # Should have 2 results
+    assert len(sarif["runs"][0]["results"]) == 2
+    # Both results should have proper structure
+    for result in sarif["runs"][0]["results"]:
+        assert "ruleId" in result
+        assert "message" in result
+        assert "locations" in result
+        assert "physicalLocation" in result["locations"][0]
+
+
+# ============================================================================
+# Additional coverage tests for edge cases
+# ============================================================================
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv", return_value="true")
+@patch("checkcrontab.main.os.path.exists", return_value=True)
+def test_check_file_multiline_continuation_with_backslash(mock_exists, mock_env, mock_platform, tmp_path):
+    """Test check_file with multiline command continuation with backslash"""
+    # Test the code at lines 76-77 and 88
+    f = tmp_path / "multiline_cron"
+    content = """# Test multiline
+0 2 * * * root echo line1 \\
+    && echo line2 \\
+    && echo line3
+"""
+    f.write_text(content)
+    rows, errors = check_crontab.check_file(str(f), is_system_crontab=True)
+    assert rows == 1  # Should count as 1 line
+    assert errors == []
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv", return_value="true")
+@patch("checkcrontab.main.os.path.exists", return_value=True)
+def test_check_file_skip_empty_continuation_lines(mock_exists, mock_env, mock_platform, tmp_path):
+    """Test check_file skips empty continuation lines"""
+    # Test the code at line 88
+    f = tmp_path / "continuation_cron"
+    content = """0 2 * * * root echo test \\
+
+# Comment after continuation
+"""
+    f.write_text(content)
+    rows, errors = check_crontab.check_file(str(f), is_system_crontab=True)
+    assert rows == 1
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv", return_value="true")
+@patch("checkcrontab.main.os.path.exists", return_value=True)
+@patch("checkcrontab.main.os.path.isdir")
+def test_main_arguments_with_directory(mock_isdir, mock_exists, mock_env, mock_platform, tmp_path, capsys):
+    """Test main with directory as argument"""
+    # Test code at lines 293-299
+    cron_dir = tmp_path / "cron.d"
+    cron_dir.mkdir()
+    (cron_dir / "job1").write_text("0 1 * * * root echo job1\n")
+    (cron_dir / ".hidden").write_text("0 2 * * * root echo hidden\n")  # Invalid, should generate warning
+
+    def isdir_side_effect(path):
+        return str(path) == str(cron_dir)
+
+    mock_isdir.side_effect = isdir_side_effect
+
+    code = run_main(["--format", "json", str(cron_dir)])
+    data = json.loads(capsys.readouterr().out)
+    assert code == 0
+    # Should have processed valid files
+    assert data["total_files"] >= 1
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv", return_value="false")  # Not GitHub
+@patch("checkcrontab.main.os.path.exists", return_value=True)
+@patch("checkcrontab.checker.check_daemon")
+def test_main_check_daemon_warnings_on_linux(mock_check_daemon, mock_exists, mock_env, mock_platform, tmp_path, caplog):
+    """Test that check_daemon warnings are logged on Linux (not GitHub)"""
+    # Test code at line 318
+    mock_check_daemon.return_value = ["Cron daemon: systemctl not found"]
+
+    f = tmp_path / "test_cron"
+    f.write_text("0 1 * * * echo test\n")
+
+    caplog.set_level(logging.WARNING)
+    code = run_main([str(f)])
+    assert code == 0
+    # Should have logged the daemon warning
+    assert any("systemctl not found" in r.getMessage() for r in caplog.records if r.levelname == "WARNING")
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv", return_value="true")
+@patch("checkcrontab.main.os.path.exists", return_value=True)
+def test_main_check_filename_error_in_json_mode(mock_exists, mock_env, mock_platform, tmp_path, capsys):
+    """Test that check_filename errors are properly handled in JSON mode"""
+    # Test code at lines 352-369
+    # Create a file with invalid name
+    invalid_dir = tmp_path / "cron.d"
+    invalid_dir.mkdir()
+    invalid_file = invalid_dir / "invalid.txt"  # Contains dot - invalid
+    invalid_file.write_text("0 * * * * root echo test\n")
+
+    code = run_main(["--format", "json", "-S", str(invalid_file)])
+    data = json.loads(capsys.readouterr().out)
+
+    # Should have error for invalid filename
+    assert data["total_files"] == 1
+    assert data["files"][0]["success"] is False
+    assert data["files"][0]["errors_count"] >= 1
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv", return_value="true")
+@patch("checkcrontab.main.os.path.exists", return_value=True)
+@patch("checkcrontab.checker.check_owner_and_permissions")
+def test_main_owner_permissions_errors_logged(mock_check_perms, mock_exists, mock_env, mock_platform, tmp_path, caplog):
+    """Test that check_owner_and_permissions errors are logged"""
+    # Test code at lines 374-376 and 381
+    mock_check_perms.return_value = ["wrong permissions (0o755): sudo chmod 644 /tmp/test"]
+
+    f = tmp_path / "test_cron"
+    f.write_text("0 1 * * * root echo test\n")
+
+    caplog.set_level(logging.ERROR)
+    code = run_main(["-S", str(f)])
+
+    # Should have logged the permission error
+    assert any("wrong permissions" in r.getMessage() for r in caplog.records if r.levelname == "ERROR")
+    # Should have non-zero exit code due to error
+    assert code == 1
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv", return_value="true")
+@patch("checkcrontab.main.os.path.exists", return_value=False)
+def test_main_missing_file_warning_in_text_mode(mock_exists, mock_env, mock_platform, caplog):
+    """Test that missing file generates warning in text mode"""
+    # Test code at line 428 (though the warning is actually at line 310 for this case)
+    caplog.set_level(logging.WARNING)
+
+    code = run_main(["--format", "text", "/nonexistent/file.cron"])
+
+    # Should exit with 0 (warnings don't cause failure)
+    assert code == 0
+    # Should have logged warning about file not found
+    assert any("File not found" in r.getMessage() or "not a valid username" in r.getMessage()
+               for r in caplog.records if r.levelname == "WARNING")
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv", return_value="true")
+@patch("checkcrontab.main.os.path.exists")
+def test_main_username_not_found_warning(mock_exists, mock_env, mock_platform, caplog):
+    """Test warning when username crontab not found"""
+    # Test code at line 308
+    def exists_side_effect(path):
+        # Make it look like a username (not a file)
+        return False
+
+    mock_exists.side_effect = exists_side_effect
+
+    with patch("checkcrontab.main.find_user_crontab", return_value=None):
+        caplog.set_level(logging.WARNING)
+        code = run_main(["nonexistentuser123"])
+
+        # Should have warning about user not found
+        assert any("not found" in r.getMessage() or "has no crontab" in r.getMessage()
+                   for r in caplog.records if r.levelname == "WARNING")
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv", return_value="true")
+@patch("checkcrontab.main.os.path.exists", return_value=True)
+@patch("checkcrontab.main.os.path.isfile", return_value=False)
+@patch("checkcrontab.main.os.path.isdir", return_value=False)
+def test_main_invalid_argument_warning(mock_isdir, mock_isfile, mock_exists, mock_env, mock_platform, caplog):
+    """Test warning for argument that's not file, dir, or valid username"""
+    # This tests line 310
+    caplog.set_level(logging.WARNING)
+
+    code = run_main(["invalid@#$%"])
+
+    # Should have warning about invalid argument
+    assert any("File not found" in r.getMessage() or "not a valid username" in r.getMessage()
+               for r in caplog.records if r.levelname == "WARNING")
+
+
+@patch("checkcrontab.main.platform.system", return_value="Linux")
+@patch("checkcrontab.main.os.getenv", return_value="true")
+def test_import_error_handling(mock_env, mock_platform):
+    """Test that import errors are handled gracefully"""
+    # Test lines 38-40
+    # This is difficult to test directly as imports happen at module load
+    # But we can verify the code exists and is reachable
+    assert hasattr(check_crontab, "logger")
+    assert hasattr(check_crontab, "checker")

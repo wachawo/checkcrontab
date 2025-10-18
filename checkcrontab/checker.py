@@ -7,6 +7,7 @@ import logging
 import os
 import platform
 import re
+import stat
 import subprocess
 import traceback
 from typing import List, Optional, Tuple
@@ -15,7 +16,8 @@ logger = logging.getLogger(__name__)
 
 # Constants for validation
 RANGE_PARTS_COUNT = 2
-SYSTEM_CRONTAB_PERMISSIONS = 0o644
+CRONTAB_PERMISSIONS = 0o644
+CRONTAB_OWNER_UID = int(os.getenv("CRONTAB_OWNER_UID", "0"))
 USER_CRONTAB_MIN_FIELDS = 6
 SYSTEM_CRONTAB_MIN_FIELDS = 7
 SYSTEM_CRONTAB_MAX_FIELDS = 7
@@ -31,6 +33,119 @@ HOUR_PATTERN = r"^(\*|([0-9]|1[0-9]|2[0-3])(-([0-9]|1[0-9]|2[0-3]))?(/([0-9]|1[0
 DAY_PATTERN = r"^(\*|([1-9]|[12][0-9]|3[01])(-([1-9]|[12][0-9]|3[01]))?(/([1-9]|[12][0-9]|3[01]))?(,([1-9]|[12][0-9]|3[01])(-([1-9]|[12][0-9]|3[01]))?(/([1-9]|[12][0-9]|3[01]))?)*|\*/([1-9]|[12][0-9]|3[01]))$"
 MONTH_PATTERN = r"^(\*|([1-9]|1[0-2])(-([1-9]|1[0-2]))?(/([1-9]|1[0-2]))?(,([1-9]|1[0-2])(-([1-9]|1[0-2]))?(/([1-9]|1[0-2]))?)*|\*/([1-9]|1[0-2]))$"
 WEEKDAY_PATTERN = r"^(\*|([0-7])(-([0-7]))?(/([0-7]))?(,([0-7])(-([0-7]))?)*|\*/([0-7]))$"
+INVALID_NAME_ALLOWED_RE = r"^[A-Za-z0-9_-]+$"
+
+
+def check_filename(file_path: str) -> str:
+    """
+    Validate cron filename (use basename). Return a list of error strings.
+    Rules per man 8 cron / man 5 crontab:
+      - ignore: names containing '.'; ending with '~'; containing '#', ',';
+      - starting with '.' (hidden);
+      - only [A-Za-z0-9_-] are allowed (everything else is invalid).
+    """
+    name = os.path.basename(file_path or "")
+    if not name:
+        return f"{file_path} empty name filename"
+    if name.startswith("."):
+        return f"{name} wrong filename: starts with '.'"
+    if name.endswith("~"):
+        return f"{name} wrong filename: ends with '~'"
+    if "." in name:
+        return f"{name} wrong filename contains '.'"
+    if "#" in name:
+        return f"{name} wrong filename contains '#'"
+    if "," in name:
+        return f"{name} wrong filename contains ','"
+    regexp = re.compile(INVALID_NAME_ALLOWED_RE)
+    if not regexp.match(name):
+        return f"invalid filename '{name}': contains characters outside [A-Za-z0-9_-]"
+    return ""
+
+
+def check_daemon() -> List[str]:
+    """Check if cron daemon is running"""
+    errors: List[str] = []
+    try:
+        result = subprocess.run(["systemctl", "is-active", "cron"], capture_output=True, text=True, timeout=5, check=False)
+        if result.returncode != 0 or result.stdout.strip() != "active":
+            logger.warning("Cron daemon: is not running")
+        else:
+            logger.debug("Cron daemon: is active")
+    except subprocess.TimeoutExpired:
+        errors.append("Cron daemon: timeout")
+    except FileNotFoundError:
+        errors.append("Cron daemon: systemctl not found")
+    except subprocess.SubprocessError as e:
+        errors.append(f"Cron daemon: {type(e).__name__}")
+    except Exception as e:
+        errors.append(f"Cron daemon: {type(e).__name__}")
+    return errors
+
+
+def check_kind(path: str, follow_symlink: bool = True) -> str:
+    """Determine the kind of file at the given path"""
+    # is_link = os.path.islink(path)
+    st = os.stat(path) if follow_symlink else os.lstat(path)
+    m = st.st_mode
+    # Check if regular file
+    if stat.S_ISREG(m):
+        return "regular_file"
+    if stat.S_ISDIR(m):
+        return "directory"
+    if stat.S_ISLNK(m):
+        return "symlink"
+    if stat.S_ISCHR(m):
+        return "char_device"
+    if stat.S_ISBLK(m):
+        return "block_device"
+    if stat.S_ISSOCK(m):
+        return "socket"
+    if stat.S_ISFIFO(m):
+        return "fifo"
+    return "unknown"
+
+
+def check_owner_and_permissions(file_path: str, owner_uid: int = CRONTAB_OWNER_UID) -> List[str]:
+    """Check owner and file permissions"""
+    errors: List[str] = []
+    if not os.path.lexists(file_path):
+        errors.append(f"{file_path}: file does not exist")
+        return errors
+    try:
+        if os.path.islink(file_path):
+            try:
+                link_stat = os.lstat(file_path)  # symlink inode (do not follow)
+                if link_stat.st_uid != owner_uid:
+                    errors.append(f"wrong symlink owner: sudo chown -h root:root {file_path}")
+                else:
+                    logger.debug("symlink correct owner")
+            except Exception as e:
+                errors.append(f"failed to stat symlink: {e}")
+                # If we can't lstat the link, further checks don't make sense
+                return errors
+            target_path = os.path.realpath(file_path)
+            if not os.path.exists(target_path):
+                errors.append(f"broken symlink ({target_path} does not exist)")
+                return errors
+        else:
+            target_path = file_path
+        file_kind = check_kind(target_path)
+        if file_kind != "regular_file":
+            errors.append(f"{target_path}({file_kind}): not a regular_file.")
+        stat_info = os.stat(target_path)
+        mode = stat_info.st_mode & 0o777
+        if mode != CRONTAB_PERMISSIONS:
+            errors.append(f"wrong permissions ({oct(mode)}): sudo chmod 644 {target_path}")
+        else:
+            logger.debug(f"correct permissions: {oct(mode)}")
+        if stat_info.st_uid != owner_uid:
+            errors.append(f"crontab wrong owner: sudo chown root:root {target_path}")
+        else:
+            logger.debug("crontab correct owner:")
+    except Exception as e:
+        errors.append(f"{e}")
+    return errors
 
 
 def get_line_content(file_path: str, line_number: int) -> str:
@@ -228,39 +343,6 @@ def check_special(keyword: str, parts: List[str], is_system_crontab: bool = Fals
     return errors
 
 
-def check_daemon() -> None:
-    """Check if cron daemon is running"""
-    try:
-        result = subprocess.run(["systemctl", "is-active", "cron"], capture_output=True, text=True, timeout=5, check=False)
-        if result.returncode != 0 or result.stdout.strip() != "active":
-            logger.warning("Cron daemon is not running")
-        else:
-            logger.debug("Cron daemon status check: active")
-    except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
-        logger.warning("Could not check cron daemon status")
-        logger.debug("Cron daemon status check: failed")
-
-
-def check_permissions() -> None:
-    """Check system crontab file permissions"""
-    crontab_file = "/etc/crontab"
-    if os.path.exists(crontab_file):
-        stat_info = os.stat(crontab_file)
-        mode = stat_info.st_mode & 0o777
-
-        if mode != SYSTEM_CRONTAB_PERMISSIONS:
-            logger.warning(f"{crontab_file}: system crontab has incorrect permissions: {oct(mode)} (should be 644)")
-        else:
-            logger.debug(f"{crontab_file}: system crontab permissions check: {oct(mode)} (correct)")
-
-        if stat_info.st_uid != 0:
-            logger.warning(f"{crontab_file}: system crontab is not owned by root")
-        else:
-            logger.debug(f"{crontab_file}: system crontab ownership check: root (correct)")
-    else:
-        logger.debug(f"{crontab_file}: system crontab file does not exist")
-
-
 def check_line(line: str, line_number: int, file_name: str, file_path: Optional[str] = None, is_system_crontab: bool = False) -> Tuple[List[str], List[str]]:
     """
     Check a single crontab line (user or system)
@@ -434,17 +516,6 @@ def check_line_special(line: str, line_number: int, file_name: str, file_path: O
     return errors
 
 
-# Legacy function names for backward compatibility
-def check_cron_daemon() -> None:
-    """Legacy function name for check_daemon"""
-    return check_daemon()
-
-
-def check_system_crontab_permissions() -> None:
-    """Legacy function name for check_permissions"""
-    return check_permissions()
-
-
 def validate_time_field_logic(value: str, field_name: str, min_val: int, max_val: int) -> List[str]:
     """Validate time field logic (ranges, lists, steps)"""
     errors: List[str] = []
@@ -542,7 +613,10 @@ def get_crontab(username: str) -> Optional[str]:
             logger.info(f"No crontab found for user: {username}")
             return None
         else:
-            logger.warning(f"Error getting crontab for {username}: {result.stderr}")
+            error_message = result.stderr
+            # remove blank lines from error message
+            error_message = "\n".join([line for line in error_message.splitlines() if line.strip()])
+            logger.warning(f"Error getting crontab for {username}: {error_message}")
             return None
 
     except subprocess.TimeoutExpired:

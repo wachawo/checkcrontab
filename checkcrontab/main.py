@@ -150,7 +150,7 @@ def find_user_crontab(username: str) -> Optional[str]:
     return None
 
 
-def generate_sarif_output(files_data: List[Dict[str, Any]], total_errors: int, total_warnings: int = 0) -> Dict[str, Any]:
+def gen_sarif_output(files_data: List[Dict[str, Any]], total_errors: int, total_warnings: int = 0) -> Dict[str, Any]:
     """Generate SARIF format output"""
     results = []
 
@@ -195,6 +195,27 @@ def generate_sarif_output(files_data: List[Dict[str, Any]], total_errors: int, t
     return sarif_output
 
 
+def get_files(path: str) -> Tuple[List[str], List[str]]:
+    """Get list of files from path (file or directory)"""
+    files = []
+    errors = []
+    if not os.path.exists(path):
+        # Path does not exist; no files to add.
+        pass
+    elif os.path.isfile(path):
+        files.append(path)
+    elif os.path.isdir(path):
+        for file in glob.glob(os.path.join(path, "*")):
+            if os.path.isfile(file):
+                base = os.path.basename(file)
+                error = checker.check_filename(base)
+                if not error:
+                    files.append(file)
+                else:
+                    errors.append(error)
+    return files, errors
+
+
 def main() -> int:
     """Main function"""
     parser = argparse.ArgumentParser(
@@ -237,9 +258,11 @@ Usage examples:
     if args.system:
         for path in args.system:
             if os.path.isdir(path):
-                for file_path in glob.glob(os.path.join(path, "*")):
-                    if os.path.isfile(file_path):
-                        files_list.append((file_path, True))
+                files, warnings = get_files(path)
+                for warning in warnings:
+                    logger.warning(warning)
+                for file in files:
+                    files_list.append((file, True))
             else:
                 files_list.append((path, True))
 
@@ -259,38 +282,40 @@ Usage examples:
                 logger.warning(f"User crontab not found for: {username}")
 
     # Add arguments with smart detection
-    for arg in args.arguments:
-        if os.path.isfile(arg):
+    for path in args.arguments:
+        if os.path.isfile(path):
             # First check if it's an existing file
-            full_path = os.path.abspath(arg)
-            is_system_crontab = full_path == "/etc/crontab" or full_path.startswith("/etc/cron.d") or "system" in os.path.basename(full_path)
+            full_path = os.path.abspath(path)
+            is_system_crontab = bool(full_path == "/etc/crontab" or full_path.startswith("/etc/cron.d") or "system" in os.path.basename(full_path))
             files_list.append((full_path, is_system_crontab))
-        elif os.path.isdir(arg):
+        elif os.path.isdir(path):
             # If directory, add all files inside as system crontabs
-            for file_path in glob.glob(os.path.join(arg, "*")):
-                full_path = os.path.abspath(file_path)
-                is_system_crontab = full_path == "/etc/crontab" or full_path.startswith("/etc/cron.d") or "system" in os.path.basename(full_path)
-                if os.path.isfile(full_path):
-                    files_list.append((full_path, is_system_crontab))
-        elif re.compile(r"^[a-zA-Z][a-zA-Z0-9_-]{0,31}$").match(arg):
+            files, warnings = get_files(path)
+            for warning in warnings:
+                logger.warning(warning)
+            for file in files:
+                full_path = os.path.abspath(file)
+                is_system_crontab = bool(full_path == "/etc/crontab" or full_path.startswith("/etc/cron.d") or "system" in os.path.basename(full_path))
+                files_list.append((full_path, is_system_crontab))
+        elif re.compile(r"^[a-zA-Z][a-zA-Z0-9_-]{0,31}$").match(path):
             # If not a file, treat as username
-            crontab_path = find_user_crontab(arg)
+            crontab_path = find_user_crontab(path)
             if crontab_path:
                 files_temp.append(crontab_path)
                 files_list.append((crontab_path, False))  # User crontab
-                logger.info(f"{arg} user found: {crontab_path}")
+                logger.info(f"{path} user found: {crontab_path}")
             else:
-                logger.warning(f"{arg} user not found or has no crontab")
+                logger.warning(f"{path} user not found or has no crontab")
         else:
-            logger.warning(f"{arg} File not found and is not a valid username")
+            logger.warning(f"{path} File not found and is not a valid username")
 
     # Add system crontab on Linux if not already included
     if platform.system().lower() == "linux":
         is_github = os.getenv("GITHUB_ACTIONS") == "true"
         # Only check daemon and permissions on Linux and not in GitHub Actions
         if not is_github:
-            checker.check_daemon()
-            checker.check_permissions()
+            for w in checker.check_daemon():
+                logger.warning(w)
         # if not any(file_path == "/etc/crontab" for file_path, _ in files_list):
         #    files_list.insert(0, ("/etc/crontab", True))
     else:
@@ -320,7 +345,41 @@ Usage examples:
 
     for path, is_system_crontab in files_list:
         if os.path.exists(path):
+            if path not in files_temp:
+                base = os.path.basename(path)
+                error = checker.check_filename(base)
+                if error:
+                    msg = error
+                    file_info = {
+                        "file": path,
+                        "is_system_crontab": is_system_crontab,
+                        "rows": 0,
+                        "rows_warnings": 0,
+                        "warnings_count": 0,
+                        "rows_errors": 1,
+                        "errors_count": 1,
+                        "errors": [f"{os.path.basename(path)} (Line 0): {msg}"],
+                        "success": False,
+                    }
+                    output_data["files"].append(file_info)
+                    all_errors.append(f"{os.path.basename(path)} (Line 0): {msg}")
+                    total_errors += 1
+                    if args.format == "text":
+                        logger.error(msg)
+                    continue
+            file_level_errors: List[str] = []
+            if platform.system().lower() == "linux" and is_system_crontab:
+                errors = checker.check_owner_and_permissions(path)
+                for err in errors:
+                    err_msg = f"{os.path.basename(path)} (Line 0): {err}"
+                    logger.error(err_msg)
+                    file_level_errors.append(err_msg)
+
             rows_checked, file_errors = check_file(path, is_system_crontab=is_system_crontab)
+
+            if file_level_errors:
+                file_errors = file_errors + file_level_errors
+
             total_rows += rows_checked
             total_errors += len(file_errors)
             all_errors.extend(file_errors)
@@ -389,7 +448,7 @@ Usage examples:
     if args.format == "json":
         print(json.dumps(output_data, indent=2))
     elif args.format == "sarif":
-        sarif_output = generate_sarif_output(output_data["files"], total_errors)
+        sarif_output = gen_sarif_output(output_data["files"], total_errors)
         print(json.dumps(sarif_output, indent=2))
     # Standard output
     elif total_errors == 0:
