@@ -327,7 +327,7 @@ def test_user_incorrect_file_returns_non_zero(mock_permissions, mock_daemon, moc
     mock_exists.return_value = True
     # Mock system checks to not raise exceptions
     mock_daemon.return_value = None
-    mock_permissions.return_value = None
+    mock_permissions.return_value = []
 
     # Test with user_incorrect
     with patch("sys.argv", ["checkcrontab", "examples/user_incorrect"]):
@@ -356,7 +356,7 @@ def test_user_valid_file_returns_zero(mock_permissions, mock_daemon, mock_exists
     mock_exists.return_value = True
     # Mock system checks to not raise exceptions
     mock_daemon.return_value = None
-    mock_permissions.return_value = None
+    mock_permissions.return_value = []
 
     # Test with user_valid
     with patch("sys.argv", ["checkcrontab", "examples/user_valid"]):
