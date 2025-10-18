@@ -4,6 +4,7 @@
 ========
 - Add check owner and file permissions
 - Add check format file name
+- Increased test coverage
 
 0.0.11 (2025-10-16)
 ========
