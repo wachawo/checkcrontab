@@ -75,7 +75,7 @@ checkcrontab /etc/crontab
 checkcrontab username
 
 # Validar com parâmetros explícitos
-gheckcrontab -S system.cron -U user.cron -u username1 -u username2
+checkcrontab -S system.cron -U user.cron -u username1 -u username2
 
 # Validar todos os crontabs de um diretório
 checkcrontab /etc/cron.d
