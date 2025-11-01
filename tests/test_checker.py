@@ -79,6 +79,12 @@ def test_check_filename_empty():
     assert "empty name" in error
 
 
+def test_check_filename_none():
+    """Test check_filename with None"""
+    error = checker.check_filename(None)
+    assert "empty name" in error
+
+
 # ============================================================================
 # check_kind tests
 # ============================================================================
@@ -108,6 +114,21 @@ def test_check_kind_symlink(tmp_path):
     assert checker.check_kind(str(link)) == "regular_file"
     # With follow_symlink=False, should return symlink
     assert checker.check_kind(str(link), follow_symlink=False) == "symlink"
+
+
+def test_check_kind_special_files(tmp_path):
+    """Test check_kind with special file types"""
+    special_files = {
+        "char_device": 0o020666,  # S_IFCHR
+        "block_device": 0o060666,  # S_IFBLK
+        "socket": 0o140666,  # S_IFSOCK
+        "fifo": 0o010666,  # S_IFIFO
+    }
+
+    for kind, mode in special_files.items():
+        with patch("os.stat") as mock_stat:
+            mock_stat.return_value = MagicMock(st_mode=mode)
+            assert checker.check_kind("fake_path") == kind
 
 
 # ============================================================================
@@ -352,6 +373,34 @@ def test_validate_time_field_logic_range_out_of_bounds_end():
     assert any("range end" in e and "out of bounds" in e for e in errors)
 
 
+def test_validate_time_field_logic_duplicate_value():
+    """Test validate_time_field_logic with duplicate values in a list"""
+    errors = checker.validate_time_field_logic("1,2,1", "minutes", 0, 59)
+    assert len(errors) > 0
+    assert any("duplicate value" in e for e in errors)
+
+
+def test_validate_time_field_logic_empty_value():
+    """Test validate_time_field_logic with an empty value in a list"""
+    errors = checker.validate_time_field_logic("1,,2", "minutes", 0, 59)
+    assert len(errors) > 0
+    assert any("empty value" in e for e in errors)
+
+
+def test_validate_time_field_logic_invalid_step_format():
+    """Test validate_time_field_logic with an invalid step format"""
+    errors = checker.validate_time_field_logic("*/a", "minutes", 0, 59)
+    assert len(errors) > 0
+    assert any("invalid step value" in e for e in errors)
+
+
+def test_validate_time_field_logic_invalid_range():
+    """Test validate_time_field_logic with an invalid range where start > end"""
+    errors = checker.validate_time_field_logic("5-1", "minutes", 0, 59)
+    assert len(errors) > 0
+    assert any("invalid range" in e for e in errors)
+
+
 # ============================================================================
 # check_user_exists tests
 # ============================================================================
@@ -435,6 +484,56 @@ def test_check_command_missing():
     assert "missing command" in errors[0]
 
 
+def test_check_dangerous_commands():
+    """Test check_dangerous_commands with dangerous commands"""
+    dangerous_commands = [
+        "rm -rf /",
+        "rm -rf /root",
+        "rm -rf / && ls",
+        "rm -rf / || ls",
+        "rm -rf / ; ls",
+    ]
+    for command in dangerous_commands:
+        errors = checker.check_dangerous_commands(command)
+        assert len(errors) > 0
+        assert any("dangerous command" in e for e in errors)
+
+
+def test_check_minutes_invalid_format():
+    """Test check_minutes with an invalid format"""
+    errors = checker.check_minutes("a", is_system_crontab=False)
+    assert len(errors) > 0
+    assert any("invalid minute format" in e for e in errors)
+
+
+def test_check_hours_invalid_format():
+    """Test check_hours with an invalid format"""
+    errors = checker.check_hours("a")
+    assert len(errors) > 0
+    assert any("invalid hour format" in e for e in errors)
+
+
+def test_check_day_of_month_invalid_format():
+    """Test check_day_of_month with an invalid format"""
+    errors = checker.check_day_of_month("a")
+    assert len(errors) > 0
+    assert any("invalid day of month format" in e for e in errors)
+
+
+def test_check_month_invalid_format():
+    """Test check_month with an invalid format"""
+    errors = checker.check_month("a")
+    assert len(errors) > 0
+    assert any("invalid month format" in e for e in errors)
+
+
+def test_check_day_of_week_invalid_format():
+    """Test check_day_of_week with an invalid format"""
+    errors = checker.check_day_of_week("a")
+    assert len(errors) > 0
+    assert any("invalid day of week format" in e for e in errors)
+
+
 # ============================================================================
 # Legacy functions tests
 # ============================================================================
@@ -461,6 +560,32 @@ def test_check_line_special_legacy():
 # ============================================================================
 # Additional coverage tests for edge cases
 # ============================================================================
+
+
+def test_check_line_insufficient_fields_special():
+    """Test check_line with insufficient fields for a special keyword"""
+    errors, warnings = checker.check_line("@reboot", 1, "test.txt")
+    assert len(errors) > 0
+    assert any("insufficient fields" in e for e in errors)
+
+
+def test_check_line_insufficient_fields_regular():
+    """Test check_line with insufficient fields for a regular crontab line"""
+    errors, warnings = checker.check_line("* * * *", 1, "test.txt")
+    assert len(errors) > 0
+    assert any("insufficient fields" in e for e in errors)
+
+
+def test_check_line_system_extra_field_in_command():
+    """Test check_line with an extra field in the command for a system crontab line"""
+    errors, warnings = checker.check_line(
+        "* * * * * root extra /usr/bin/backup.sh",
+        1,
+        "test.txt",
+        is_system_crontab=True,
+    )
+    assert len(errors) > 0
+    assert any("extra field" in e for e in errors)
 
 
 @patch("checkcrontab.checker.os.lstat")
@@ -556,6 +681,31 @@ def test_check_line_multiline_continuation_with_backslash():
     # This tests the multiline handling in check_file
     # We need to test it through check_file, not check_line
     pass  # Will test through integration tests
+
+
+def test_check_user_invalid_format():
+    """Test check_user with various invalid formats"""
+    invalid_usernames = ["", "#user", '"user"', "user@", "user name", "-user"]
+    for username in invalid_usernames:
+        errors, warnings = checker.check_user(username)
+        assert len(errors) > 0
+        assert any("invalid user format" in e for e in errors)
+
+
+def test_check_special_invalid_keyword():
+    """Test check_special with an invalid keyword"""
+    errors = checker.check_special(
+        "@invalid", ["@invalid", "command"], is_system_crontab=False
+    )
+    assert len(errors) > 0
+    assert any("invalid special keyword" in e for e in errors)
+
+
+def test_check_line_with_env_var():
+    """Test check_line with an environment variable"""
+    errors, warnings = checker.check_line("MAILTO=test@example.com", 1, "test.txt")
+    assert errors == []
+    assert warnings == []
 
 
 # ============================================================================
