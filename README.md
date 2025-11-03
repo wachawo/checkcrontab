@@ -11,6 +11,8 @@ A Python script for checking syntax of crontab files. Cross-platform support for
 
 **[English](https://github.com/wachawo/checkcrontab/blob/main/README.md)** | [Español](https://github.com/wachawo/checkcrontab/blob/main/docs/README_ES.md) | [Português](https://github.com/wachawo/checkcrontab/blob/main/docs/README_PT.md) | [Français](https://github.com/wachawo/checkcrontab/blob/main/docs/README_FR.md) | [Deutsch](https://github.com/wachawo/checkcrontab/blob/main/docs/README_DE.md) | [Italiano](https://github.com/wachawo/checkcrontab/blob/main/docs/README_IT.md) | [Русский](https://github.com/wachawo/checkcrontab/blob/main/docs/README_RU.md) | [中文](https://github.com/wachawo/checkcrontab/blob/main/docs/README_ZH.md) | [日本語](https://github.com/wachawo/checkcrontab/blob/main/docs/README_JA.md) | [हिन्दी](https://github.com/wachawo/checkcrontab/blob/main/docs/README_HI.md)
 
+<img width="1108" height="257" alt="image" src="https://github.com/user-attachments/assets/9ad75b94-3a72-4d0f-b9f4-9e1b22ac475d" />
+
 ### Requirements
 
 - **Python 3.7 or higher**
@@ -187,8 +189,8 @@ pre-commit autoupdate
 ### Testing
 
 ```bash
-pytest --cov=checkcrontab --cov-report=term-missing
-coverage html  # optional local HTML report in htmlcov/index.html
+pytest --cov=checkcrontab --cov-report=term-missing --cov-report=xml
+coverage report
 # CI automatically uploads coverage.xml to Codecov
 # python -m coverage_badge -o docs/coverage.svg
 ```
