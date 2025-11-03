@@ -191,6 +191,7 @@ pre-commit autoupdate
 ```bash
 pytest --cov=checkcrontab --cov-report=term-missing --cov-report=xml
 coverage report
+coverage html  # optional local HTML report in htmlcov/index.html
 # CI automatically uploads coverage.xml to Codecov
 # python -m coverage_badge -o docs/coverage.svg
 ```
