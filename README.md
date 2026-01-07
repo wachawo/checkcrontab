@@ -13,6 +13,18 @@ A Python script for checking syntax of crontab files. Cross-platform support for
 
 <img width="1108" height="257" alt="image" src="https://github.com/user-attachments/assets/9ad75b94-3a72-4d0f-b9f4-9e1b22ac475d" />
 
+### Contents
+- [Requirements](#requirements)
+- [Platform Support](#platform-support)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Exit codes](#exit-codes)
+- [Command Line Options](#command-line-options)
+- [Features](#features)
+- [Testing](#testing)
+- [Usage with pre-commit](#usage-with-pre-commit)
+
+
 ### Requirements
 
 - **Python 3.7 or higher**
@@ -98,7 +110,7 @@ To redirect output from STDERR to STDOUT (for example, in CI), use --format text
 checkcrontab --format text examples/user_valid.txt
 ```
 
-#### SARIF Output
+### SARIF Output
 For SARIF output, use the `--format sarif` flag:
 
 ```bash
