@@ -1,28 +1,20 @@
-name: Auto Assign
+name: Auto-assign
 on:
   issues:
-    types: [opened]
+    types: [opened, reopened]
   pull_request:
-    types: [opened]
-permissions:
-  contents: read
-  issues: write
-  pull-requests: write
+    types: [opened, reopened, ready_for_review]
 jobs:
   assign:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
     steps:
-      - name: Auto-assign issue
-        if: github.event_name == 'issues'
-        uses: pozil/auto-assign-issue@v1
+      - name: Auto-assign and request reviewers
+        if:  github.event_name == 'issue' || github.event_name == 'pull_request'
+        uses: wachawo/github-auto-assign@v1
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           assignees: wachawo
-          numOfAssignee: 1
-      - name: Auto-assign PR
-        if: github.event_name == 'pull_request'
-        uses: kentaro-m/auto-assign-action@v2.0.0
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          addAssignees: wachawo
-          addReviewers: wachawo
+          reviewers: wachawo
