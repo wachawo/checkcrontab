@@ -352,7 +352,7 @@ def check_line(line: str, line_number: int, file_name: str, file_path: Optional[
     warnings: List[str] = []
 
     # Skip environment variables
-    if "=" in line and not any(char.isdigit() or char in "*@" for char in line.split("=")[0]):
+    if re.match(r"""^\s*(?:[^'"\s=][^\s=]*|'[^'=]*'|"[^"=]*")\s*=""", line):
         return errors, warnings
 
     # Check for special keywords

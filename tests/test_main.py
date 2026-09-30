@@ -95,6 +95,40 @@ def test_environment_variable_skipped():
     assert warnings == []
 
 
+@pytest.mark.parametrize("is_system_crontab", [False, True])
+@pytest.mark.parametrize("line", [
+    "AWS_S3_BUCKET=backups",
+    '  VAR1 = "with spaces"',
+    '"VAR2"=two',
+    "'VAR 3' = ''",
+    "_V4=",
+])
+def test_environment_variable_names_with_digits(line, is_system_crontab):
+    errors, warnings = checker.check_line(line, 1, "test.txt", is_system_crontab=is_system_crontab)
+    assert errors == []
+    assert warnings == []
+
+
+@pytest.mark.parametrize("is_system_crontab", [False, True])
+@pytest.mark.parametrize("minute", ["0", "60"])
+def test_job_with_assignment_in_command(minute, is_system_crontab):
+    user = "root " if is_system_crontab else ""
+    line = f"{minute} 0 1 1 1 {user}MODE=backup /usr/bin/backup"
+    errors, warnings = checker.check_line(line, 1, "test.txt", is_system_crontab=is_system_crontab)
+    assert bool(errors) == (minute == "60")
+    assert warnings == []
+
+
+@pytest.mark.parametrize("is_system_crontab", [False, True])
+def test_file_with_environment_variable_name_containing_digits(tmp_path, is_system_crontab):
+    path = tmp_path / "backup"
+    user = "root " if is_system_crontab else ""
+    path.write_text(f"AWS_S3_BUCKET=backups\n0 2 * * * {user}/usr/bin/backup\n", encoding="utf-8")
+    rows, errors = check_crontab.check_file(str(path), is_system_crontab=is_system_crontab)
+    assert rows == 2
+    assert errors == []
+
+
 # ============================================================================
 # System crontab line checking tests
 # ============================================================================
